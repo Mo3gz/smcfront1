@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { 
@@ -18,6 +18,19 @@ const AdminDashboard = ({ socket }) => {
   const [notifications, setNotifications] = useState([]);
   const [adminVerified, setAdminVerified] = useState(false);
 
+  const verifyAdminAccess = useCallback(async () => {
+    const result = await checkAdminStatus();
+    if (result.success) {
+      setAdminVerified(true);
+      fetchTeams();
+      fetchNotifications();
+    } else {
+      console.error('Admin verification failed:', result.error);
+      toast.error('Admin access denied. Please log in as admin.');
+      // Redirect to login or show error
+    }
+  }, [checkAdminStatus, fetchTeams, fetchNotifications]);
+
   useEffect(() => {
     verifyAdminAccess();
 
@@ -29,22 +42,9 @@ const AdminDashboard = ({ socket }) => {
     return () => {
       socket.off('admin-notification');
     };
-  }, [socket]);
+  }, [socket, verifyAdminAccess]);
 
-  const verifyAdminAccess = async () => {
-    const result = await checkAdminStatus();
-    if (result.success) {
-      setAdminVerified(true);
-      fetchTeams();
-      fetchNotifications();
-    } else {
-      console.error('Admin verification failed:', result.error);
-      toast.error('Admin access denied. Please log in as admin.');
-      // Redirect to login or show error
-    }
-  };
-
-  const fetchTeams = async () => {
+  const fetchTeams = useCallback(async () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
       const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
@@ -52,9 +52,9 @@ const AdminDashboard = ({ socket }) => {
     } catch (error) {
       console.error('Error fetching teams:', error);
     }
-  };
+  }, []);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
       const response = await axios.get(`${API_BASE_URL}/api/admin/notifications`, { withCredentials: true });
@@ -66,7 +66,7 @@ const AdminDashboard = ({ socket }) => {
         await logout();
       }
     }
-  };
+  }, [logout]);
 
   const handleLogout = async () => {
     await logout();
