@@ -3,16 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.15.0",
-    "socket.io-client": "^4.7.2",
     "axios": "^1.5.0",
-    "react-scripts": "5.0.1",
+    "dotenv": "^17.2.0",
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-confetti": "^6.1.0",
+    "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
-    "react-confetti": "^6.1.0"
+    "react-router-dom": "^6.15.0",
+    "react-scripts": "5.0.1",
+    "socket.io-client": "^4.7.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -38,5 +39,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://smcback-production-6d12.up.railway.app"
-} 
+  "proxy": "https://smcback-production-6d12.up.railway.app"
+}

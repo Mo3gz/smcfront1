@@ -6,15 +6,12 @@ import {
   Package, 
   RotateCcw, 
   Map, 
-  LogOut,
-  Coins,
-  Target
+  LogOut
 } from 'lucide-react';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
-import axios from 'axios';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();

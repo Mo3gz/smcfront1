@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Map, Coins, Target } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 

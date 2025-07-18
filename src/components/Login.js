@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { LogIn, Shield, Users } from 'lucide-react';
+import { LogIn, Shield } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');

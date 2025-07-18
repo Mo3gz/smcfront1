@@ -7,9 +7,7 @@ import {
   Package, 
   Users, 
   Trophy, 
-  LogOut,
-  Plus,
-  Minus
+  LogOut
 } from 'lucide-react';
 import axios from 'axios';
 
