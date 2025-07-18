@@ -24,7 +24,6 @@ function AppContent() {
     socket.on('notification', (notification) => {
       const notificationWithId = { ...notification, _id: Date.now() + Math.random() };
       setNotifications(prev => [...prev, notificationWithId]);
-      toast.success(notification.message);
       setTimeout(() => {
         setNotifications(prev => prev.filter(n => n._id !== notificationWithId._id));
       }, 5000);
