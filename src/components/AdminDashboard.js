@@ -18,6 +18,30 @@ const AdminDashboard = ({ socket }) => {
   const [notifications, setNotifications] = useState([]);
   const [adminVerified, setAdminVerified] = useState(false);
 
+  const fetchTeams = useCallback(async () => {
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
+      setTeams(response.data);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    }
+  }, []);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const response = await axios.get(`${API_BASE_URL}/api/admin/notifications`, { withCredentials: true });
+      setNotifications(response.data);
+    } catch (error) {
+      console.error('Error fetching notifications:', error.response?.status, error.response?.data);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Authentication failed. Please log in again.');
+        await logout();
+      }
+    }
+  }, [logout]);
+
   const verifyAdminAccess = useCallback(async () => {
     const result = await checkAdminStatus();
     if (result.success) {
@@ -43,30 +67,6 @@ const AdminDashboard = ({ socket }) => {
       socket.off('admin-notification');
     };
   }, [socket, verifyAdminAccess]);
-
-  const fetchTeams = useCallback(async () => {
-    try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
-      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
-      setTeams(response.data);
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-    }
-  }, []);
-
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
-      const response = await axios.get(`${API_BASE_URL}/api/admin/notifications`, { withCredentials: true });
-      setNotifications(response.data);
-    } catch (error) {
-      console.error('Error fetching notifications:', error.response?.status, error.response?.data);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        toast.error('Authentication failed. Please log in again.');
-        await logout();
-      }
-    }
-  }, [logout]);
 
   const handleLogout = async () => {
     await logout();
