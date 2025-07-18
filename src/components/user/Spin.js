@@ -34,6 +34,7 @@ const Spin = ({ socket, userData, setUserData }) => {
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/spin`, {
+        id: userData.id,
         spinType,
         promoCode: promoCode || undefined
       }, { withCredentials: true });

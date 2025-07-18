@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
-      const response = await axios.get(`${API_BASE_URL}/api/user`, { withCredentials: true });
+      const response = await axios.get(`${API_BASE_URL}/api/user`, { data: { id: user?.id }, withCredentials: true });
       setUser(response.data);
     } catch (error) {
       setUser(null);

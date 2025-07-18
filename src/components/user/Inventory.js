@@ -16,7 +16,7 @@ const Inventory = ({ socket }) => {
 
   const fetchInventory = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/inventory`, { withCredentials: true });
+      const response = await axios.get(`${API_BASE_URL}/api/inventory`, { data: { id: userData.id }, withCredentials: true });
       setInventory(response.data);
     } catch (error) {
       console.error('Error fetching inventory:', error);
@@ -49,6 +49,7 @@ const Inventory = ({ socket }) => {
 
     try {
       await axios.post(`${API_BASE_URL}/api/cards/use`, {
+        id: userData.id,
         cardId: selectedCard.id,
         selectedTeam,
         description
