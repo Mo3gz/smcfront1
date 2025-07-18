@@ -8,7 +8,7 @@ import AdminDashboard from './components/AdminDashboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
-const socket = io('http://localhost:5000', {
+const socket = io('https://smcback-production-6d12.up.railway.app', {
   withCredentials: true
 });
 
