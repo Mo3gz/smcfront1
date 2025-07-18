@@ -51,4 +51,27 @@
   color: #666;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.notification {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: #667eea;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  font-size: 16px;
+  z-index: 9999;
+  opacity: 0;
+  animation: fadeInOut 5s forwards;
+  pointer-events: none;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
 } 

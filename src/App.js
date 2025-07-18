@@ -22,8 +22,12 @@ function AppContent() {
     }
 
     socket.on('notification', (notification) => {
-      setNotifications(prev => [...prev, notification]);
+      const notificationWithId = { ...notification, _id: Date.now() + Math.random() };
+      setNotifications(prev => [...prev, notificationWithId]);
       toast.success(notification.message);
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n._id !== notificationWithId._id));
+      }, 5000);
     });
 
     socket.on('scoreboard-update', (scoreboard) => {
@@ -59,9 +63,8 @@ function AppContent() {
     <Router>
       <div className="app">
         <Toaster position="top-right" />
-        
-        {notifications.map((notification, index) => (
-          <div key={index} className="notification">
+        {notifications.map((notification) => (
+          <div key={notification._id} className="notification">
             {notification.message}
           </div>
         ))}
