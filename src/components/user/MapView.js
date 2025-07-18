@@ -3,6 +3,8 @@ import { Coins } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+
 const MapView = ({ userData, setUserData }) => {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,7 @@ const MapView = ({ userData, setUserData }) => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get('/api/countries');
+      const response = await axios.get(`${API_BASE_URL}/api/countries`);
       setCountries(response.data);
     } catch (error) {
       console.error('Error fetching countries:', error);
@@ -34,7 +36,7 @@ const MapView = ({ userData, setUserData }) => {
     }
 
     try {
-      const response = await axios.post('/api/countries/buy', {
+      const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
         countryId: country.id
       }, { withCredentials: true });
 

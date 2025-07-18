@@ -18,6 +18,8 @@ const Spin = ({ socket, userData, setUserData }) => {
     { id: 'random', name: 'Random Spin', cost: 25, icon: RotateCcw, color: '#667eea' }
   ];
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+
   const handleSpin = async () => {
     if (spinning) return;
 
@@ -31,7 +33,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     setResult(null);
 
     try {
-      const response = await axios.post('/api/spin', {
+      const response = await axios.post(`${API_BASE_URL}/api/spin`, {
         spinType,
         promoCode: promoCode || undefined
       }, { withCredentials: true });

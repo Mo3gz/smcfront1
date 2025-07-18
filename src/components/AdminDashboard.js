@@ -33,7 +33,8 @@ const AdminDashboard = ({ socket }) => {
 
   const fetchTeams = async () => {
     try {
-      const response = await axios.get('/api/scoreboard');
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -42,7 +43,8 @@ const AdminDashboard = ({ socket }) => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get('/api/admin/notifications', { withCredentials: true });
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const response = await axios.get(`${API_BASE_URL}/api/admin/notifications`, { withCredentials: true });
       setNotifications(response.data);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -151,7 +153,8 @@ const PromoCodes = ({ teams }) => {
     e.preventDefault();
     
     try {
-      await axios.post('/api/admin/promocodes', {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      await axios.post(`${API_BASE_URL}/api/admin/promocodes`, {
         code,
         teamId,
         discount
@@ -242,7 +245,8 @@ const CardManagement = ({ teams }) => {
     e.preventDefault();
     
     try {
-      await axios.post('/api/admin/cards', {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      await axios.post(`${API_BASE_URL}/api/admin/cards`, {
         teamId,
         cardName,
         cardType
@@ -412,7 +416,8 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     e.preventDefault();
     
     try {
-      const endpoint = action === 'coins' ? '/api/admin/coins' : '/api/admin/score';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const endpoint = action === 'coins' ? `${API_BASE_URL}/api/admin/coins` : `${API_BASE_URL}/api/admin/score`;
       await axios.post(endpoint, {
         teamId: selectedTeam,
         amount: parseInt(amount),

@@ -10,9 +10,11 @@ const Scoreboard = () => {
     fetchScoreboard();
   }, []);
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+
   const fetchScoreboard = async () => {
     try {
-      const response = await axios.get('/api/scoreboard');
+      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
       setScoreboard(response.data);
     } catch (error) {
       console.error('Error fetching scoreboard:', error);

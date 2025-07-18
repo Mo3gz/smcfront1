@@ -17,9 +17,11 @@ const Inventory = ({ socket }) => {
     fetchTeams();
   }, []);
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+
   const fetchInventory = async () => {
     try {
-      const response = await axios.get('/api/inventory', { withCredentials: true });
+      const response = await axios.get(`${API_BASE_URL}/api/inventory`, { withCredentials: true });
       setInventory(response.data);
     } catch (error) {
       console.error('Error fetching inventory:', error);
@@ -30,7 +32,7 @@ const Inventory = ({ socket }) => {
 
   const fetchTeams = async () => {
     try {
-      const response = await axios.get('/api/scoreboard');
+      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -46,7 +48,7 @@ const Inventory = ({ socket }) => {
     if (!selectedCard) return;
 
     try {
-      await axios.post('/api/cards/use', {
+      await axios.post(`${API_BASE_URL}/api/cards/use`, {
         cardId: selectedCard.id,
         selectedTeam,
         description

@@ -21,7 +21,8 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get('/api/user', { withCredentials: true });
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const response = await axios.get(`${API_BASE_URL}/api/user`, { withCredentials: true });
       setUser(response.data);
     } catch (error) {
       setUser(null);
@@ -32,7 +33,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await axios.post('/api/login', { username, password }, { withCredentials: true });
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const response = await axios.post(`${API_BASE_URL}/api/login`, { username, password }, { withCredentials: true });
       setUser(response.data.user);
       return { success: true };
     } catch (error) {
@@ -45,7 +47,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post('/api/logout', {}, { withCredentials: true });
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      await axios.post(`${API_BASE_URL}/api/logout`, {}, { withCredentials: true });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
