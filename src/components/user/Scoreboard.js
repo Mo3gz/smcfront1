@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Medal, Award } from 'lucide-react';
 import axios from 'axios';
 
@@ -6,13 +6,9 @@ const Scoreboard = () => {
   const [scoreboard, setScoreboard] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchScoreboard();
-  }, [fetchScoreboard]);
-
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
 
-  const fetchScoreboard = async () => {
+  const fetchScoreboard = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
       setScoreboard(response.data);
@@ -21,7 +17,11 @@ const Scoreboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    fetchScoreboard();
+  }, [fetchScoreboard]);
 
   const getRankIcon = (rank) => {
     switch (rank) {
