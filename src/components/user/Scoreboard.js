@@ -8,7 +8,7 @@ const Scoreboard = () => {
 
   useEffect(() => {
     fetchScoreboard();
-  }, []);
+  }, [fetchScoreboard]);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
 

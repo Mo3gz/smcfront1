@@ -15,7 +15,7 @@ const Inventory = ({ socket }) => {
   useEffect(() => {
     fetchInventory();
     fetchTeams();
-  }, []);
+  }, [fetchInventory, fetchTeams]);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
 
