@@ -37,7 +37,6 @@ const MapView = ({ userData, setUserData }) => {
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
-        id: userData.id,
         countryId: country.id
       }, { withCredentials: true });
 
