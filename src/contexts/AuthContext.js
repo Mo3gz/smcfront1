@@ -25,9 +25,21 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.get(`${API_BASE_URL}/api/user`, { withCredentials: true });
       setUser(response.data);
     } catch (error) {
+      console.error('Auth check failed:', error.response?.status, error.response?.data);
       setUser(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkAdminStatus = async () => {
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const response = await axios.get(`${API_BASE_URL}/api/admin/check`, { withCredentials: true });
+      return { success: true, user: response.data.user };
+    } catch (error) {
+      console.error('Admin check failed:', error.response?.status, error.response?.data);
+      return { success: false, error: error.response?.data?.error || 'Admin check failed' };
     }
   };
 
@@ -61,7 +73,8 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    checkAuth
+    checkAuth,
+    checkAdminStatus
   };
 
   return (

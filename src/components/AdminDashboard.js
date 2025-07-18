@@ -12,14 +12,14 @@ import {
 import axios from 'axios';
 
 const AdminDashboard = ({ socket }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, checkAdminStatus } = useAuth();
   const [activeTab, setActiveTab] = useState('promocodes');
   const [teams, setTeams] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [adminVerified, setAdminVerified] = useState(false);
 
   useEffect(() => {
-    fetchTeams();
-    fetchNotifications();
+    verifyAdminAccess();
 
     // Listen for admin notifications
     socket.on('admin-notification', (notification) => {
@@ -30,6 +30,19 @@ const AdminDashboard = ({ socket }) => {
       socket.off('admin-notification');
     };
   }, [socket]);
+
+  const verifyAdminAccess = async () => {
+    const result = await checkAdminStatus();
+    if (result.success) {
+      setAdminVerified(true);
+      fetchTeams();
+      fetchNotifications();
+    } else {
+      console.error('Admin verification failed:', result.error);
+      toast.error('Admin access denied. Please log in as admin.');
+      // Redirect to login or show error
+    }
+  };
 
   const fetchTeams = async () => {
     try {
@@ -47,7 +60,11 @@ const AdminDashboard = ({ socket }) => {
       const response = await axios.get(`${API_BASE_URL}/api/admin/notifications`, { withCredentials: true });
       setNotifications(response.data);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('Error fetching notifications:', error.response?.status, error.response?.data);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Authentication failed. Please log in again.');
+        await logout();
+      }
     }
   };
 
@@ -72,6 +89,15 @@ const AdminDashboard = ({ socket }) => {
         return <PromoCodes teams={teams} />;
     }
   };
+
+  if (!adminVerified) {
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+        <p>Verifying admin access...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
@@ -165,7 +191,12 @@ const PromoCodes = ({ teams }) => {
       setTeamId('');
       setDiscount(10);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to create promo code');
+      console.error('Create promo error:', error.response?.status, error.response?.data);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Authentication failed. Please log in again.');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to create promo code');
+      }
     }
   };
 
@@ -257,7 +288,12 @@ const CardManagement = ({ teams }) => {
       setCardName('');
       setCardType('luck');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to give card');
+      console.error('Give card error:', error.response?.status, error.response?.data);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Authentication failed. Please log in again.');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to give card');
+      }
     }
   };
 
@@ -430,7 +466,12 @@ const TeamManagement = ({ teams, fetchTeams }) => {
       setReason('');
       fetchTeams();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to update team');
+      console.error('Update team error:', error.response?.status, error.response?.data);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Authentication failed. Please log in again.');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to update team');
+      }
     }
   };
 
