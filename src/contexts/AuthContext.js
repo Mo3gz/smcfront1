@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { createMobileAxiosConfig, retryRequest, handleMobileError, performMobileAuthCheck } from '../utils/mobileAuth';
 
 const AuthContext = createContext();
 
@@ -14,26 +15,66 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Configure axios defaults for better mobile support
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
   
   const checkAuth = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/user`, { 
-        withCredentials: true,
-        timeout: 10000 // 10 second timeout for mobile
-      });
+      const authCheckFn = async () => {
+        const config = createMobileAxiosConfig();
+        const response = await axios.get(`${API_BASE_URL}/api/user`, config);
+        return response;
+      };
+      
+      const response = await performMobileAuthCheck(authCheckFn);
       setUser(response.data);
     } catch (error) {
       console.error('Auth check failed:', error.response?.status, error.response?.data);
-      setUser(null);
-      // Clear any stored user data
-      localStorage.removeItem('user');
+      
+      const errorInfo = handleMobileError(error, 'auth check');
+      
+      // Only logout on specific authentication errors, not network issues
+      if (errorInfo.type === 'auth') {
+        // Try to refresh token first
+        const refreshResult = await refreshToken();
+        if (!refreshResult) {
+          setUser(null);
+          localStorage.removeItem('user');
+        }
+      } else if (errorInfo.type === 'permission') {
+        setUser(null);
+        localStorage.removeItem('user');
+      }
+      // Don't logout on network errors or other issues
     } finally {
       setLoading(false);
     }
   }, [API_BASE_URL]);
+
+  // Token refresh function
+  const refreshToken = async () => {
+    if (isRefreshing) return false; // Prevent multiple refresh attempts
+    
+    try {
+      setIsRefreshing(true);
+      const config = createMobileAxiosConfig();
+      const response = await axios.post(`${API_BASE_URL}/api/refresh-token`, {}, config);
+      
+      if (response.status === 200) {
+        // Token refreshed successfully, retry the original request
+        const userResponse = await axios.get(`${API_BASE_URL}/api/user`, config);
+        setUser(userResponse.data);
+        return true;
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+    return false;
+  };
 
   useEffect(() => {
     checkAuth();
@@ -53,16 +94,38 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
-    // Response interceptor
+    // Response interceptor with better mobile handling
     const responseInterceptor = axios.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          // Token expired or invalid
+      async (error) => {
+        const originalRequest = error.config;
+        
+        // Handle token expiration
+        if (error.response?.status === 401 && 
+            error.response?.data?.error === 'Token expired' && 
+            !originalRequest._retry) {
+          
+          originalRequest._retry = true;
+          
+          // Try to refresh token
+          const refreshResult = await refreshToken();
+          if (refreshResult) {
+            // Retry the original request
+            return axios(originalRequest);
+          }
+        }
+        
+        // Use mobile error handling
+        const errorInfo = handleMobileError(error, 'axios interceptor');
+        
+        // Only logout on specific auth errors, not network issues
+        if (errorInfo.type === 'auth' && 
+            (error.response?.data?.error === 'Invalid token' || 
+             error.response?.data?.error === 'Access token required')) {
           setUser(null);
-          // Clear any stored user data
           localStorage.removeItem('user');
         }
+        
         return Promise.reject(error);
       }
     );
@@ -76,10 +139,8 @@ export const AuthProvider = ({ children }) => {
 
   const checkAdminStatus = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/admin/check`, { 
-        withCredentials: true,
-        timeout: 10000
-      });
+      const config = createMobileAxiosConfig();
+      const response = await axios.get(`${API_BASE_URL}/api/admin/check`, config);
       return { success: true, user: response.data.user };
     } catch (error) {
       console.error('Admin check failed:', error.response?.status, error.response?.data);
@@ -89,35 +150,31 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
+      const config = createMobileAxiosConfig();
       const response = await axios.post(`${API_BASE_URL}/api/login`, 
         { username, password }, 
-        { 
-          withCredentials: true,
-          timeout: 15000 // Longer timeout for login
-        }
+        config
       );
       setUser(response.data.user);
       return { success: true };
     } catch (error) {
       console.error('Login error:', error.response?.data);
+      const errorInfo = handleMobileError(error, 'login');
       return { 
         success: false, 
-        error: error.response?.data?.error || error.response?.data?.message || 'Login failed' 
+        error: errorInfo.message || 'Login failed' 
       };
     }
   };
 
   const logout = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/api/logout`, {}, { 
-        withCredentials: true,
-        timeout: 5000
-      });
+      const config = createMobileAxiosConfig();
+      await axios.post(`${API_BASE_URL}/api/logout`, {}, config);
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
-      // Clear any stored user data
       localStorage.removeItem('user');
     }
   };
@@ -129,11 +186,12 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkAuth,
     checkAdminStatus,
+    refreshToken,
+    isRefreshing,
     // Add a function to handle token expiration
     handleTokenExpiration: () => {
       setUser(null);
       localStorage.removeItem('user');
-      // You can add navigation to login page here if needed
     }
   };
 
