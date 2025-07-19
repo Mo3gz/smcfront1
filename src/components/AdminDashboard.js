@@ -131,7 +131,7 @@ const AdminDashboard = ({ socket }) => {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Notifications />
+            {/* <Notifications /> */}
             <button 
               onClick={handleLogout}
               className="btn btn-danger"
@@ -394,6 +394,11 @@ const AdminNotifications = ({ notifications }) => {
               </div>
               <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
                 {notification.message || `Used ${notification.cardName}`}
+                {notification.selectedTeam && (
+                  <span style={{ display: 'block', color: '#2196f3', fontWeight: 500, marginTop: '4px' }}>
+                    Target: {notification.selectedTeam}
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: '12px', color: '#999' }}>
                 {new Date(notification.timestamp).toLocaleString()}
