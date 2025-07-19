@@ -17,6 +17,7 @@ const AdminDashboard = ({ socket }) => {
   const [teams, setTeams] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [adminVerified, setAdminVerified] = useState(false);
+  const [teamsWithCards, setTeamsWithCards] = useState([]);
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -87,6 +88,23 @@ const AdminDashboard = ({ socket }) => {
       };
     }
   }, [socket, adminVerified]);
+
+  // Fetch all teams and their cards for admin
+  const fetchTeamsWithCards = useCallback(async () => {
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+      const response = await axios.get(`${API_BASE_URL}/api/admin/teams-cards`, { withCredentials: true });
+      setTeamsWithCards(response.data);
+    } catch (error) {
+      console.error('Error fetching teams and cards:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (adminVerified) {
+      fetchTeamsWithCards();
+    }
+  }, [adminVerified, fetchTeamsWithCards]);
 
   const handleLogout = async () => {
     try {
@@ -159,6 +177,34 @@ const AdminDashboard = ({ socket }) => {
 
       <div className="page-content">
         {renderContent()}
+        {/* New section: Teams and their cards */}
+        <div className="card" style={{ marginTop: 32 }}>
+          <h3>Teams & Their Cards</h3>
+          {teamsWithCards.length === 0 ? (
+            <div style={{ color: '#666', textAlign: 'center', padding: '24px' }}>No teams or cards found.</div>
+          ) : (
+            teamsWithCards.map(team => (
+              <div key={team.id} style={{ marginBottom: 24, borderBottom: '1px solid #eee', paddingBottom: 16 }}>
+                <div style={{ fontWeight: 600, fontSize: 16, color: '#333', marginBottom: 4 }}>{team.teamName} ({team.username})</div>
+                <div style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>Score: {team.score} | Coins: {team.coins}</div>
+                <div style={{ fontSize: 14, color: '#555' }}>
+                  <strong>Cards:</strong>
+                  {team.cards && team.cards.length > 0 ? (
+                    <ul style={{ margin: '8px 0 0 16px', padding: 0 }}>
+                      {team.cards.map(card => (
+                        <li key={card.id} style={{ marginBottom: 4 }}>
+                          <span style={{ fontWeight: 500 }}>{card.name}</span> <span style={{ color: '#999' }}>({card.type})</span> - <span style={{ fontSize: 12 }}>{card.effect}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span style={{ color: '#aaa', marginLeft: 8 }}>No cards</span>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       <nav className="navbar">
