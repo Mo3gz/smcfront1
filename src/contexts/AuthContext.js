@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -15,13 +15,30 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
   // Configure axios defaults for better mobile support
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
   
+  const checkAuth = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/user`, { 
+        withCredentials: true,
+        timeout: 10000 // 10 second timeout for mobile
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error('Auth check failed:', error.response?.status, error.response?.data);
+      setUser(null);
+      // Clear any stored user data
+      localStorage.removeItem('user');
+    } finally {
+      setLoading(false);
+    }
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   // Set up axios interceptors for better error handling
   useEffect(() => {
     // Request interceptor
@@ -56,23 +73,6 @@ export const AuthProvider = ({ children }) => {
       axios.interceptors.response.eject(responseInterceptor);
     };
   }, []);
-
-  const checkAuth = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/user`, { 
-        withCredentials: true,
-        timeout: 10000 // 10 second timeout for mobile
-      });
-      setUser(response.data);
-    } catch (error) {
-      console.error('Auth check failed:', error.response?.status, error.response?.data);
-      setUser(null);
-      // Clear any stored user data
-      localStorage.removeItem('user');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const checkAdminStatus = async () => {
     try {
