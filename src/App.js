@@ -7,6 +7,7 @@ import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
 import DebugInfo from './components/DebugInfo';
+import MobileAuthTest from './components/MobileAuthTest';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -86,6 +87,9 @@ function AppContent() {
         
         {/* Debug component for troubleshooting mobile issues */}
         <DebugInfo />
+        
+        {/* Mobile authentication test component */}
+        <MobileAuthTest />
       </div>
     </Router>
   );

@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
 
   // Configure axios defaults for better mobile support
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
@@ -45,6 +46,13 @@ export const AuthProvider = ({ children }) => {
   }, [API_BASE_URL, isRefreshing]);
   
   const checkAuth = useCallback(async () => {
+    // Skip auth check if user just logged in (especially on mobile)
+    if (justLoggedIn) {
+      console.log('Skipping auth check - user just logged in');
+      setLoading(false);
+      return;
+    }
+
     try {
       const authCheckFn = async () => {
         const config = createMobileAxiosConfig();
@@ -99,9 +107,17 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL, refreshToken]);
+  }, [API_BASE_URL, refreshToken, justLoggedIn]);
 
   useEffect(() => {
+    // For mobile browsers, skip initial auth check to prevent conflicts
+    if (isMobileBrowser()) {
+      console.log('Mobile browser detected - skipping initial auth check');
+      setLoading(false);
+      return;
+    }
+    
+    // Only run initial auth check on desktop
     checkAuth();
   }, [checkAuth]);
 
@@ -182,6 +198,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
+      // Set flag to prevent auth check conflicts
+      setJustLoggedIn(true);
+      
       const loginFn = async () => {
         const config = createMobileAxiosConfig();
         const response = await axios.post(`${API_BASE_URL}/api/login`, 
@@ -197,19 +216,30 @@ export const AuthProvider = ({ children }) => {
       // Set user immediately from login response
       setUser(response.data.user);
       
-      // For mobile, add a small delay before checking auth to let cookies settle
+      // For mobile, add a longer delay before allowing auth checks
       if (isMobileBrowser()) {
         setTimeout(() => {
-          // Silently check auth after a delay
+          console.log('Mobile: Allowing auth checks after login delay');
+          setJustLoggedIn(false);
+          // Silently check auth after delay
           checkAuth().catch(error => {
             console.log('Post-login auth check failed (mobile):', error);
             // Don't logout on mobile if this fails, user is already logged in
           });
-        }, 2000);
+        }, 5000); // Increased delay for mobile
+      } else {
+        // For desktop, shorter delay
+        setTimeout(() => {
+          console.log('Desktop: Allowing auth checks after login delay');
+          setJustLoggedIn(false);
+        }, 1000);
       }
       
       return { success: true };
     } catch (error) {
+      // Reset flag on error
+      setJustLoggedIn(false);
+      
       console.error('Login error:', error.response?.data);
       const errorInfo = handleMobileError(error, 'login');
       
@@ -239,6 +269,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
+      setJustLoggedIn(false); // Reset flag on logout
       localStorage.removeItem('user');
     }
   };
