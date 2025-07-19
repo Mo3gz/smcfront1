@@ -140,4 +140,16 @@
 
 .pulse {
   animation: pulse 2s infinite;
+}
+
+/* Slide in animation for congratulations card */
+@keyframes slideInFromTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 } 

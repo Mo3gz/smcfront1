@@ -65,6 +65,18 @@ const Spin = ({ socket, userData, setUserData }) => {
         setPromoCode('');
         setSpinning(false);
         
+        // Show congratulations message prominently
+        toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
+          duration: 4000,
+          position: 'top-center',
+          style: {
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        });
+        
         setTimeout(() => setShowConfetti(false), 3000);
       }, 3000);
 
@@ -184,21 +196,28 @@ const Spin = ({ socket, userData, setUserData }) => {
             background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
             color: 'white',
             textAlign: 'center',
-            marginTop: '20px'
+            marginTop: '20px',
+            animation: 'slideInFromTop 0.5s ease-out',
+            boxShadow: '0 10px 30px rgba(79, 172, 254, 0.3)',
+            border: '2px solid rgba(255, 255, 255, 0.2)'
           }}>
-            <h3 style={{ marginBottom: '12px' }}>🎉 Congratulations!</h3>
-            <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+            <h3 style={{ marginBottom: '12px', fontSize: '24px' }}>🎉 Congratulations!</h3>
+            <div style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
               {result.name}
             </div>
-            <div style={{ fontSize: '14px', opacity: 0.9 }}>
+            <div style={{ fontSize: '16px', opacity: 0.9, marginBottom: '12px' }}>
               {result.effect}
             </div>
             <div style={{ 
-              fontSize: '12px', 
+              fontSize: '14px', 
               opacity: 0.8, 
               marginTop: '8px',
               textTransform: 'uppercase',
-              letterSpacing: '1px'
+              letterSpacing: '1px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              display: 'inline-block'
             }}>
               {result.type} card
             </div>
