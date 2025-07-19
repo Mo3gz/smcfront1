@@ -34,7 +34,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     { id: 'random', name: 'Random Spin', cost: 25, icon: RotateCcw, color: '#667eea' }
   ];
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
   const handleSpin = async () => {
     if (spinning) return;
