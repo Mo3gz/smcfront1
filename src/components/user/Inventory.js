@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Zap, Shield, Heart } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Inventory = ({ socket }) => {
+  const { user } = useAuth();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -188,7 +190,7 @@ const Inventory = ({ socket }) => {
                   required
                 >
                   <option value="">Choose a team...</option>
-                  {teams.filter(team => team.id !== (window?.user?.id || (user && user.id))).map((team) => (
+                  {teams.filter(team => team.id !== (user && user.id)).map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.teamName}
                     </option>
