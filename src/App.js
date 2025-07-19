@@ -21,6 +21,18 @@ const socket = io('smcback-production-0e51.up.railway.app', {
   transports: ['websocket', 'polling'] // Fallback for mobile browsers
 });
 
+function ProtectedRoute({ children, allowedRoles }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user || (allowedRoles && !allowedRoles.includes(user.role))) {
+    // Redirect to appropriate dashboard if not allowed
+    if (user && user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user && user.role !== 'admin') return <Navigate to="/user" replace />;
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 function AppContent() {
   const { user, loading } = useAuth();
   const [notifications, setNotifications] = useState([]);
@@ -87,14 +99,30 @@ function AppContent() {
         ))}
 
         <Routes>
+          {/* Redirect / to the correct dashboard */}
+          <Route path="/" element={<Navigate to={user.role === 'admin' ? '/admin' : '/user'} replace />} />
+
+          {/* Admin route, only for admins */}
           <Route 
-            path="/" 
+            path="/admin" 
             element={
-              user.role === 'admin' ? 
-                <AdminDashboard socket={socket} /> : 
-                <UserDashboard socket={socket} />
-            } 
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard socket={socket} />
+              </ProtectedRoute>
+            }
           />
+
+          {/* User route, only for non-admin users */}
+          <Route 
+            path="/user" 
+            element={
+              <ProtectedRoute allowedRoles={['user', 'normal', undefined, null, '']}>
+                <UserDashboard socket={socket} />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch-all: redirect to / */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         
