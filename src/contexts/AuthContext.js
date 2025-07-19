@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { createMobileAxiosConfig, handleMobileError, performMobileAuthCheck } from '../utils/mobileAuth';
+import { createMobileAxiosConfig, retryRequest, handleMobileError, performMobileAuthCheck, performMobileLogin } from '../utils/mobileAuth';
+import { isMobileBrowser } from '../utils/mobileDetection';
 
 const AuthContext = createContext();
 
@@ -58,23 +59,43 @@ export const AuthProvider = ({ children }) => {
       
       const errorInfo = handleMobileError(error, 'auth check');
       
-      // Only logout on specific authentication errors, not network issues
-      if (errorInfo.type === 'auth') {
-        // Try to refresh token first
-        const refreshResult = await refreshToken();
-        if (!refreshResult) {
+      // For mobile browsers, be more lenient with auth checks
+      if (isMobileBrowser()) {
+        // On mobile, only logout on very specific auth errors
+        if (errorInfo.type === 'auth' && 
+            (error.response?.data?.error === 'Invalid token' || 
+             error.response?.data?.error === 'Access token required')) {
+          
+          // Try to refresh token first
+          const refreshResult = await refreshToken();
+          if (!refreshResult) {
+            console.log('Mobile auth check failed, logging out');
+            setUser(null);
+            localStorage.removeItem('user');
+          }
+        } else if (errorInfo.type === 'permission') {
+          console.log('Mobile permission error, logging out');
           setUser(null);
           localStorage.removeItem('user');
+        } else {
+          // For network errors or other issues on mobile, don't logout
+          console.log('Mobile auth check failed but not logging out:', errorInfo.type);
         }
-      } else if (errorInfo.type === 'permission') {
-        setUser(null);
-        localStorage.removeItem('user');
-      } else if (errorInfo.type === 'network') {
-        // For network errors, don't logout immediately
-        // Just set loading to false and let the user retry
-        console.log('Network error during auth check, not logging out');
+      } else {
+        // Desktop behavior - more strict
+        if (errorInfo.type === 'auth') {
+          const refreshResult = await refreshToken();
+          if (!refreshResult) {
+            setUser(null);
+            localStorage.removeItem('user');
+          }
+        } else if (errorInfo.type === 'permission') {
+          setUser(null);
+          localStorage.removeItem('user');
+        } else if (errorInfo.type === 'network') {
+          console.log('Network error during auth check, not logging out');
+        }
       }
-      // Don't logout on network errors or other issues
     } finally {
       setLoading(false);
     }
@@ -161,12 +182,32 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const config = createMobileAxiosConfig();
-      const response = await axios.post(`${API_BASE_URL}/api/login`, 
-        { username, password }, 
-        config
-      );
+      const loginFn = async () => {
+        const config = createMobileAxiosConfig();
+        const response = await axios.post(`${API_BASE_URL}/api/login`, 
+          { username, password }, 
+          config
+        );
+        return response;
+      };
+      
+      // Use mobile-specific login helper
+      const response = await performMobileLogin(loginFn);
+      
+      // Set user immediately from login response
       setUser(response.data.user);
+      
+      // For mobile, add a small delay before checking auth to let cookies settle
+      if (isMobileBrowser()) {
+        setTimeout(() => {
+          // Silently check auth after a delay
+          checkAuth().catch(error => {
+            console.log('Post-login auth check failed (mobile):', error);
+            // Don't logout on mobile if this fails, user is already logged in
+          });
+        }, 2000);
+      }
+      
       return { success: true };
     } catch (error) {
       console.error('Login error:', error.response?.data);

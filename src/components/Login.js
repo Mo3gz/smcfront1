@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { LogIn, Shield, AlertCircle } from 'lucide-react';
+import { LogIn, Shield, AlertCircle, Wrench } from 'lucide-react';
 import { getMobileWarnings, isMobileBrowser } from '../utils/mobileDetection';
+import MobileTroubleshooter from './MobileTroubleshooter';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [mobileWarnings, setMobileWarnings] = useState([]);
+  const [showTroubleshooter, setShowTroubleshooter] = useState(false);
   const { login } = useAuth();
 
   useEffect(() => {
@@ -98,6 +100,27 @@ const Login = () => {
                   <li key={index}>{warning}</li>
                 ))}
               </ul>
+              
+              {/* Mobile Troubleshooter Button */}
+              <button
+                onClick={() => setShowTroubleshooter(true)}
+                style={{
+                  marginTop: '12px',
+                  padding: '8px 16px',
+                  background: '#667eea',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Wrench size={14} />
+                Fix Mobile Issues
+              </button>
             </div>
           )}
 
@@ -172,6 +195,11 @@ const Login = () => {
           Developed by <strong style={{ color: 'white' }}>Ayman</strong>
         </p>
       </div>
+      
+      {/* Mobile Troubleshooter */}
+      {showTroubleshooter && (
+        <MobileTroubleshooter onClose={() => setShowTroubleshooter(false)} />
+      )}
     </div>
   );
 };

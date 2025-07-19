@@ -5,7 +5,7 @@ import { isMobileBrowser } from './mobileDetection';
 export const createMobileAxiosConfig = (baseConfig = {}) => {
   const mobileConfig = {
     ...baseConfig,
-    timeout: isMobileBrowser() ? 20000 : 15000, // Longer timeout for mobile
+    timeout: isMobileBrowser() ? 25000 : 15000, // Even longer timeout for mobile
     withCredentials: true,
     headers: {
       ...baseConfig.headers,
@@ -48,7 +48,9 @@ export const isMobileNetworkError = (error) => {
     error.code === 'ERR_NETWORK' || // Network error
     error.message?.includes('Network Error') ||
     error.message?.includes('timeout') ||
-    error.message?.includes('Failed to fetch')
+    error.message?.includes('Failed to fetch') ||
+    error.message?.includes('ERR_INTERNET_DISCONNECTED') ||
+    error.message?.includes('ERR_NETWORK_CHANGED')
   );
 };
 
@@ -99,11 +101,28 @@ export const checkCookieSupport = () => {
   }
 };
 
-// Mobile-specific authentication check
+// Mobile-specific authentication check with better error handling
 export const performMobileAuthCheck = async (authCheckFn) => {
   if (!checkCookieSupport()) {
     throw new Error('Cookies are disabled. Please enable cookies for this site.');
   }
   
-  return await retryRequest(authCheckFn, 2, 2000);
+  // For mobile, use fewer retries but longer delays
+  const maxRetries = isMobileBrowser() ? 2 : 3;
+  const delay = isMobileBrowser() ? 3000 : 2000;
+  
+  return await retryRequest(authCheckFn, maxRetries, delay);
+};
+
+// Mobile-specific login helper
+export const performMobileLogin = async (loginFn) => {
+  if (!checkCookieSupport()) {
+    throw new Error('Cookies are disabled. Please enable cookies for this site.');
+  }
+  
+  // For login, be more persistent on mobile
+  const maxRetries = isMobileBrowser() ? 3 : 2;
+  const delay = isMobileBrowser() ? 2000 : 1000;
+  
+  return await retryRequest(loginFn, maxRetries, delay);
 }; 
