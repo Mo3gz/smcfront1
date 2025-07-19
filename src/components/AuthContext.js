@@ -32,11 +32,24 @@ export const AuthProvider = ({ children }) => {
       console.log('🔍 Checking authentication...');
       const config = createAxiosConfig();
       const response = await axios.get(`${API_BASE_URL}/api/user`, config);
-      
       console.log('🔍 Auth check successful:', response.data);
       setUser(response.data);
     } catch (error) {
-      console.error('🔍 Auth check failed:', error.response?.status, error.response?.data);
+      let errorMessage = 'Unknown error';
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = 'Token expired or invalid. Please log in again.';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Access forbidden.';
+        } else {
+          errorMessage = error.response.data?.error || error.message;
+        }
+      } else if (error.request) {
+        errorMessage = 'No response from server.';
+      } else {
+        errorMessage = error.message;
+      }
+      console.error('🔍 Auth check failed:', errorMessage);
       setUser(null);
       localStorage.removeItem('user');
     } finally {
@@ -53,58 +66,35 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       console.log('🔑 Attempting login for:', username);
-      console.log('🔑 API Base URL:', API_BASE_URL);
-      
       const config = createAxiosConfig();
-      console.log('🔑 Request config:', config);
-      
       const response = await axios.post(`${API_BASE_URL}/api/login`, 
         { username, password }, 
         config
       );
-      
-      console.log('🔑 Login response status:', response.status);
-      console.log('🔑 Login response data:', response.data);
+      console.log('🔑 Login successful:', response.data);
       console.log('🔑 User data:', response.data.user);
       console.log('🔑 User role:', response.data.user?.role);
-      
-      // Validate response data
-      if (!response.data.user) {
-        throw new Error('Invalid response: missing user data');
-      }
-      
-      // Set user immediately
       setUser(response.data.user);
-      
-      // Store in localStorage as backup
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      
-      // If token is provided, store it as well
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
-      }
-      
-      console.log('✅ Login successful, user set in state');
-      
       return { success: true };
     } catch (error) {
-      console.error('🔑 Login failed - Full error:', error);
-      console.error('🔑 Error response:', error.response?.data);
-      console.error('🔑 Error status:', error.response?.status);
-      console.error('🔑 Error headers:', error.response?.headers);
-      
       let errorMessage = 'Login failed. Please try again.';
-      
-      if (error.response?.status === 401) {
-        errorMessage = 'Invalid username or password. Please try again.';
-      } else if (error.response?.status === 0 || error.code === 'ERR_NETWORK') {
-        errorMessage = 'Network connection issue. Please check your internet connection.';
-      } else if (error.response?.status >= 500) {
-        errorMessage = 'Server error. Please try again later.';
-      } else if (error.message) {
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = 'Invalid username or password. Please try again.';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Access forbidden.';
+        } else if (error.response.status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else {
+          errorMessage = error.response.data?.error || error.message;
+        }
+      } else if (error.request) {
+        errorMessage = 'No response from server.';
+      } else {
         errorMessage = error.message;
       }
-      
+      console.error('🔑 Login failed:', errorMessage);
       return { 
         success: false, 
         error: errorMessage
