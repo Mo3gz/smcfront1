@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle, XCircle, Settings, Wifi, Shield } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { isMobileBrowser, getMobileBrowserInfo, checkCookieSupport } from '../utils/mobileDetection';
 
 const MobileTroubleshooter = ({ onClose }) => {
   const [checks, setChecks] = useState({});
-  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (isMobileBrowser()) {

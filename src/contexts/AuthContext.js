@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { createMobileAxiosConfig, retryRequest, handleMobileError, performMobileAuthCheck, performMobileLogin } from '../utils/mobileAuth';
+import { createMobileAxiosConfig, handleMobileError, performMobileAuthCheck, performMobileLogin } from '../utils/mobileAuth';
 import { isMobileBrowser } from '../utils/mobileDetection';
 
 const AuthContext = createContext();
