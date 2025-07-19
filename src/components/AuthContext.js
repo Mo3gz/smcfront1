@@ -151,7 +151,14 @@ export const AuthProvider = ({ children }) => {
   const checkAdminStatus = async () => {
     try {
       console.log('🔐 Checking admin status...');
-      const config = createAxiosConfig();
+      const token = localStorage.getItem('authToken');
+      const config = {
+        ...createAxiosConfig(),
+        headers: {
+          ...createAxiosConfig().headers,
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      };
       const response = await axios.get(`${API_BASE_URL}/api/admin/check`, config);
       console.log('🔐 Admin check successful:', response.data);
       return { success: true, user: response.data.user };
