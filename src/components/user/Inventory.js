@@ -12,7 +12,7 @@ const Inventory = ({ socket }) => {
   const [description, setDescription] = useState('');
   const [teams, setTeams] = useState([]);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
   const fetchInventory = useCallback(async () => {
     try {

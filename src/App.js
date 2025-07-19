@@ -15,7 +15,7 @@ import UserStateDebug from './components/UserStateDebug';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
-const socket = io('smcback-production-0e51.up.railway.app', {
+const socket = io('smcback-production-6d12.up.railway.app', {
   withCredentials: true,
   timeout: 20000, // 20 second timeout for mobile
   transports: ['websocket', 'polling'] // Fallback for mobile browsers

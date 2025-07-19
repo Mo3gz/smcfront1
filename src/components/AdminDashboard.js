@@ -21,7 +21,7 @@ const AdminDashboard = ({ socket }) => {
 
   const fetchTeams = useCallback(async () => {
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
       const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
       setTeams(response.data);
     } catch (error) {
@@ -31,7 +31,7 @@ const AdminDashboard = ({ socket }) => {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
       const response = await axios.get(`${API_BASE_URL}/api/admin/notifications`, { withCredentials: true });
       setNotifications(response.data);
     } catch (error) {
@@ -214,7 +214,7 @@ const PromoCodes = ({ teams }) => {
     e.preventDefault();
     
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
       await axios.post(`${API_BASE_URL}/api/admin/promocodes`, {
         code,
         teamId,
@@ -305,7 +305,7 @@ const CardManagement = ({ teams }) => {
     e.preventDefault();
     
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
       await axios.post(`${API_BASE_URL}/api/admin/cards`, {
         teamId,
         cardName,
@@ -461,7 +461,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     e.preventDefault();
     
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
       await axios.post(`${API_BASE_URL}/api/admin/coins`, {
         teamId: selectedTeam,
         amount: coinAmount,
@@ -486,7 +486,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     e.preventDefault();
     
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
       await axios.post(`${API_BASE_URL}/api/admin/score`, {
         teamId: selectedTeam,
         amount: scoreAmount,
