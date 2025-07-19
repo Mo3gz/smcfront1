@@ -37,6 +37,33 @@ const UserStateDebug = () => {
     }
   };
 
+  const testUserRole = async () => {
+    if (!user?.id) {
+      console.log('❌ No user ID available');
+      return;
+    }
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/debug/user-role/${user.id}`);
+      console.log('🔍 User role check response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ User role check error:', error);
+      return null;
+    }
+  };
+
+  const testAllUsers = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/debug/all-users`);
+      console.log('🔍 All users response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ All users check error:', error);
+      return null;
+    }
+  };
+
   if (!isVisible) {
     return (
       <div style={{ position: 'fixed', bottom: '10px', left: '160px', zIndex: 1000 }}>
@@ -159,10 +186,45 @@ const UserStateDebug = () => {
               padding: '12px 24px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              marginBottom: '8px',
+              marginRight: '8px'
             }}
           >
             Test /api/user Endpoint
+          </button>
+          <button
+            onClick={testUserRole}
+            style={{
+              background: '#ff9800',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              marginBottom: '8px',
+              marginRight: '8px'
+            }}
+          >
+            Check User Role
+          </button>
+          <button
+            onClick={testAllUsers}
+            style={{
+              background: '#4caf50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              marginBottom: '8px'
+            }}
+          >
+            List All Users
           </button>
           <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
             Check console for response details
