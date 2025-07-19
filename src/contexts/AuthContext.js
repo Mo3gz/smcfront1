@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { createMobileAxiosConfig, retryRequest, handleMobileError, performMobileAuthCheck } from '../utils/mobileAuth';
+import { createMobileAxiosConfig, handleMobileError, performMobileAuthCheck } from '../utils/mobileAuth';
 
 const AuthContext = createContext();
 
@@ -19,6 +19,29 @@ export const AuthProvider = ({ children }) => {
 
   // Configure axios defaults for better mobile support
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+  
+  // Token refresh function
+  const refreshToken = useCallback(async () => {
+    if (isRefreshing) return false; // Prevent multiple refresh attempts
+    
+    try {
+      setIsRefreshing(true);
+      const config = createMobileAxiosConfig();
+      const response = await axios.post(`${API_BASE_URL}/api/refresh-token`, {}, config);
+      
+      if (response.status === 200) {
+        // Token refreshed successfully, retry the original request
+        const userResponse = await axios.get(`${API_BASE_URL}/api/user`, config);
+        setUser(userResponse.data);
+        return true;
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+    return false;
+  }, [API_BASE_URL, isRefreshing]);
   
   const checkAuth = useCallback(async () => {
     try {
@@ -51,30 +74,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
-
-  // Token refresh function
-  const refreshToken = async () => {
-    if (isRefreshing) return false; // Prevent multiple refresh attempts
-    
-    try {
-      setIsRefreshing(true);
-      const config = createMobileAxiosConfig();
-      const response = await axios.post(`${API_BASE_URL}/api/refresh-token`, {}, config);
-      
-      if (response.status === 200) {
-        // Token refreshed successfully, retry the original request
-        const userResponse = await axios.get(`${API_BASE_URL}/api/user`, config);
-        setUser(userResponse.data);
-        return true;
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-    return false;
-  };
+  }, [API_BASE_URL, refreshToken]);
 
   useEffect(() => {
     checkAuth();
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }) => {
       axios.interceptors.request.eject(requestInterceptor);
       axios.interceptors.response.eject(responseInterceptor);
     };
-  }, []);
+  }, [refreshToken]);
 
   const checkAdminStatus = async () => {
     try {
