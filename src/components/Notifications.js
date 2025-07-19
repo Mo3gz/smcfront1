@@ -99,7 +99,7 @@ const Notifications = () => {
       const config = createMobileAxiosConfig();
       axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, config).catch(() => {});
     }
-  }, [isVisible, notifications.length]);
+  }, [isVisible, notifications.length, API_BASE_URL]);
 
   const modal = (
     <div style={{

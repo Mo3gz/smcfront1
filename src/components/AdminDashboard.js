@@ -10,7 +10,6 @@ import {
   LogOut
 } from 'lucide-react';
 import axios from 'axios';
-import Notifications from './Notifications';
 
 const AdminDashboard = ({ socket }) => {
   const { user, logout, checkAdminStatus } = useAuth();
