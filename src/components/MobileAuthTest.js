@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { isMobileBrowser, getMobileBrowserInfo, checkCookieSupport } from '../utils/mobileDetection';
 import { toast } from 'react-hot-toast';
