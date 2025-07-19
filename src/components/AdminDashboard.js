@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { 
@@ -51,27 +51,40 @@ const AdminDashboard = ({ socket }) => {
       fetchNotifications();
     } else {
       console.error('Admin verification failed:', result.error);
-      toast.error('Admin access denied. Please log in as admin.');
-      // Redirect to login or show error
+      toast.error('Admin access denied. Please check your permissions.');
+      await logout();
     }
-  }, [checkAdminStatus, fetchTeams, fetchNotifications]);
+  }, [checkAdminStatus, fetchTeams, fetchNotifications, logout]);
 
   useEffect(() => {
-    verifyAdminAccess();
+    if (user) {
+      verifyAdminAccess();
+    }
+  }, [user, verifyAdminAccess]);
 
-    // Listen for admin notifications
-    socket.on('admin-notification', (notification) => {
-      setNotifications(prev => [notification, ...prev]);
-    });
+  useEffect(() => {
+    if (socket && adminVerified) {
+      socket.on('admin-notification', (notification) => {
+        setNotifications(prev => [notification, ...prev]);
+        toast.info(`New notification from ${notification.teamName}`);
+      });
 
-    return () => {
-      socket.off('admin-notification');
-    };
-  }, [socket, verifyAdminAccess]);
+      return () => {
+        socket.off('admin-notification');
+      };
+    }
+  }, [socket, adminVerified]);
 
   const handleLogout = async () => {
-    await logout();
-    toast.success('Logged out successfully');
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Logout failed, but you will be redirected');
+      // Force logout even if there's an error
+      window.location.reload();
+    }
   };
 
   const renderContent = () => {
@@ -83,7 +96,7 @@ const AdminDashboard = ({ socket }) => {
       case 'notifications':
         return <AdminNotifications notifications={notifications} />;
       case 'scoreboard':
-        return <LiveScoreboard teams={teams} />;
+        return <AdminScoreboard teams={teams} />;
       case 'teams':
         return <TeamManagement teams={teams} fetchTeams={fetchTeams} />;
       default:
@@ -93,21 +106,38 @@ const AdminDashboard = ({ socket }) => {
 
   if (!adminVerified) {
     return (
-      <div className="loading">
-        <div className="spinner"></div>
-        <p>Verifying admin access...</p>
+      <div className="container">
+        <div className="page-content">
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 20px' }}></div>
+            <h3>Verifying Admin Access...</h3>
+            <p style={{ color: '#666' }}>Please wait while we verify your permissions.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container">
-      <div className="app-header">
-        <h1 className="app-title">Admin Dashboard</h1>
-        <div className="user-info">
+      <div className="header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: 'bold'
+          }}>
+            {user?.username?.charAt(0).toUpperCase()}
+          </div>
           <div>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
-              {user?.teamName}
+            <div style={{ fontWeight: '600', color: '#333' }}>
+              {user?.teamName || user?.username}
             </div>
             <div style={{ fontSize: '12px', color: '#666' }}>
               Administrator
@@ -119,6 +149,7 @@ const AdminDashboard = ({ socket }) => {
               onClick={handleLogout}
               className="btn btn-danger"
               style={{ padding: '8px 16px', fontSize: '14px' }}
+              title="Logout"
             >
               <LogOut size={16} />
             </button>
@@ -199,73 +230,61 @@ const PromoCodes = ({ teams }) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Authentication failed. Please log in again.');
       } else {
-        toast.error(error.response?.data?.error || 'Failed to create promo code');
+        toast.error('Failed to create promo code');
       }
     }
   };
 
   return (
-    <div>
-      <div className="header">
-        <h1>🎁 Promo Codes</h1>
-        <p>Create discount codes for teams</p>
-      </div>
-
-      <div className="card">
-        <form onSubmit={handleCreatePromo}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Promo Code
-            </label>
-            <input
-              type="text"
-              className="input"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter promo code"
-              required
-            />
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Team
-            </label>
-            <select
-              className="input"
-              value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
-              required
-            >
-              <option value="">Select a team...</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.teamName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Discount Percentage
-            </label>
-            <input
-              type="number"
-              className="input"
-              value={discount}
-              onChange={(e) => setDiscount(parseInt(e.target.value))}
-              min="1"
-              max="100"
-              required
-            />
-          </div>
-
-          <button type="submit" className="btn" style={{ width: '100%' }}>
-            Create Promo Code
-          </button>
-        </form>
-      </div>
+    <div className="card">
+      <h3>Create Promo Code</h3>
+      <form onSubmit={handleCreatePromo}>
+        <div style={{ marginBottom: '16px' }}>
+          <label>Promo Code</label>
+          <input
+            type="text"
+            className="input"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Enter promo code"
+            required
+          />
+        </div>
+        
+        <div style={{ marginBottom: '16px' }}>
+          <label>Team</label>
+          <select
+            className="input"
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
+            required
+          >
+            <option value="">Select a team</option>
+            {teams.map(team => (
+              <option key={team.id} value={team.id}>
+                {team.teamName}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div style={{ marginBottom: '16px' }}>
+          <label>Discount (%)</label>
+          <input
+            type="number"
+            className="input"
+            value={discount}
+            onChange={(e) => setDiscount(Number(e.target.value))}
+            min="1"
+            max="100"
+            required
+          />
+        </div>
+        
+        <button type="submit" className="btn">
+          Create Promo Code
+        </button>
+      </form>
     </div>
   );
 };
@@ -273,222 +292,124 @@ const PromoCodes = ({ teams }) => {
 // Card Management Component
 const CardManagement = ({ teams }) => {
   const [teamId, setTeamId] = useState('');
+  const [cardName, setCardName] = useState('');
   const [cardType, setCardType] = useState('luck');
-  const [selectedCard, setSelectedCard] = useState('');
 
-  // Predefined cards based on the backend getCardsByType function
-  const availableCards = {
-    luck: [
-      { name: 'Hidden Treasure', type: 'luck', effect: '+400 Points instantly' },
-      { name: 'Camp Tax', type: 'luck', effect: '-300 Points go to the Bank' },
-      { name: 'Golden Ticket', type: 'luck', effect: 'Pay 200 Points → If you win the next challenge, take +500 Points!' },
-      { name: 'Mysterious Trader', type: 'luck', effect: 'Pay 150 Points → Get a random Attack Card' },
-      { name: 'Everything Against Me', type: 'luck', effect: 'Instantly lose 250 Points' },
-      { name: 'Double Up', type: 'luck', effect: 'Double your current points if you win any challenge in the next 30 minutes' },
-      { name: 'Shady Deal', type: 'luck', effect: 'Steal 100 Points from any tent' }
-    ],
-    attack: [
-      { name: 'Raid', type: 'attack', effect: 'Choose one team to raid. If you win the challenge, steal 300 Points from them.' },
-      { name: 'Control Battle', type: 'attack', effect: 'Select one team to challenge in a one-on-one tent battle. Winner gets +500 Points.' },
-      { name: 'Double Strike', type: 'attack', effect: 'Select one team to ally with and attack another tent together.' },
-      { name: 'Break Alliances', type: 'attack', effect: 'Force 2 allied tents to break their alliance' },
-      { name: 'Broad Day Robbery', type: 'attack', effect: 'Take 100 Points instantly from any tent' }
-    ],
-    alliance: [
-      { name: 'Strategic Alliance', type: 'alliance', effect: 'Select one team to form an alliance with for 1 full day.' },
-      { name: 'Betrayal Alliance', type: 'alliance', effect: 'Form an alliance, then betray them at the end to steal their points.' },
-      { name: 'Golden Partnership', type: 'alliance', effect: 'Choose a team to team up with in the next challenge.' },
-      { name: 'Temporary Truce', type: 'alliance', effect: 'Select 2 teams to pause all attacks between them for 1 full day.' },
-      { name: 'Hidden Leader', type: 'alliance', effect: 'You become the challenge leader. Ally with another team.' }
-    ]
-  };
+  const cardTypes = [
+    { value: 'luck', label: 'Luck Card' },
+    { value: 'attack', label: 'Attack Card' },
+    { value: 'alliance', label: 'Alliance Card' }
+  ];
 
   const handleGiveCard = async (e) => {
     e.preventDefault();
     
-    if (!selectedCard) {
-      toast.error('Please select a card');
-      return;
-    }
-
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
       await axios.post(`${API_BASE_URL}/api/admin/cards`, {
         teamId,
-        cardName: selectedCard,
+        cardName,
         cardType
       }, { withCredentials: true });
 
       toast.success('Card given successfully!');
       setTeamId('');
-      setSelectedCard('');
+      setCardName('');
       setCardType('luck');
     } catch (error) {
       console.error('Give card error:', error.response?.status, error.response?.data);
       if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Authentication failed. Please log in again.');
       } else {
-        toast.error(error.response?.data?.error || 'Failed to give card');
+        toast.error('Failed to give card');
       }
     }
   };
 
-  const getCardIcon = (type) => {
-    switch (type) {
-      case 'attack':
-        return '⚔️';
-      case 'alliance':
-        return '🤝';
-      case 'luck':
-        return '🍀';
-      default:
-        return '📦';
-    }
-  };
-
   return (
-    <div>
-      <div className="header">
-        <h1>📦 Give Cards</h1>
-        <p>Give cards to specific teams</p>
-      </div>
-
-      <div className="card">
-        <form onSubmit={handleGiveCard}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Team
-            </label>
-            <select
-              className="input"
-              value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
-              required
-            >
-              <option value="">Select a team...</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.teamName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Card Type
-            </label>
-            <select
-              className="input"
-              value={cardType}
-              onChange={(e) => {
-                setCardType(e.target.value);
-                setSelectedCard(''); // Reset selected card when type changes
-              }}
-              required
-            >
-              <option value="luck">🍀 Luck</option>
-              <option value="attack">⚔️ Attack</option>
-              <option value="alliance">🤝 Alliance</option>
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Select Card
-            </label>
-            <select
-              className="input"
-              value={selectedCard}
-              onChange={(e) => setSelectedCard(e.target.value)}
-              required
-            >
-              <option value="">Choose a card...</option>
-              {availableCards[cardType]?.map((card) => (
-                <option key={card.name} value={card.name}>
-                  {getCardIcon(card.type)} {card.name}
-                </option>
-              ))}
-            </select>
-            {selectedCard && (
-              <div style={{ 
-                marginTop: '8px', 
-                padding: '8px', 
-                background: 'rgba(102, 126, 234, 0.1)', 
-                borderRadius: '6px',
-                fontSize: '12px',
-                color: '#666'
-              }}>
-                <strong>Effect:</strong> {availableCards[cardType]?.find(c => c.name === selectedCard)?.effect}
-              </div>
-            )}
-          </div>
-
-          <button type="submit" className="btn" style={{ width: '100%' }}>
-            Give Card
-          </button>
-        </form>
-      </div>
+    <div className="card">
+      <h3>Give Card to Team</h3>
+      <form onSubmit={handleGiveCard}>
+        <div style={{ marginBottom: '16px' }}>
+          <label>Team</label>
+          <select
+            className="input"
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
+            required
+          >
+            <option value="">Select a team</option>
+            {teams.map(team => (
+              <option key={team.id} value={team.id}>
+                {team.teamName}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div style={{ marginBottom: '16px' }}>
+          <label>Card Name</label>
+          <input
+            type="text"
+            className="input"
+            value={cardName}
+            onChange={(e) => setCardName(e.target.value)}
+            placeholder="Enter card name"
+            required
+          />
+        </div>
+        
+        <div style={{ marginBottom: '16px' }}>
+          <label>Card Type</label>
+          <select
+            className="input"
+            value={cardType}
+            onChange={(e) => setCardType(e.target.value)}
+            required
+          >
+            {cardTypes.map(type => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <button type="submit" className="btn">
+          Give Card
+        </button>
+      </form>
     </div>
   );
 };
 
 // Admin Notifications Component
 const AdminNotifications = ({ notifications }) => {
-  const getCardIcon = (type) => {
-    switch (type) {
-      case 'attack':
-        return '⚔️';
-      case 'alliance':
-        return '🤝';
-      case 'luck':
-        return '🍀';
-      default:
-        return '📦';
-    }
-  };
-
   return (
-    <div>
-      <div className="header">
-        <h1>🔔 Notifications</h1>
-        <p>Card usage notifications</p>
-      </div>
-
-      <div className="card">
+    <div className="card">
+      <h3>Team Notifications</h3>
+      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
         {notifications.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <Settings size={48} color="#667eea" />
-            <p style={{ marginTop: '16px', color: '#666' }}>No notifications yet</p>
-          </div>
+          <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+            No notifications yet
+          </p>
         ) : (
-          notifications.map((notification) => (
-            <div key={notification.id} className="card" style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '16px' }}>{getCardIcon(notification.cardType)}</span>
-                    <h4 style={{ color: '#333', margin: 0 }}>
-                      {notification.teamName} used {notification.cardName}
-                    </h4>
-                  </div>
-                  <p style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
-                    <strong>Card Type:</strong> {notification.cardType.charAt(0).toUpperCase() + notification.cardType.slice(1)}
-                  </p>
-                  {notification.selectedTeam && (
-                    <p style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
-                      <strong>Target Team:</strong> {notification.selectedTeam}
-                    </p>
-                  )}
-                  {notification.description && (
-                    <p style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
-                      <strong>Description:</strong> {notification.description}
-                    </p>
-                  )}
-                </div>
-                <div style={{ fontSize: '12px', color: '#999', marginLeft: '16px', textAlign: 'right' }}>
-                  {new Date(notification.timestamp).toLocaleString()}
-                </div>
+          notifications.map(notification => (
+            <div key={notification.id} style={{
+              padding: '12px',
+              border: '1px solid #eee',
+              borderRadius: '8px',
+              marginBottom: '8px',
+              background: notification.read ? '#f9f9f9' : 'white'
+            }}>
+              <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                {notification.teamName} - {notification.type}
+              </div>
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
+                {notification.message || `Used ${notification.cardName}`}
+              </div>
+              <div style={{ fontSize: '12px', color: '#999' }}>
+                {new Date(notification.timestamp).toLocaleString()}
               </div>
             </div>
           ))
@@ -498,29 +419,32 @@ const AdminNotifications = ({ notifications }) => {
   );
 };
 
-// Live Scoreboard Component
-const LiveScoreboard = ({ teams }) => {
+// Admin Scoreboard Component
+const AdminScoreboard = ({ teams }) => {
   return (
-    <div>
-      <div className="header">
-        <h1>🏆 Live Scoreboard</h1>
-        <p>Real-time team rankings</p>
-      </div>
-
-      <div className="card">
-        {teams.map((team, index) => (
-          <div key={team.id} className="scoreboard-item">
-            <div className="scoreboard-rank">
-              #{index + 1}
-            </div>
-            <div className="scoreboard-info">
-              <div className="scoreboard-name">{team.teamName}</div>
-              <div className="scoreboard-stats">
-                Score: {team.score} • Coins: {team.coins}
-              </div>
-            </div>
-          </div>
-        ))}
+    <div className="card">
+      <h3>Team Scoreboard</h3>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #eee' }}>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Rank</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Team</th>
+              <th style={{ padding: '12px', textAlign: 'right' }}>Score</th>
+              <th style={{ padding: '12px', textAlign: 'right' }}>Coins</th>
+            </tr>
+          </thead>
+          <tbody>
+            {teams.map((team, index) => (
+              <tr key={team.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '12px' }}>#{index + 1}</td>
+                <td style={{ padding: '12px', fontWeight: '600' }}>{team.teamName}</td>
+                <td style={{ padding: '12px', textAlign: 'right' }}>{team.score}</td>
+                <td style={{ padding: '12px', textAlign: 'right' }}>{team.coins}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -529,110 +453,137 @@ const LiveScoreboard = ({ teams }) => {
 // Team Management Component
 const TeamManagement = ({ teams, fetchTeams }) => {
   const [selectedTeam, setSelectedTeam] = useState('');
-  const [amount, setAmount] = useState('');
+  const [coinAmount, setCoinAmount] = useState(0);
+  const [scoreAmount, setScoreAmount] = useState(0);
   const [reason, setReason] = useState('');
-  const [action, setAction] = useState('coins');
 
-  const handleUpdateTeam = async (e) => {
+  const handleUpdateCoins = async (e) => {
     e.preventDefault();
     
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
-      const endpoint = action === 'coins' ? `${API_BASE_URL}/api/admin/coins` : `${API_BASE_URL}/api/admin/score`;
-      await axios.post(endpoint, {
+      await axios.post(`${API_BASE_URL}/api/admin/coins`, {
         teamId: selectedTeam,
-        amount: parseInt(amount),
+        amount: coinAmount,
         reason
       }, { withCredentials: true });
 
-      toast.success(`${action === 'coins' ? 'Coins' : 'Score'} updated successfully!`);
-      setSelectedTeam('');
-      setAmount('');
+      toast.success('Coins updated successfully!');
+      setCoinAmount(0);
       setReason('');
       fetchTeams();
     } catch (error) {
-      console.error('Update team error:', error.response?.status, error.response?.data);
+      console.error('Update coins error:', error.response?.status, error.response?.data);
       if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Authentication failed. Please log in again.');
       } else {
-        toast.error(error.response?.data?.error || 'Failed to update team');
+        toast.error('Failed to update coins');
+      }
+    }
+  };
+
+  const handleUpdateScore = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
+      await axios.post(`${API_BASE_URL}/api/admin/score`, {
+        teamId: selectedTeam,
+        amount: scoreAmount,
+        reason
+      }, { withCredentials: true });
+
+      toast.success('Score updated successfully!');
+      setScoreAmount(0);
+      setReason('');
+      fetchTeams();
+    } catch (error) {
+      console.error('Update score error:', error.response?.status, error.response?.data);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Authentication failed. Please log in again.');
+      } else {
+        toast.error('Failed to update score');
       }
     }
   };
 
   return (
-    <div>
-      <div className="header">
-        <h1>👥 Team Management</h1>
-        <p>Manage team coins and scores</p>
+    <div className="card">
+      <h3>Team Management</h3>
+      
+      <div style={{ marginBottom: '24px' }}>
+        <label>Select Team</label>
+        <select
+          className="input"
+          value={selectedTeam}
+          onChange={(e) => setSelectedTeam(e.target.value)}
+          required
+        >
+          <option value="">Select a team</option>
+          {teams.map(team => (
+            <option key={team.id} value={team.id}>
+              {team.teamName} (Score: {team.score}, Coins: {team.coins})
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="card">
-        <form onSubmit={handleUpdateTeam}>
+      <div style={{ display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+        <form onSubmit={handleUpdateCoins}>
+          <h4>Update Coins</h4>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Team
-            </label>
-            <select
-              className="input"
-              value={selectedTeam}
-              onChange={(e) => setSelectedTeam(e.target.value)}
-              required
-            >
-              <option value="">Select a team...</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.teamName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Action
-            </label>
-            <select
-              className="input"
-              value={action}
-              onChange={(e) => setAction(e.target.value)}
-              required
-            >
-              <option value="coins">Update Coins</option>
-              <option value="score">Update Score</option>
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Amount (use negative for decrease)
-            </label>
+            <label>Coin Amount (+ or -)</label>
             <input
               type="number"
               className="input"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount"
+              value={coinAmount}
+              onChange={(e) => setCoinAmount(Number(e.target.value))}
+              placeholder="Enter amount (positive or negative)"
               required
             />
           </div>
-
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Reason
-            </label>
+          <div style={{ marginBottom: '16px' }}>
+            <label>Reason</label>
             <input
               type="text"
               className="input"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Enter reason for update"
+              placeholder="Reason for coin update"
               required
             />
           </div>
+          <button type="submit" className="btn" disabled={!selectedTeam}>
+            Update Coins
+          </button>
+        </form>
 
-          <button type="submit" className="btn" style={{ width: '100%' }}>
-            Update Team
+        <form onSubmit={handleUpdateScore}>
+          <h4>Update Score</h4>
+          <div style={{ marginBottom: '16px' }}>
+            <label>Score Amount (+ or -)</label>
+            <input
+              type="number"
+              className="input"
+              value={scoreAmount}
+              onChange={(e) => setScoreAmount(Number(e.target.value))}
+              placeholder="Enter amount (positive or negative)"
+              required
+            />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label>Reason</label>
+            <input
+              type="text"
+              className="input"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Reason for score update"
+              required
+            />
+          </div>
+          <button type="submit" className="btn" disabled={!selectedTeam}>
+            Update Score
           </button>
         </form>
       </div>
@@ -640,4 +591,5 @@ const TeamManagement = ({ teams, fetchTeams }) => {
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;
+
