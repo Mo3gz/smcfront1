@@ -143,17 +143,21 @@ const Notifications = () => {
           background: unreadCount > 0 ? '#ff4757' : '#667eea',
           color: 'white',
           border: 'none',
-          borderRadius: '8px',
-          padding: '8px 16px',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
           cursor: 'pointer',
-          fontSize: '14px',
+          fontSize: '16px',
           fontWeight: 'bold',
           position: 'relative',
-          marginRight: '10px'
+          marginRight: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
         title={`${unreadCount} unread notifications`}
       >
-        🔔 Notifications
+        🔔
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute',
