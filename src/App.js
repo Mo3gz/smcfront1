@@ -22,13 +22,9 @@ function ProtectedRoute({ children, allowedRoles }) {
       <div className="spinner"></div>
     </div>
   );
-  // Remove hardcoded username check; rely on allowedRoles only
-  if (!user || (allowedRoles && !allowedRoles.includes(user.role))) {
-    // Redirect to appropriate dashboard if not allowed
-    if (user && user.role === 'admin') return <Navigate to="/admin-dashboard" replace />;
-    if (user && user.role !== 'admin') return <Navigate to="/user" replace />;
-    return <Navigate to="/" replace />;
-  }
+  // Always redirect unauthenticated users to /
+  if (!user) return <Navigate to="/" replace />;
+  if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
   return children;
 }
 

@@ -82,13 +82,20 @@ const AdminDashboard = ({ socket }) => {
           }))
           .sort((a, b) => b.score - a.score);
         setTeams(updatedScoreboard);
+        // Refetch teamsWithCards for real-time update
+        fetchTeamsWithCards();
+      });
+      // Listen for inventory updates (cards)
+      socket.on('inventory-update', () => {
+        fetchTeamsWithCards();
       });
       return () => {
         socket.off('admin-notification');
         socket.off('scoreboard-update');
+        socket.off('inventory-update');
       };
     }
-  }, [socket, adminVerified]);
+  }, [socket, adminVerified, fetchTeamsWithCards]);
 
   // Fetch all teams and their cards for admin
   const fetchTeamsWithCards = useCallback(async () => {
