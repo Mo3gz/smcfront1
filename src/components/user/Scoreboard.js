@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Medal, Award } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const Scoreboard = () => {
+const Scoreboard = ({ socket }) => {
   const [scoreboard, setScoreboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
 
@@ -22,6 +24,42 @@ const Scoreboard = () => {
   useEffect(() => {
     fetchScoreboard();
   }, [fetchScoreboard]);
+
+  // Listen for real-time scoreboard updates
+  useEffect(() => {
+    if (socket) {
+      socket.on('scoreboard-update', (updatedUsers) => {
+        console.log('Scoreboard updated via socket:', updatedUsers);
+        // Filter only user teams and sort by score
+        const updatedScoreboard = updatedUsers
+          .filter(user => user.role === 'user')
+          .map(user => ({
+            id: user.id || user._id,
+            teamName: user.teamName,
+            score: user.score,
+            coins: user.coins
+          }))
+          .sort((a, b) => b.score - a.score);
+        
+        setScoreboard(updatedScoreboard);
+        setLastUpdate(new Date());
+        
+        // Show a subtle notification for live updates
+        toast.success('Scoreboard updated!', {
+          duration: 2000,
+          icon: '🔄',
+          style: {
+            background: '#4CAF50',
+            color: 'white',
+          },
+        });
+      });
+
+      return () => {
+        socket.off('scoreboard-update');
+      };
+    }
+  }, [socket]);
 
   const getRankIcon = (rank) => {
     switch (rank) {
@@ -49,6 +87,26 @@ const Scoreboard = () => {
       <div className="header">
         <h1>🏆 Scoreboard</h1>
         <p>Live team rankings</p>
+        {lastUpdate && (
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#4CAF50', 
+            marginTop: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            justifyContent: 'center'
+          }}>
+            <div style={{ 
+              width: '8px', 
+              height: '8px', 
+              background: '#4CAF50', 
+              borderRadius: '50%',
+              animation: 'pulse 2s infinite'
+            }}></div>
+            Last updated: {lastUpdate.toLocaleTimeString()}
+          </div>
+        )}
       </div>
 
       <div className="card">

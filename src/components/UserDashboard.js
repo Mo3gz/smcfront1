@@ -17,18 +17,36 @@ const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('scoreboard');
   const [userData, setUserData] = useState(user);
+  const [socketConnected, setSocketConnected] = useState(false);
 
   useEffect(() => {
-    // Listen for real-time user updates
-    socket.on('user-update', (updatedUser) => {
-      if (updatedUser.id === user.id) {
-        setUserData(prev => ({ ...prev, ...updatedUser }));
-      }
-    });
+    // Check socket connection status
+    if (socket) {
+      setSocketConnected(socket.connected);
+      
+      socket.on('connect', () => {
+        console.log('Socket connected');
+        setSocketConnected(true);
+      });
+      
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+        setSocketConnected(false);
+      });
 
-    return () => {
-      socket.off('user-update');
-    };
+      // Listen for real-time user updates
+      socket.on('user-update', (updatedUser) => {
+        if (updatedUser.id === user.id) {
+          setUserData(prev => ({ ...prev, ...updatedUser }));
+        }
+      });
+
+      return () => {
+        socket.off('connect');
+        socket.off('disconnect');
+        socket.off('user-update');
+      };
+    }
   }, [socket, user.id]);
 
   const handleLogout = async () => {
@@ -39,15 +57,15 @@ const UserDashboard = ({ socket }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'scoreboard':
-        return <Scoreboard />;
+        return <Scoreboard socket={socket} />;
       case 'inventory':
         return <Inventory socket={socket} />;
       case 'spin':
         return <Spin socket={socket} userData={userData} setUserData={setUserData} />;
       case 'map':
-        return <MapView userData={userData} setUserData={setUserData} />;
+        return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
       default:
-        return <Scoreboard />;
+        return <Scoreboard socket={socket} />;
     }
   };
 
@@ -62,6 +80,24 @@ const UserDashboard = ({ socket }) => {
             </div>
             <div style={{ fontSize: '12px', color: '#666' }}>
               Team Member
+            </div>
+            {/* Socket connection indicator */}
+            <div style={{ 
+              fontSize: '10px', 
+              color: socketConnected ? '#4CAF50' : '#f44336',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              marginTop: '2px'
+            }}>
+              <div style={{ 
+                width: '6px', 
+                height: '6px', 
+                background: socketConnected ? '#4CAF50' : '#f44336', 
+                borderRadius: '50%',
+                animation: socketConnected ? 'pulse 2s infinite' : 'none'
+              }}></div>
+              {socketConnected ? 'Live' : 'Offline'}
             </div>
           </div>
           <button 

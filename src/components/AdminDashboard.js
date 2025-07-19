@@ -269,23 +269,55 @@ const PromoCodes = ({ teams }) => {
 // Card Management Component
 const CardManagement = ({ teams }) => {
   const [teamId, setTeamId] = useState('');
-  const [cardName, setCardName] = useState('');
   const [cardType, setCardType] = useState('luck');
+  const [selectedCard, setSelectedCard] = useState('');
+
+  // Predefined cards based on the backend getCardsByType function
+  const availableCards = {
+    luck: [
+      { name: 'Hidden Treasure', type: 'luck', effect: '+400 Points instantly' },
+      { name: 'Camp Tax', type: 'luck', effect: '-300 Points go to the Bank' },
+      { name: 'Golden Ticket', type: 'luck', effect: 'Pay 200 Points → If you win the next challenge, take +500 Points!' },
+      { name: 'Mysterious Trader', type: 'luck', effect: 'Pay 150 Points → Get a random Attack Card' },
+      { name: 'Everything Against Me', type: 'luck', effect: 'Instantly lose 250 Points' },
+      { name: 'Double Up', type: 'luck', effect: 'Double your current points if you win any challenge in the next 30 minutes' },
+      { name: 'Shady Deal', type: 'luck', effect: 'Steal 100 Points from any tent' }
+    ],
+    attack: [
+      { name: 'Raid', type: 'attack', effect: 'Choose one team to raid. If you win the challenge, steal 300 Points from them.' },
+      { name: 'Control Battle', type: 'attack', effect: 'Select one team to challenge in a one-on-one tent battle. Winner gets +500 Points.' },
+      { name: 'Double Strike', type: 'attack', effect: 'Select one team to ally with and attack another tent together.' },
+      { name: 'Break Alliances', type: 'attack', effect: 'Force 2 allied tents to break their alliance' },
+      { name: 'Broad Day Robbery', type: 'attack', effect: 'Take 100 Points instantly from any tent' }
+    ],
+    alliance: [
+      { name: 'Strategic Alliance', type: 'alliance', effect: 'Select one team to form an alliance with for 1 full day.' },
+      { name: 'Betrayal Alliance', type: 'alliance', effect: 'Form an alliance, then betray them at the end to steal their points.' },
+      { name: 'Golden Partnership', type: 'alliance', effect: 'Choose a team to team up with in the next challenge.' },
+      { name: 'Temporary Truce', type: 'alliance', effect: 'Select 2 teams to pause all attacks between them for 1 full day.' },
+      { name: 'Hidden Leader', type: 'alliance', effect: 'You become the challenge leader. Ally with another team.' }
+    ]
+  };
 
   const handleGiveCard = async (e) => {
     e.preventDefault();
     
+    if (!selectedCard) {
+      toast.error('Please select a card');
+      return;
+    }
+
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
       await axios.post(`${API_BASE_URL}/api/admin/cards`, {
         teamId,
-        cardName,
+        cardName: selectedCard,
         cardType
       }, { withCredentials: true });
 
       toast.success('Card given successfully!');
       setTeamId('');
-      setCardName('');
+      setSelectedCard('');
       setCardType('luck');
     } catch (error) {
       console.error('Give card error:', error.response?.status, error.response?.data);
@@ -294,6 +326,19 @@ const CardManagement = ({ teams }) => {
       } else {
         toast.error(error.response?.data?.error || 'Failed to give card');
       }
+    }
+  };
+
+  const getCardIcon = (type) => {
+    switch (type) {
+      case 'attack':
+        return '⚔️';
+      case 'alliance':
+        return '🤝';
+      case 'luck':
+        return '🍀';
+      default:
+        return '📦';
     }
   };
 
@@ -327,32 +372,52 @@ const CardManagement = ({ teams }) => {
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-              Card Name
-            </label>
-            <input
-              type="text"
-              className="input"
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-              placeholder="Enter card name"
-              required
-            />
-          </div>
-
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
               Card Type
             </label>
             <select
               className="input"
               value={cardType}
-              onChange={(e) => setCardType(e.target.value)}
+              onChange={(e) => {
+                setCardType(e.target.value);
+                setSelectedCard(''); // Reset selected card when type changes
+              }}
               required
             >
-              <option value="luck">Luck</option>
-              <option value="attack">Attack</option>
-              <option value="alliance">Alliance</option>
+              <option value="luck">🍀 Luck</option>
+              <option value="attack">⚔️ Attack</option>
+              <option value="alliance">🤝 Alliance</option>
             </select>
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
+              Select Card
+            </label>
+            <select
+              className="input"
+              value={selectedCard}
+              onChange={(e) => setSelectedCard(e.target.value)}
+              required
+            >
+              <option value="">Choose a card...</option>
+              {availableCards[cardType]?.map((card) => (
+                <option key={card.name} value={card.name}>
+                  {getCardIcon(card.type)} {card.name}
+                </option>
+              ))}
+            </select>
+            {selectedCard && (
+              <div style={{ 
+                marginTop: '8px', 
+                padding: '8px', 
+                background: 'rgba(102, 126, 234, 0.1)', 
+                borderRadius: '6px',
+                fontSize: '12px',
+                color: '#666'
+              }}>
+                <strong>Effect:</strong> {availableCards[cardType]?.find(c => c.name === selectedCard)?.effect}
+              </div>
+            )}
           </div>
 
           <button type="submit" className="btn" style={{ width: '100%' }}>
@@ -366,6 +431,19 @@ const CardManagement = ({ teams }) => {
 
 // Notifications Component
 const Notifications = ({ notifications }) => {
+  const getCardIcon = (type) => {
+    switch (type) {
+      case 'attack':
+        return '⚔️';
+      case 'alliance':
+        return '🤝';
+      case 'luck':
+        return '🍀';
+      default:
+        return '📦';
+    }
+  };
+
   return (
     <div>
       <div className="header">
@@ -383,25 +461,28 @@ const Notifications = ({ notifications }) => {
           notifications.map((notification) => (
             <div key={notification.id} className="card" style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h4 style={{ color: '#333', marginBottom: '8px' }}>
-                    {notification.teamName} used {notification.cardName}
-                  </h4>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '16px' }}>{getCardIcon(notification.cardType)}</span>
+                    <h4 style={{ color: '#333', margin: 0 }}>
+                      {notification.teamName} used {notification.cardName}
+                    </h4>
+                  </div>
                   <p style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
-                    Card Type: {notification.cardType}
+                    <strong>Card Type:</strong> {notification.cardType.charAt(0).toUpperCase() + notification.cardType.slice(1)}
                   </p>
                   {notification.selectedTeam && (
                     <p style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
-                      Target Team: {notification.selectedTeam}
+                      <strong>Target Team:</strong> {notification.selectedTeam}
                     </p>
                   )}
                   {notification.description && (
-                    <p style={{ color: '#666', fontSize: '14px' }}>
-                      Description: {notification.description}
+                    <p style={{ color: '#666', fontSize: '14px', marginBottom: '4px' }}>
+                      <strong>Description:</strong> {notification.description}
                     </p>
                   )}
                 </div>
-                <div style={{ fontSize: '12px', color: '#999' }}>
+                <div style={{ fontSize: '12px', color: '#999', marginLeft: '16px', textAlign: 'right' }}>
                   {new Date(notification.timestamp).toLocaleString()}
                 </div>
               </div>

@@ -5,11 +5,14 @@ import { Toaster } from 'react-hot-toast';
 import Login from './components/Login';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
 const socket = io('smcback-production-0e51.up.railway.app', {
-  withCredentials: true
+  withCredentials: true,
+  timeout: 20000, // 20 second timeout for mobile
+  transports: ['websocket', 'polling'] // Fallback for mobile browsers
 });
 
 function AppContent() {
@@ -87,7 +90,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

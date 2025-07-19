@@ -39,6 +39,20 @@ const Inventory = ({ socket }) => {
     fetchTeams();
   }, [fetchInventory, fetchTeams]);
 
+  // Listen for inventory updates when cards are used
+  useEffect(() => {
+    if (socket) {
+      socket.on('inventory-update', () => {
+        console.log('Inventory updated via socket');
+        fetchInventory(); // Refresh inventory when cards are used
+      });
+
+      return () => {
+        socket.off('inventory-update');
+      };
+    }
+  }, [socket, fetchInventory]);
+
   const handleCardClick = (card) => {
     setSelectedCard(card);
     setShowModal(true);

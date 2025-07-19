@@ -1,27 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { LogIn, Shield } from 'lucide-react';
+import { LogIn, Shield, AlertCircle } from 'lucide-react';
+import { getMobileWarnings, isMobileBrowser } from '../utils/mobileDetection';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mobileWarnings, setMobileWarnings] = useState([]);
   const { login } = useAuth();
+
+  useEffect(() => {
+    if (isMobileBrowser()) {
+      const warnings = getMobileWarnings();
+      setMobileWarnings(warnings);
+      
+      // Show warnings as toasts
+      warnings.forEach(warning => {
+        toast(warning, {
+          icon: '⚠️',
+          duration: 6000,
+          style: {
+            background: '#ffc107',
+            color: '#000',
+          },
+        });
+      });
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const result = await login(username, password);
-    
-    if (result.success) {
-      toast.success('Login successful!');
-    } else {
-      toast.error(result.error);
+    try {
+      const result = await login(username, password);
+      
+      if (result.success) {
+        toast.success('Login successful!');
+      } else {
+        // Handle specific error messages
+        if (result.error.includes('timeout') || result.error.includes('network')) {
+          toast.error('Network issue. Please check your connection and try again.');
+        } else if (result.error.includes('expired')) {
+          toast.error('Session expired. Please log in again.');
+        } else {
+          toast.error(result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -39,6 +72,35 @@ const Login = () => {
             <p style={{ color: '#666', marginTop: '8px' }}>Sign in to continue your adventure</p>
           </div>
 
+          {/* Mobile browser warnings */}
+          {mobileWarnings.length > 0 && (
+            <div style={{ 
+              marginBottom: '16px', 
+              padding: '12px', 
+              background: 'rgba(255, 193, 7, 0.1)', 
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 193, 7, 0.3)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <AlertCircle size={16} color="#ffc107" />
+                <span style={{ fontSize: '14px', color: '#856404', fontWeight: '600' }}>
+                  Mobile Browser Detected
+                </span>
+              </div>
+              <ul style={{ 
+                margin: 0, 
+                paddingLeft: '20px', 
+                fontSize: '12px', 
+                color: '#856404',
+                lineHeight: '1.4'
+              }}>
+                {mobileWarnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
@@ -51,6 +113,7 @@ const Login = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
                 required
+                autoComplete="username"
               />
             </div>
 
@@ -65,6 +128,7 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required
+                autoComplete="current-password"
               />
             </div>
 

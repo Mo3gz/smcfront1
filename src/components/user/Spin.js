@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
@@ -10,6 +10,22 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [spinning, setSpinning] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [result, setResult] = useState(null);
+
+  // Listen for real-time user updates (coins, score changes)
+  useEffect(() => {
+    if (socket) {
+      socket.on('user-update', (updatedUser) => {
+        console.log('User updated via socket in Spin:', updatedUser);
+        if (updatedUser.id === userData?.id) {
+          setUserData(prev => ({ ...prev, ...updatedUser }));
+        }
+      });
+
+      return () => {
+        socket.off('user-update');
+      };
+    }
+  }, [socket, userData?.id, setUserData]);
 
   const spinTypes = [
     { id: 'luck', name: 'Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },

@@ -5,13 +5,39 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
 
-const MapView = ({ userData, setUserData }) => {
+const MapView = ({ userData, setUserData, socket }) => {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
     fetchCountries();
   }, []);
+
+  // Listen for real-time country updates
+  useEffect(() => {
+    if (socket) {
+      socket.on('countries-update', (updatedCountries) => {
+        console.log('Countries updated via socket:', updatedCountries);
+        setCountries(updatedCountries);
+        setLastUpdate(new Date());
+        
+        // Show a subtle notification for live updates
+        toast.success('Map updated!', {
+          duration: 2000,
+          icon: '🗺️',
+          style: {
+            background: '#2196F3',
+            color: 'white',
+          },
+        });
+      });
+
+      return () => {
+        socket.off('countries-update');
+      };
+    }
+  }, [socket]);
 
   const fetchCountries = async () => {
     try {
@@ -40,7 +66,7 @@ const MapView = ({ userData, setUserData }) => {
         countryId: country.id
       }, { withCredentials: true });
 
-      // Update local state
+      // Update local state immediately for better UX
       setCountries(prev => 
         prev.map(c => 
           c.id === country.id 
@@ -91,6 +117,26 @@ const MapView = ({ userData, setUserData }) => {
       <div className="header">
         <h1>🗺️ World Map</h1>
         <p>Conquer countries to boost your score!</p>
+        {lastUpdate && (
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#2196F3', 
+            marginTop: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            justifyContent: 'center'
+          }}>
+            <div style={{ 
+              width: '8px', 
+              height: '8px', 
+              background: '#2196F3', 
+              borderRadius: '50%',
+              animation: 'pulse 2s infinite'
+            }}></div>
+            Last updated: {lastUpdate.toLocaleTimeString()}
+          </div>
+        )}
       </div>
 
       <div className="card">
