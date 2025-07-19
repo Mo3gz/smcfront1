@@ -124,7 +124,7 @@ const AdminDashboard = ({ socket }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ 
             width: '40px', 
-            height: '40px', 
+            height: '40px',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             borderRadius: '50%',
             display: 'flex',
