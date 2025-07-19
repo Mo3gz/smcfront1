@@ -93,16 +93,18 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      console.log('🚪 Logging out...');
-      const config = createAxiosConfig();
-      await axios.post(`${API_BASE_URL}/api/logout`, {}, config);
+      // Call backend to clear cookie
+      await axios.post(`${API_BASE_URL}/api/logout`, {}, createAxiosConfig());
     } catch (error) {
-      console.error('🚪 Logout error:', error);
+      console.error('Logout error:', error);
     } finally {
-      console.log('🚪 Clearing user data...');
+      // Clear all user data
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('authToken');
+      sessionStorage.clear();
+      // Optionally, redirect to login page
+      window.location.href = '/'; // or '/login' if you have a login route
     }
   };
 
