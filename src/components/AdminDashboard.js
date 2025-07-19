@@ -18,6 +18,7 @@ const AdminDashboard = ({ socket }) => {
   const [notifications, setNotifications] = useState([]);
   const [adminVerified, setAdminVerified] = useState(false);
   const [teamsWithCards, setTeamsWithCards] = useState([]);
+  const [collapsedTeams, setCollapsedTeams] = useState({});
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -136,6 +137,11 @@ const AdminDashboard = ({ socket }) => {
     }
   };
 
+  // Collapsible handler
+  const toggleTeamCollapse = (teamId) => {
+    setCollapsedTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }));
+  };
+
   if (!adminVerified) {
     return (
       <div className="container">
@@ -178,34 +184,44 @@ const AdminDashboard = ({ socket }) => {
 
       <div className="page-content">
         {renderContent()}
-        {/* New section: Teams and their cards */}
-        <div className="card" style={{ marginTop: 32 }}>
-          <h3>Teams & Their Cards</h3>
-          {teamsWithCards.length === 0 ? (
-            <div style={{ color: '#666', textAlign: 'center', padding: '24px' }}>No teams or cards found.</div>
-          ) : (
-            teamsWithCards.map(team => (
-              <div key={team.id} style={{ marginBottom: 24, borderBottom: '1px solid #eee', paddingBottom: 16 }}>
-                <div style={{ fontWeight: 600, fontSize: 16, color: '#333', marginBottom: 4 }}>{team.teamName} ({team.username})</div>
-                <div style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>Score: {team.score} | Coins: {team.coins}</div>
-                <div style={{ fontSize: 14, color: '#555' }}>
-                  <strong>Cards:</strong>
-                  {team.cards && team.cards.length > 0 ? (
-                    <ul style={{ margin: '8px 0 0 16px', padding: 0 }}>
-                      {team.cards.map(card => (
-                        <li key={card.id} style={{ marginBottom: 4 }}>
-                          <span style={{ fontWeight: 500 }}>{card.name}</span> <span style={{ color: '#999' }}>({card.type})</span> - <span style={{ fontSize: 12 }}>{card.effect}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <span style={{ color: '#aaa', marginLeft: 8 }}>No cards</span>
+        {/* Collapsible Teams & Their Cards section, only on cards and scoreboard tabs */}
+        {(activeTab === 'cards' || activeTab === 'scoreboard') && (
+          <div className="card" style={{ marginTop: 32 }}>
+            <h3>Teams & Their Cards</h3>
+            {teamsWithCards.length === 0 ? (
+              <div style={{ color: '#666', textAlign: 'center', padding: '24px' }}>No teams or cards found.</div>
+            ) : (
+              teamsWithCards.map(team => (
+                <div key={team.id} style={{ marginBottom: 16, borderBottom: '1px solid #eee', paddingBottom: 8 }}>
+                  <div
+                    style={{ fontWeight: 600, fontSize: 16, color: '#333', marginBottom: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    onClick={() => toggleTeamCollapse(team.id)}
+                  >
+                    <span>{team.teamName} ({team.username})</span>
+                    <span style={{ fontSize: 18, marginLeft: 8 }}>{collapsedTeams[team.id] ? '▼' : '▶'}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>Score: {team.score} | Coins: {team.coins}</div>
+                  {collapsedTeams[team.id] && (
+                    <div style={{ fontSize: 14, color: '#555', marginTop: 8 }}>
+                      <strong>Cards:</strong>
+                      {team.cards && team.cards.length > 0 ? (
+                        <ul style={{ margin: '8px 0 0 16px', padding: 0 }}>
+                          {team.cards.map(card => (
+                            <li key={card.id} style={{ marginBottom: 4 }}>
+                              <span style={{ fontWeight: 500 }}>{card.name}</span> <span style={{ color: '#999' }}>({card.type})</span> - <span style={{ fontSize: 12 }}>{card.effect}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span style={{ color: '#aaa', marginLeft: 8 }}>No cards</span>
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="navbar">
