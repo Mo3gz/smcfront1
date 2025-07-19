@@ -212,25 +212,23 @@ const Notifications = () => {
         title={`${unreadCount} unread notifications`}
       >
         🔔
-        {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '-8px',
-            right: '-8px',
-            background: '#ff4757',
-            color: 'white',
-            borderRadius: '50%',
-            width: '20px',
-            height: '20px',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold'
-          }}>
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
+        <span style={{
+          position: 'absolute',
+          top: '-8px',
+          right: '-8px',
+          background: unreadCount > 0 ? '#ff4757' : '#667eea',
+          color: 'white',
+          borderRadius: '50%',
+          width: '20px',
+          height: '20px',
+          fontSize: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 'bold'
+        }}>
+          {isVisible ? 0 : (unreadCount > 99 ? '99+' : unreadCount)}
+        </span>
       </button>
     );
   }
