@@ -151,7 +151,6 @@ const Notifications = () => {
           fontWeight: 'bold',
           position: 'relative',
           marginRight: '10px',
-          marginTop: '20%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
@@ -189,7 +188,6 @@ const Notifications = () => {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -203,7 +201,8 @@ const Notifications = () => {
         maxWidth: '600px',
         width: '100%',
         maxHeight: '80vh',
-        overflow: 'auto'
+        overflow: 'auto',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ margin: 0, color: '#333' }}>🔔 Notifications</h2>
@@ -246,7 +245,7 @@ const Notifications = () => {
             <p style={{ margin: 0, fontSize: '14px' }}>You're all caught up!</p>
           </div>
         ) : (
-          <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+          <div style={{ maxHeight: '400px', overflow: 'auto', marginTop: '20%' }}>
             {notifications.map((notification) => (
               <div
                 key={notification.id}
