@@ -71,7 +71,9 @@ const Notifications = () => {
     if (!socket || !user) return;
     const handleNotification = (notification) => {
       setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
+      if (!isVisible) {
+        setUnreadCount(prev => prev + 1);
+      }
       setIsVisible(true); // Open modal automatically
       toast.success('New notification received!');
       fetchNotifications(); // Always refresh the full list from backend
@@ -80,7 +82,7 @@ const Notifications = () => {
     return () => {
       socket.off('notification', handleNotification);
     };
-  }, [socket, user, fetchNotifications]);
+  }, [socket, user, fetchNotifications, isVisible]);
 
   // Refresh notifications when modal is opened
   useEffect(() => {

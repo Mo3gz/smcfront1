@@ -67,9 +67,23 @@ const AdminDashboard = ({ socket }) => {
         setNotifications(prev => [notification, ...prev]);
         toast.info(`New notification from ${notification.teamName}`);
       });
-
+      // Listen for real-time scoreboard updates
+      socket.on('scoreboard-update', (updatedUsers) => {
+        // Filter only user teams and sort by score
+        const updatedScoreboard = updatedUsers
+          .filter(user => user.role === 'user')
+          .map(user => ({
+            id: user.id || user._id,
+            teamName: user.teamName,
+            score: user.score,
+            coins: user.coins
+          }))
+          .sort((a, b) => b.score - a.score);
+        setTeams(updatedScoreboard);
+      });
       return () => {
         socket.off('admin-notification');
+        socket.off('scoreboard-update');
       };
     }
   }, [socket, adminVerified]);
