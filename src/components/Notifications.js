@@ -151,6 +151,7 @@ const Notifications = () => {
           fontWeight: 'bold',
           position: 'relative',
           marginRight: '10px',
+          marginTop: '20%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
@@ -188,7 +189,7 @@ const Notifications = () => {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.9)',
+      background: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
