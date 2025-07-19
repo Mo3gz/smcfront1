@@ -10,6 +10,7 @@ import DebugInfo from './components/DebugInfo';
 import MobileAuthTest from './components/MobileAuthTest';
 import IOSCompatibilityGuide from './components/iOSCompatibilityGuide';
 import AdminLoginGuide from './components/AdminLoginGuide';
+import ConnectivityTest from './components/ConnectivityTest';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -98,6 +99,9 @@ function AppContent() {
         
         {/* Admin login guide */}
         <AdminLoginGuide />
+        
+        {/* Connectivity test */}
+        <ConnectivityTest />
       </div>
     </Router>
   );
