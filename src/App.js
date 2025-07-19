@@ -6,6 +6,7 @@ import Login from './components/Login';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
+import DebugInfo from './components/DebugInfo';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -82,6 +83,9 @@ function AppContent() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        
+        {/* Debug component for troubleshooting mobile issues */}
+        <DebugInfo />
       </div>
     </Router>
   );

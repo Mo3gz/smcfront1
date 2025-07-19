@@ -9,9 +9,8 @@ export const createMobileAxiosConfig = (baseConfig = {}) => {
     withCredentials: true,
     headers: {
       ...baseConfig.headers,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
+      'X-Requested-With': 'XMLHttpRequest'
+      // Removed Cache-Control and Pragma headers that were causing CORS issues
     }
   };
 

@@ -69,6 +69,10 @@ export const AuthProvider = ({ children }) => {
       } else if (errorInfo.type === 'permission') {
         setUser(null);
         localStorage.removeItem('user');
+      } else if (errorInfo.type === 'network') {
+        // For network errors, don't logout immediately
+        // Just set loading to false and let the user retry
+        console.log('Network error during auth check, not logging out');
       }
       // Don't logout on network errors or other issues
     } finally {
@@ -99,6 +103,13 @@ export const AuthProvider = ({ children }) => {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
+        
+        // Handle CORS errors specifically
+        if (error.message && error.message.includes('CORS')) {
+          console.error('CORS error detected:', error.message);
+          // Don't logout on CORS errors, just return the error
+          return Promise.reject(error);
+        }
         
         // Handle token expiration
         if (error.response?.status === 401 && 
@@ -160,9 +171,21 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Login error:', error.response?.data);
       const errorInfo = handleMobileError(error, 'login');
+      
+      // Provide more specific error messages
+      let errorMessage = errorInfo.message;
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'Invalid username or password. Please try again.';
+      } else if (error.response?.status === 0 || error.code === 'ERR_NETWORK') {
+        errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
       return { 
         success: false, 
-        error: errorInfo.message || 'Login failed' 
+        error: errorMessage
       };
     }
   };
