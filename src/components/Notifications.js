@@ -4,6 +4,9 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { createMobileAxiosConfig } from '../utils/mobileAuth';
 
+// Add socket.io import if not already present
+import io from 'socket.io-client';
+
 const Notifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
@@ -12,6 +15,14 @@ const Notifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+
+  // Setup socket connection (singleton)
+  const [socket] = useState(() => {
+    if (window.socket) return window.socket;
+    const s = io(API_BASE_URL, { withCredentials: true });
+    window.socket = s;
+    return s;
+  });
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
@@ -145,6 +156,21 @@ const Notifications = () => {
       fetchNotifications();
     }
   }, [user, fetchNotifications]);
+
+  // Listen for real-time notifications and open modal
+  useEffect(() => {
+    if (!socket || !user) return;
+    const handleNotification = (notification) => {
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      setIsVisible(true); // Open modal automatically
+      toast.success('New notification received!');
+    };
+    socket.on('notification', handleNotification);
+    return () => {
+      socket.off('notification', handleNotification);
+    };
+  }, [socket, user]);
 
   // Refresh notifications when modal is opened
   useEffect(() => {
