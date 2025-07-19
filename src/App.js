@@ -8,6 +8,7 @@ import AdminDashboard from './components/AdminDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
 import DebugInfo from './components/DebugInfo';
 import MobileAuthTest from './components/MobileAuthTest';
+import IOSCompatibilityGuide from './components/iOSCompatibilityGuide';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -90,6 +91,9 @@ function AppContent() {
         
         {/* Mobile authentication test component */}
         <MobileAuthTest />
+        
+        {/* iOS compatibility guide */}
+        <IOSCompatibilityGuide />
       </div>
     </Router>
   );

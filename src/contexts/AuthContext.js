@@ -24,25 +24,38 @@ export const AuthProvider = ({ children }) => {
   
   // Token refresh function
   const refreshToken = useCallback(async () => {
-    if (isRefreshing) return false; // Prevent multiple refresh attempts
+    if (isRefreshing) {
+      console.log('Token refresh already in progress');
+      return false;
+    }
+
+    setIsRefreshing(true);
     
     try {
-      setIsRefreshing(true);
+      console.log('Attempting to refresh token...');
       const config = createMobileAxiosConfig();
+      
+      // Try to refresh token
       const response = await axios.post(`${API_BASE_URL}/api/refresh-token`, {}, config);
       
-      if (response.status === 200) {
-        // Token refreshed successfully, retry the original request
-        const userResponse = await axios.get(`${API_BASE_URL}/api/user`, config);
-        setUser(userResponse.data);
-        return true;
+      // Update localStorage token if provided
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+        console.log('Token refreshed and stored in localStorage');
       }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-    } finally {
+      
       setIsRefreshing(false);
+      return true;
+    } catch (error) {
+      console.error('Token refresh failed:', error.response?.status, error.response?.data);
+      
+      // Clear invalid tokens
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      
+      setIsRefreshing(false);
+      return false;
     }
-    return false;
   }, [API_BASE_URL, isRefreshing]);
   
   const checkAuth = useCallback(async () => {
@@ -271,6 +284,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setJustLoggedIn(false); // Reset flag on logout
       localStorage.removeItem('user');
+      localStorage.removeItem('authToken'); // Clear localStorage token
     }
   };
 

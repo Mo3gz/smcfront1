@@ -1,20 +1,22 @@
 // Mobile-specific authentication utilities
-import { isMobileBrowser } from './mobileDetection';
 
-// Enhanced axios configuration for mobile browsers
-export const createMobileAxiosConfig = (baseConfig = {}) => {
-  const mobileConfig = {
-    ...baseConfig,
-    timeout: isMobileBrowser() ? 25000 : 15000, // Even longer timeout for mobile
+// Enhanced mobile axios configuration with dual authentication support
+export const createMobileAxiosConfig = () => {
+  const config = {
     withCredentials: true,
+    timeout: 15000, // 15 seconds for mobile
     headers: {
-      ...baseConfig.headers,
-      'X-Requested-With': 'XMLHttpRequest'
-      // Removed Cache-Control and Pragma headers that were causing CORS issues
+      'Content-Type': 'application/json',
     }
   };
 
-  return mobileConfig;
+  // Add token from localStorage as fallback for iOS
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers['x-auth-token'] = token;
+  }
+
+  return config;
 };
 
 // Retry logic for mobile network issues
@@ -89,40 +91,88 @@ export const handleMobileError = (error, context = '') => {
   };
 };
 
-// Cookie management for mobile browsers
-export const checkCookieSupport = () => {
-  try {
-    document.cookie = "testCookie=1";
-    const hasCookie = document.cookie.indexOf("testCookie=") !== -1;
-    document.cookie = "testCookie=1; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    return hasCookie;
-  } catch (e) {
-    return false;
-  }
-};
-
-// Mobile-specific authentication check with better error handling
+// Enhanced mobile auth check with dual authentication
 export const performMobileAuthCheck = async (authCheckFn) => {
-  if (!checkCookieSupport()) {
-    throw new Error('Cookies are disabled. Please enable cookies for this site.');
+  const maxRetries = 3;
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Mobile auth check attempt ${attempt}/${maxRetries}`);
+      
+      // Try with cookies first
+      const response = await authCheckFn();
+      return response;
+    } catch (error) {
+      lastError = error;
+      console.log(`Auth check attempt ${attempt} failed:`, error.response?.status);
+      
+      // If it's a 401 and we have a token in localStorage, try with token in body
+      if (error.response?.status === 401 && attempt < maxRetries) {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          try {
+            console.log('Retrying with localStorage token...');
+            const retryConfig = {
+              ...createMobileAxiosConfig(),
+              data: { token: token } // Send token in request body
+            };
+            
+            // Create a new auth check function with token in body
+            const retryAuthCheck = async () => {
+              const axios = (await import('axios')).default;
+              return axios.get('/api/user', retryConfig);
+            };
+            
+            const response = await retryAuthCheck();
+            return response;
+          } catch (retryError) {
+            console.log('Retry with localStorage token failed:', retryError.response?.status);
+            lastError = retryError;
+          }
+        }
+      }
+      
+      // Wait before retry (exponential backoff)
+      if (attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
   }
   
-  // For mobile, use fewer retries but longer delays
-  const maxRetries = isMobileBrowser() ? 2 : 3;
-  const delay = isMobileBrowser() ? 3000 : 2000;
-  
-  return await retryRequest(authCheckFn, maxRetries, delay);
+  throw lastError;
 };
 
-// Mobile-specific login helper
+// Enhanced mobile login with dual authentication
 export const performMobileLogin = async (loginFn) => {
-  if (!checkCookieSupport()) {
-    throw new Error('Cookies are disabled. Please enable cookies for this site.');
+  const maxRetries = 3;
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Mobile login attempt ${attempt}/${maxRetries}`);
+      
+      const response = await loginFn();
+      
+      // Store token in localStorage as fallback for iOS
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+        console.log('Token stored in localStorage for iOS compatibility');
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error;
+      console.log(`Login attempt ${attempt} failed:`, error.response?.status);
+      
+      // Wait before retry (exponential backoff)
+      if (attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
   }
   
-  // For login, be more persistent on mobile
-  const maxRetries = isMobileBrowser() ? 3 : 2;
-  const delay = isMobileBrowser() ? 2000 : 1000;
-  
-  return await retryRequest(loginFn, maxRetries, delay);
+  throw lastError;
 }; 
