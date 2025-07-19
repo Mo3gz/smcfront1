@@ -75,6 +75,23 @@ const Notifications = () => {
     }
   };
 
+  // Create test notifications
+  const createTestNotifications = async () => {
+    try {
+      const config = createMobileAxiosConfig();
+      const response = await axios.post(`${API_BASE_URL}/api/debug/create-test-notifications`, {}, config);
+      
+      console.log('✅ Test notifications created:', response.data);
+      toast.success('Test notifications created!');
+      
+      // Refresh notifications
+      await fetchNotifications();
+    } catch (error) {
+      console.error('❌ Error creating test notifications:', error);
+      toast.error('Failed to create test notifications');
+    }
+  };
+
   // Format timestamp
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -325,21 +342,36 @@ const Notifications = () => {
                 <p style={{ margin: '4px 0' }}><strong>Notifications count:</strong> {notifications.length}</p>
                 <p style={{ margin: '4px 0' }}><strong>Unread count:</strong> {unreadCount}</p>
                 <p style={{ margin: '4px 0' }}><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</p>
-                <button
-                  onClick={fetchNotifications}
-                  style={{
-                    marginTop: '8px',
-                    padding: '6px 12px',
-                    background: '#667eea',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '11px'
-                  }}
-                >
-                  Refresh Notifications
-                </button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                  <button
+                    onClick={fetchNotifications}
+                    style={{
+                      padding: '6px 12px',
+                      background: '#667eea',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '11px'
+                    }}
+                  >
+                    Refresh
+                  </button>
+                  <button
+                    onClick={createTestNotifications}
+                    style={{
+                      padding: '6px 12px',
+                      background: '#ff9800',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '11px'
+                    }}
+                  >
+                    Create Test Data
+                  </button>
+                </div>
               </div>
             </div>
           ) : (

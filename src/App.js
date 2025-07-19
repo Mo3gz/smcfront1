@@ -11,6 +11,7 @@ import MobileAuthTest from './components/MobileAuthTest';
 import IOSCompatibilityGuide from './components/iOSCompatibilityGuide';
 import AdminLoginGuide from './components/AdminLoginGuide';
 import ConnectivityTest from './components/ConnectivityTest';
+import UserStateDebug from './components/UserStateDebug';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -66,6 +67,15 @@ function AppContent() {
     return <Login />;
   }
 
+  // Debug admin routing
+  console.log('🔍 App routing debug:', {
+    userId: user.id,
+    username: user.username,
+    role: user.role,
+    isAdmin: user.role === 'admin',
+    shouldShowAdmin: user.role === 'admin'
+  });
+
   return (
     <Router>
       <div className="app">
@@ -102,6 +112,9 @@ function AppContent() {
         
         {/* Connectivity test */}
         <ConnectivityTest />
+        
+        {/* User state debug */}
+        <UserStateDebug />
       </div>
     </Router>
   );

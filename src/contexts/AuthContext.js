@@ -226,6 +226,12 @@ export const AuthProvider = ({ children }) => {
       // Use mobile-specific login helper
       const response = await performMobileLogin(loginFn);
       
+      // Debug login response
+      console.log('🔑 Login response:', response.data);
+      console.log('🔑 User data:', response.data.user);
+      console.log('🔑 User role:', response.data.user?.role);
+      console.log('🔑 Is admin:', response.data.user?.role === 'admin');
+      
       // Set user immediately from login response
       setUser(response.data.user);
       
