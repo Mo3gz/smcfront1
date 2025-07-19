@@ -47,62 +47,6 @@ const Notifications = () => {
     }
   }, [API_BASE_URL, user?.id]);
 
-  // Mark notification as read
-  const markAsRead = async (notificationId) => {
-    try {
-      const config = createMobileAxiosConfig();
-      await axios.post(`${API_BASE_URL}/api/notifications/${notificationId}/read`, {}, config);
-      
-      // Update local state
-      setNotifications(prev => 
-        prev.map(n => 
-          n.id === notificationId ? { ...n, read: true, readAt: new Date() } : n
-        )
-      );
-      
-      // Update unread count
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-
-  // Mark all notifications as read
-  const markAllAsRead = async () => {
-    try {
-      const config = createMobileAxiosConfig();
-      await axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, config);
-      
-      // Update local state
-      setNotifications(prev => 
-        prev.map(n => ({ ...n, read: true, readAt: new Date() }))
-      );
-      
-      setUnreadCount(0);
-      toast.success('All notifications marked as read');
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      toast.error('Failed to mark notifications as read');
-    }
-  };
-
-  // Create test notifications
-  const createTestNotifications = async () => {
-    try {
-      const config = createMobileAxiosConfig();
-      const response = await axios.post(`${API_BASE_URL}/api/debug/create-test-notifications`, {}, config);
-      
-      console.log('✅ Test notifications created:', response.data);
-      toast.success('Test notifications created!');
-      
-      // Refresh notifications
-      await fetchNotifications();
-    } catch (error) {
-      console.error('❌ Error creating test notifications:', error);
-      toast.error('Failed to create test notifications');
-    }
-  };
-
   // Format timestamp
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -113,42 +57,6 @@ const Notifications = () => {
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
     return date.toLocaleDateString();
-  };
-
-  // Get notification icon
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'coins-updated':
-        return '💰';
-      case 'score-updated':
-        return '🏆';
-      case 'spin':
-        return '🎰';
-      case 'country-purchased':
-        return '🌍';
-      case 'global':
-        return '📢';
-      default:
-        return '📋';
-    }
-  };
-
-  // Get notification color
-  const getNotificationColor = (type) => {
-    switch (type) {
-      case 'coins-updated':
-        return '#4caf50';
-      case 'score-updated':
-        return '#2196f3';
-      case 'spin':
-        return '#ff9800';
-      case 'country-purchased':
-        return '#9c27b0';
-      case 'global':
-        return '#f44336';
-      default:
-        return '#607d8b';
-    }
   };
 
   useEffect(() => {
