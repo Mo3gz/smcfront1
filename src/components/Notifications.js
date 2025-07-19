@@ -244,239 +244,53 @@ const Notifications = () => {
       <div style={{
         background: 'white',
         borderRadius: '16px',
-        padding: '32px',
+        padding: '0',
         width: '90%',
-        maxWidth: '800px',
-        height: '90%',
-        maxHeight: '700px',
+        maxWidth: '500px',
+        maxHeight: '90vh',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
-        position: 'relative'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ margin: 0, color: '#333', fontSize: '24px', fontWeight: 'bold' }}>🔔 Notifications</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              onClick={fetchNotifications}
-              disabled={loading}
-              style={{
-                background: '#4caf50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 16px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                opacity: loading ? 0.6 : 1,
-                transition: 'all 0.2s'
-              }}
-              title="Refresh notifications"
-            >
-              {loading ? '⏳' : '🔄'}
-            </button>
-            <button 
-              onClick={() => setIsVisible(false)}
-              style={{ 
-                background: 'none', 
-                border: 'none', 
-                fontSize: '28px', 
-                cursor: 'pointer', 
-                color: '#666',
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
-              onMouseLeave={(e) => e.target.style.background = 'none'}
-            >
-              ×
-            </button>
-          </div>
+        <div style={{ padding: '24px 32px 0 32px' }}>
+          <h3 style={{ margin: 0, color: '#333', fontWeight: 'bold', fontSize: '22px' }}>Notifications</h3>
         </div>
-
-        {unreadCount > 0 && (
-          <div style={{ marginBottom: '20px' }}>
-            <button
-              onClick={markAllAsRead}
-              style={{
-                background: '#4caf50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px 20px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => e.target.style.background = '#45a049'}
-              onMouseLeave={(e) => e.target.style.background = '#4caf50'}
-            >
-              Mark All as Read
-            </button>
-          </div>
-        )}
-
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px 0 32px' }}>
           {loading ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '60px', 
-              color: '#666',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flex: 1
-            }}>
+            <div style={{ textAlign: 'center', color: '#666', padding: '60px' }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
               <h3 style={{ margin: '0 0 8px 0', color: '#333' }}>Loading notifications...</h3>
             </div>
           ) : notifications.length === 0 ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '60px', 
-              color: '#666',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flex: 1
-            }}>
-              <div style={{ fontSize: '64px', marginBottom: '20px' }}>📭</div>
+            <div style={{ textAlign: 'center', color: '#666', padding: '60px' }}>
               <h3 style={{ margin: '0 0 12px 0', color: '#333', fontSize: '20px' }}>No notifications</h3>
               <p style={{ margin: 0, fontSize: '16px' }}>You're all caught up!</p>
-              
-              {/* Debug info */}
-              <div style={{ 
-                marginTop: '20px', 
-                padding: '16px', 
-                background: '#f5f5f5', 
-                borderRadius: '8px',
-                fontSize: '12px',
-                textAlign: 'left',
-                maxWidth: '400px'
-              }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>Debug Info:</h4>
-                <p style={{ margin: '4px 0' }}><strong>User ID:</strong> {user?.id || 'Not logged in'}</p>
-                <p style={{ margin: '4px 0' }}><strong>Username:</strong> {user?.username || 'Unknown'}</p>
-                <p style={{ margin: '4px 0' }}><strong>Notifications count:</strong> {notifications.length}</p>
-                <p style={{ margin: '4px 0' }}><strong>Unread count:</strong> {unreadCount}</p>
-                <p style={{ margin: '4px 0' }}><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</p>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                  <button
-                    onClick={fetchNotifications}
-                    style={{
-                      padding: '6px 12px',
-                      background: '#667eea',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '11px'
-                    }}
-                  >
-                    Refresh
-                  </button>
-                  <button
-                    onClick={createTestNotifications}
-                    style={{
-                      padding: '6px 12px',
-                      background: '#ff9800',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '11px'
-                    }}
-                  >
-                    Create Test Data
-                  </button>
-                </div>
-              </div>
             </div>
           ) : (
-            <div style={{ 
-              flex: 1,
-              overflow: 'auto',
-              paddingRight: '8px'
-            }}>
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  style={{
-                    padding: '20px',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '12px',
-                    marginBottom: '16px',
-                    background: notification.read ? '#fafafa' : '#fff',
-                    borderLeft: `4px solid ${getNotificationColor(notification.type)}`,
-                    cursor: notification.read ? 'default' : 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: notification.read ? 'none' : '0 2px 8px rgba(0,0,0,0.1)'
-                  }}
-                  onClick={() => !notification.read && markAsRead(notification.id)}
-                  onMouseEnter={(e) => {
-                    if (!notification.read) {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!notification.read) {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                    }
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', flex: 1 }}>
-                      <span style={{ fontSize: '24px', marginRight: '16px' }}>
-                        {getNotificationIcon(notification.type)}
-                      </span>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ 
-                          margin: '0 0 8px 0', 
-                          color: notification.read ? '#666' : '#333',
-                          fontWeight: notification.read ? 'normal' : '600',
-                          fontSize: '16px',
-                          lineHeight: '1.5'
-                        }}>
-                          {notification.message}
-                        </p>
-                        <span style={{ 
-                          fontSize: '14px', 
-                          color: '#999',
-                          display: 'block'
-                        }}>
-                          {formatTime(notification.timestamp)}
-                        </span>
-                      </div>
-                    </div>
-                    {!notification.read && (
-                      <div style={{
-                        width: '12px',
-                        height: '12px',
-                        borderRadius: '50%',
-                        background: '#ff4757',
-                        marginLeft: '16px',
-                        flexShrink: 0
-                      }} />
-                    )}
-                  </div>
+            notifications.map(notification => (
+              <div key={notification.id} style={{
+                padding: '12px',
+                border: '1px solid #eee',
+                borderRadius: '8px',
+                marginBottom: '12px',
+                background: notification.read ? '#f9f9f9' : 'white',
+                boxShadow: notification.read ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'
+              }}>
+                <div style={{ fontWeight: '600', marginBottom: '4px', color: '#333' }}>
+                  {notification.type}
                 </div>
-              ))}
-            </div>
+                <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
+                  {notification.message}
+                </div>
+                <div style={{ fontSize: '12px', color: '#999' }}>
+                  {formatTime(notification.timestamp)}
+                </div>
+              </div>
+            ))
           )}
         </div>
-
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
+        <div style={{ padding: '24px 32px', textAlign: 'center' }}>
           <button
             onClick={() => setIsVisible(false)}
             style={{
