@@ -31,14 +31,35 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔍 Checking authentication...');
       const config = createAxiosConfig();
-      const response = await axios.get(`${API_BASE_URL}/api/user`, config);
-      
-      console.log('🔍 Auth check successful:', response.data);
+      let response;
+      try {
+        response = await axios.get(`${API_BASE_URL}/api/user`, config);
+      } catch (error) {
+        // If 401 and we have a token in localStorage, try with token in header
+        if (error.response?.status === 401) {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            const tokenConfig = {
+              ...config,
+              headers: {
+                ...config.headers,
+                'x-auth-token': token
+              }
+            };
+            response = await axios.get(`${API_BASE_URL}/api/user`, tokenConfig);
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
       setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
     } catch (error) {
-      console.error('🔍 Auth check failed:', error.response?.status, error.response?.data);
       setUser(null);
       localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
     } finally {
       setLoading(false);
     }
@@ -52,29 +73,19 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (username, password) => {
     try {
-      console.log('🔑 Attempting login for:', username);
       const config = createAxiosConfig();
       const response = await axios.post(`${API_BASE_URL}/api/login`, 
         { username, password }, 
         config
       );
-      
-      console.log('🔑 Login successful:', response.data);
-      console.log('🔑 User data:', response.data.user);
-      console.log('🔑 User role:', response.data.user?.role);
-      
-      // Set user immediately
       setUser(response.data.user);
-      
-      // Store in localStorage as backup
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+      }
       return { success: true };
     } catch (error) {
-      console.error('🔑 Login failed:', error.response?.data);
-      
       let errorMessage = 'Login failed. Please try again.';
-      
       if (error.response?.status === 401) {
         errorMessage = 'Invalid username or password. Please try again.';
       } else if (error.response?.status === 0 || error.code === 'ERR_NETWORK') {
@@ -82,7 +93,6 @@ export const AuthProvider = ({ children }) => {
       } else if (error.response?.status >= 500) {
         errorMessage = 'Server error. Please try again later.';
       }
-      
       return { 
         success: false, 
         error: errorMessage
@@ -93,18 +103,15 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      // Call backend to clear cookie
       await axios.post(`${API_BASE_URL}/api/logout`, {}, createAxiosConfig());
     } catch (error) {
-      console.error('Logout error:', error);
+      // Ignore errors
     } finally {
-      // Clear all user data
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('authToken');
       sessionStorage.clear();
-      // Optionally, redirect to login page
-      window.location.href = '/'; // or '/login' if you have a login route
+      window.location.href = '/';
     }
   };
 
@@ -112,7 +119,29 @@ export const AuthProvider = ({ children }) => {
   const checkAdminStatus = async () => {
     try {
       const config = createAxiosConfig();
-      const response = await axios.get(`${API_BASE_URL}/api/admin/check`, config);
+      let response;
+      try {
+        response = await axios.get(`${API_BASE_URL}/api/admin/check`, config);
+      } catch (error) {
+        // If 401 and we have a token in localStorage, try with token in header
+        if (error.response?.status === 401) {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            const tokenConfig = {
+              ...config,
+              headers: {
+                ...config.headers,
+                'x-auth-token': token
+              }
+            };
+            response = await axios.get(`${API_BASE_URL}/api/admin/check`, tokenConfig);
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
       return { success: true, user: response.data.user };
     } catch (error) {
       console.error('Admin check failed:', error.response?.status, error.response?.data);
