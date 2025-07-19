@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { createMobileAxiosConfig } from '../utils/mobileAuth';
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -16,33 +17,30 @@ const Notifications = () => {
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/notifications`, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      console.log('🔔 Fetching notifications for user:', user?.id);
       
+      const config = createMobileAxiosConfig();
+      const response = await axios.get(`${API_BASE_URL}/api/notifications`, config);
+      
+      console.log('🔔 Notifications response:', response.data);
       setNotifications(response.data);
       const unread = response.data.filter(n => !n.read).length;
       setUnreadCount(unread);
+      console.log('🔔 Unread count:', unread);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('❌ Error fetching notifications:', error);
+      console.error('❌ Error details:', error.response?.data);
       toast.error('Failed to load notifications');
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, [API_BASE_URL, user?.id]);
 
   // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
-      await axios.post(`${API_BASE_URL}/api/notifications/${notificationId}/read`, {}, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      const config = createMobileAxiosConfig();
+      await axios.post(`${API_BASE_URL}/api/notifications/${notificationId}/read`, {}, config);
       
       // Update local state
       setNotifications(prev => 
@@ -61,12 +59,8 @@ const Notifications = () => {
   // Mark all notifications as read
   const markAllAsRead = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      const config = createMobileAxiosConfig();
+      await axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, config);
       
       // Update local state
       setNotifications(prev => 
@@ -134,6 +128,14 @@ const Notifications = () => {
       fetchNotifications();
     }
   }, [user, fetchNotifications]);
+
+  // Refresh notifications when modal is opened
+  useEffect(() => {
+    if (isVisible && user) {
+      console.log('🔔 Modal opened, refreshing notifications...');
+      fetchNotifications();
+    }
+  }, [isVisible, user, fetchNotifications]);
 
   if (!isVisible) {
     return (
@@ -210,27 +212,48 @@ const Notifications = () => {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ margin: 0, color: '#333', fontSize: '24px', fontWeight: 'bold' }}>🔔 Notifications</h2>
-          <button 
-            onClick={() => setIsVisible(false)}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              fontSize: '28px', 
-              cursor: 'pointer', 
-              color: '#666',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
-            onMouseLeave={(e) => e.target.style.background = 'none'}
-          >
-            ×
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              onClick={fetchNotifications}
+              disabled={loading}
+              style={{
+                background: '#4caf50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                opacity: loading ? 0.6 : 1,
+                transition: 'all 0.2s'
+              }}
+              title="Refresh notifications"
+            >
+              {loading ? '⏳' : '🔄'}
+            </button>
+            <button 
+              onClick={() => setIsVisible(false)}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                fontSize: '28px', 
+                cursor: 'pointer', 
+                color: '#666',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+              onMouseLeave={(e) => e.target.style.background = 'none'}
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {unreadCount > 0 && (
@@ -285,6 +308,39 @@ const Notifications = () => {
               <div style={{ fontSize: '64px', marginBottom: '20px' }}>📭</div>
               <h3 style={{ margin: '0 0 12px 0', color: '#333', fontSize: '20px' }}>No notifications</h3>
               <p style={{ margin: 0, fontSize: '16px' }}>You're all caught up!</p>
+              
+              {/* Debug info */}
+              <div style={{ 
+                marginTop: '20px', 
+                padding: '16px', 
+                background: '#f5f5f5', 
+                borderRadius: '8px',
+                fontSize: '12px',
+                textAlign: 'left',
+                maxWidth: '400px'
+              }}>
+                <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>Debug Info:</h4>
+                <p style={{ margin: '4px 0' }}><strong>User ID:</strong> {user?.id || 'Not logged in'}</p>
+                <p style={{ margin: '4px 0' }}><strong>Username:</strong> {user?.username || 'Unknown'}</p>
+                <p style={{ margin: '4px 0' }}><strong>Notifications count:</strong> {notifications.length}</p>
+                <p style={{ margin: '4px 0' }}><strong>Unread count:</strong> {unreadCount}</p>
+                <p style={{ margin: '4px 0' }}><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</p>
+                <button
+                  onClick={fetchNotifications}
+                  style={{
+                    marginTop: '8px',
+                    padding: '6px 12px',
+                    background: '#667eea',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '11px'
+                  }}
+                >
+                  Refresh Notifications
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ 
