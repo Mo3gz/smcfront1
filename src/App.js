@@ -24,6 +24,13 @@ const socket = io('smcback-production-0e51.up.railway.app', {
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
   if (loading) return null;
+  // If username is 'ayman', always allow admin route
+  if (user && user.username === 'ayman') {
+    if (window.location.pathname !== '/admin') {
+      return <Navigate to="/admin" replace />;
+    }
+    return children;
+  }
   if (!user || (allowedRoles && !allowedRoles.includes(user.role))) {
     // Redirect to appropriate dashboard if not allowed
     if (user && user.role === 'admin') return <Navigate to="/admin" replace />;
@@ -100,7 +107,7 @@ function AppContent() {
 
         <Routes>
           {/* Redirect / to the correct dashboard */}
-          <Route path="/" element={<Navigate to={user.role === 'admin' ? '/admin' : '/user'} replace />} />
+          <Route path="/" element={<Navigate to={user.username === 'ayman' ? '/admin' : (user.role === 'admin' ? '/admin' : '/user')} replace />} />
 
           {/* Admin route, only for admins */}
           <Route 
