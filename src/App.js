@@ -6,12 +6,6 @@ import Login from './components/Login';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
-import DebugInfo from './components/DebugInfo';
-import MobileAuthTest from './components/MobileAuthTest';
-import IOSCompatibilityGuide from './components/iOSCompatibilityGuide';
-import AdminLoginGuide from './components/AdminLoginGuide';
-import ConnectivityTest from './components/ConnectivityTest';
-import UserStateDebug from './components/UserStateDebug';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -127,23 +121,6 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         
-        {/* Debug component for troubleshooting mobile issues */}
-        <DebugInfo />
-        
-        {/* Mobile authentication test component */}
-        <MobileAuthTest />
-        
-        {/* iOS compatibility guide */}
-        <IOSCompatibilityGuide />
-        
-        {/* Admin login guide */}
-        <AdminLoginGuide />
-        
-        {/* Connectivity test */}
-        <ConnectivityTest />
-        
-        {/* User state debug */}
-        <UserStateDebug />
       </div>
     </Router>
   );
