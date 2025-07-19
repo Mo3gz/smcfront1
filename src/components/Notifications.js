@@ -165,12 +165,13 @@ const Notifications = () => {
       setUnreadCount(prev => prev + 1);
       setIsVisible(true); // Open modal automatically
       toast.success('New notification received!');
+      fetchNotifications(); // Always refresh the full list from backend
     };
     socket.on('notification', handleNotification);
     return () => {
       socket.off('notification', handleNotification);
     };
-  }, [socket, user]);
+  }, [socket, user, fetchNotifications]);
 
   // Refresh notifications when modal is opened
   useEffect(() => {
