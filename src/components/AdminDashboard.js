@@ -10,6 +10,7 @@ import {
   LogOut
 } from 'lucide-react';
 import axios from 'axios';
+import Notifications from './Notifications';
 
 const AdminDashboard = ({ socket }) => {
   const { user, logout, checkAdminStatus } = useAuth();
@@ -80,7 +81,7 @@ const AdminDashboard = ({ socket }) => {
       case 'cards':
         return <CardManagement teams={teams} />;
       case 'notifications':
-        return <Notifications notifications={notifications} />;
+        return <AdminNotifications notifications={notifications} />;
       case 'scoreboard':
         return <LiveScoreboard teams={teams} />;
       case 'teams':
@@ -112,13 +113,16 @@ const AdminDashboard = ({ socket }) => {
               Administrator
             </div>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="btn btn-danger"
-            style={{ padding: '8px 16px', fontSize: '14px' }}
-          >
-            <LogOut size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Notifications />
+            <button 
+              onClick={handleLogout}
+              className="btn btn-danger"
+              style={{ padding: '8px 16px', fontSize: '14px' }}
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -429,8 +433,8 @@ const CardManagement = ({ teams }) => {
   );
 };
 
-// Notifications Component
-const Notifications = ({ notifications }) => {
+// Admin Notifications Component
+const AdminNotifications = ({ notifications }) => {
   const getCardIcon = (type) => {
     switch (type) {
       case 'attack':

@@ -12,6 +12,7 @@ import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
+import Notifications from './Notifications';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
@@ -100,13 +101,16 @@ const UserDashboard = ({ socket }) => {
               {socketConnected ? 'Live' : 'Offline'}
             </div>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="btn btn-danger"
-            style={{ padding: '8px 16px', fontSize: '14px' }}
-          >
-            <LogOut size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Notifications />
+            <button 
+              onClick={handleLogout}
+              className="btn btn-danger"
+              style={{ padding: '8px 16px', fontSize: '14px' }}
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
