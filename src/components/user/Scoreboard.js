@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal, Award, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
@@ -7,6 +7,8 @@ const Scoreboard = ({ socket }) => {
   const [scoreboard, setScoreboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [previousScoreboard, setPreviousScoreboard] = useState([]);
+  const [highlightedTeams, setHighlightedTeams] = useState(new Set());
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-0e51.up.railway.app';
 
@@ -30,6 +32,7 @@ const Scoreboard = ({ socket }) => {
     if (socket) {
       socket.on('scoreboard-update', (updatedUsers) => {
         console.log('Scoreboard updated via socket:', updatedUsers);
+        
         // Filter only user teams and sort by score
         const updatedScoreboard = updatedUsers
           .filter(user => user.role === 'user')
@@ -41,25 +44,98 @@ const Scoreboard = ({ socket }) => {
           }))
           .sort((a, b) => b.score - a.score);
         
+        // Compare with previous scoreboard to detect changes
+        const changes = detectScoreboardChanges(previousScoreboard, updatedScoreboard);
+        
+        // Highlight teams with changes
+        if (changes.length > 0) {
+          const teamsToHighlight = new Set(changes.map(change => change.teamId));
+          setHighlightedTeams(teamsToHighlight);
+          
+          // Remove highlight after 3 seconds
+          setTimeout(() => {
+            setHighlightedTeams(new Set());
+          }, 3000);
+          
+          // Show detailed notifications for changes
+          changes.forEach(change => {
+            if (change.type === 'score') {
+              const icon = change.difference > 0 ? '📈' : '📉';
+              const color = change.difference > 0 ? '#4CAF50' : '#f44336';
+              toast.success(`${icon} ${change.teamName}: ${change.difference > 0 ? '+' : ''}${change.difference} points`, {
+                duration: 3000,
+                style: {
+                  background: color,
+                  color: 'white',
+                },
+              });
+            } else if (change.type === 'coins') {
+              const icon = change.difference > 0 ? '💰' : '💸';
+              const color = change.difference > 0 ? '#4CAF50' : '#f44336';
+              toast.success(`${icon} ${change.teamName}: ${change.difference > 0 ? '+' : ''}${change.difference} coins`, {
+                duration: 3000,
+                style: {
+                  background: color,
+                  color: 'white',
+                },
+              });
+            }
+          });
+        }
+        
+        setPreviousScoreboard(scoreboard);
         setScoreboard(updatedScoreboard);
         setLastUpdate(new Date());
-        
-        // Show a subtle notification for live updates
-        toast.success('Scoreboard updated!', {
-          duration: 2000,
-          icon: '🔄',
-          style: {
-            background: '#4CAF50',
-            color: 'white',
-          },
-        });
+      });
+
+      // Listen for user updates (from spinning, buying countries, etc.)
+      socket.on('user-update', (updatedUser) => {
+        console.log('User updated via socket:', updatedUser);
+        // The scoreboard-update event will handle the display
       });
 
       return () => {
         socket.off('scoreboard-update');
+        socket.off('user-update');
       };
     }
-  }, [socket]);
+  }, [socket, previousScoreboard, scoreboard]);
+
+  // Function to detect changes in scoreboard
+  const detectScoreboardChanges = (oldScoreboard, newScoreboard) => {
+    const changes = [];
+    
+    newScoreboard.forEach(newTeam => {
+      const oldTeam = oldScoreboard.find(team => team.id === newTeam.id);
+      if (oldTeam) {
+        // Check for score changes
+        if (newTeam.score !== oldTeam.score) {
+          changes.push({
+            teamId: newTeam.id,
+            teamName: newTeam.teamName,
+            type: 'score',
+            difference: newTeam.score - oldTeam.score,
+            oldValue: oldTeam.score,
+            newValue: newTeam.score
+          });
+        }
+        
+        // Check for coin changes
+        if (newTeam.coins !== oldTeam.coins) {
+          changes.push({
+            teamId: newTeam.id,
+            teamName: newTeam.teamName,
+            type: 'coins',
+            difference: newTeam.coins - oldTeam.coins,
+            oldValue: oldTeam.coins,
+            newValue: newTeam.coins
+          });
+        }
+      }
+    });
+    
+    return changes;
+  };
 
   const getRankIcon = (rank) => {
     switch (rank) {
@@ -72,6 +148,20 @@ const Scoreboard = ({ socket }) => {
       default:
         return <Award size={24} />;
     }
+  };
+
+  const getChangeIcon = (team) => {
+    if (!highlightedTeams.has(team.id)) return null;
+    
+    const oldTeam = previousScoreboard.find(t => t.id === team.id);
+    if (!oldTeam) return null;
+    
+    if (team.score > oldTeam.score) {
+      return <TrendingUp size={16} style={{ color: '#4CAF50' }} />;
+    } else if (team.score < oldTeam.score) {
+      return <TrendingDown size={16} style={{ color: '#f44336' }} />;
+    }
+    return null;
   };
 
   if (loading) {
@@ -117,12 +207,23 @@ const Scoreboard = ({ socket }) => {
           </div>
         ) : (
           scoreboard.map((team, index) => (
-            <div key={team.id} className="scoreboard-item">
+            <div 
+              key={team.id} 
+              className={`scoreboard-item ${highlightedTeams.has(team.id) ? 'highlighted' : ''}`}
+              style={{
+                background: highlightedTeams.has(team.id) ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
+                border: highlightedTeams.has(team.id) ? '2px solid #4CAF50' : '1px solid #e0e0e0',
+                transition: 'all 0.3s ease'
+              }}
+            >
               <div className="scoreboard-rank">
                 {getRankIcon(index + 1)}
               </div>
               <div className="scoreboard-info">
-                <div className="scoreboard-name">{team.teamName}</div>
+                <div className="scoreboard-name">
+                  {team.teamName}
+                  {getChangeIcon(team)}
+                </div>
                 <div className="scoreboard-stats">
                   Score: {team.score} • Coins: {team.coins}
                 </div>
