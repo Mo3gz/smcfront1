@@ -206,9 +206,19 @@ const AdminDashboard = ({ socket }) => {
                       <strong>Cards:</strong>
                       {team.cards && team.cards.length > 0 ? (
                         <ul style={{ margin: '8px 0 0 16px', padding: 0 }}>
-                          {team.cards.map(card => (
-                            <li key={card.id} style={{ marginBottom: 4 }}>
-                              <span style={{ fontWeight: 500 }}>{card.name}</span> <span style={{ color: '#999' }}>({card.type})</span> - <span style={{ fontSize: 12 }}>{card.effect}</span>
+                          {Object.values(
+                            team.cards.reduce((acc, card) => {
+                              const key = card.name + '|' + card.type + '|' + card.effect;
+                              if (!acc[key]) {
+                                acc[key] = { ...card, count: 1 };
+                              } else {
+                                acc[key].count += 1;
+                              }
+                              return acc;
+                            }, {})
+                          ).map(card => (
+                            <li key={card.name + card.type + card.effect} style={{ marginBottom: 4 }}>
+                              <span style={{ fontWeight: 500 }}>{card.count > 1 ? `${card.count} x ` : ''}{card.name}</span> <span style={{ color: '#999' }}>({card.type})</span> - <span style={{ fontSize: 12 }}>{card.effect}</span>
                             </li>
                           ))}
                         </ul>
