@@ -121,22 +121,9 @@ const AdminDashboard = ({ socket }) => {
   return (
     <div className="container">
       <div className="header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ 
-            width: '40px', 
-            height: '40px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: 'bold'
-          }}>
-            {user?.username?.charAt(0).toUpperCase()}
-          </div>
+        <div className="user-info" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
           <div>
-            <div style={{ fontWeight: '600', color: '#333' }}>
+            <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
               {user?.teamName || user?.username}
             </div>
             <div style={{ fontSize: '12px', color: '#666' }}>

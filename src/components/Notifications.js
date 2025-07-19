@@ -140,26 +140,28 @@ const Notifications = () => {
       position: 'fixed',
       top: 0,
       left: 0,
-      right: 0,
-      bottom: 0,
+      width: '100vw',
+      height: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 99999,
-      padding: '20px',
+      zIndex: 999999,
       background: 'rgba(0, 0, 0, 0.5)'
     }}>
       <div style={{
         background: 'white',
         borderRadius: '16px',
         padding: '0',
-        width: '90%',
-        maxWidth: '500px',
+        width: '95%',
+        maxWidth: '600px',
+        minHeight: '350px',
         maxHeight: '90vh',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'stretch',
       }}>
         <div style={{ padding: '24px 32px 0 32px' }}>
           <h3 style={{ margin: 0, color: '#333', fontWeight: 'bold', fontSize: '22px' }}>Notifications</h3>
