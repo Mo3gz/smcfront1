@@ -20,6 +20,18 @@ const AdminDashboard = ({ socket }) => {
   const [teamsWithCards, setTeamsWithCards] = useState([]);
   const [collapsedTeams, setCollapsedTeams] = useState({});
 
+  // Fetch all teams and their cards for admin (move this up)
+  const fetchTeamsWithCards = useCallback(async () => {
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+      // Use the correct endpoint
+      const response = await axios.get(`${API_BASE_URL}/api/admin/teams-cards`, { withCredentials: true });
+      setTeamsWithCards(response.data);
+    } catch (error) {
+      console.error('Error fetching teams and cards:', error);
+    }
+  }, []);
+
   const fetchTeams = useCallback(async () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
@@ -96,18 +108,6 @@ const AdminDashboard = ({ socket }) => {
       };
     }
   }, [socket, adminVerified, fetchTeamsWithCards]);
-
-  // Fetch all teams and their cards for admin
-  const fetchTeamsWithCards = useCallback(async () => {
-    try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-      // Use the correct endpoint
-      const response = await axios.get(`${API_BASE_URL}/api/admin/teams-cards`, { withCredentials: true });
-      setTeamsWithCards(response.data);
-    } catch (error) {
-      console.error('Error fetching teams and cards:', error);
-    }
-  }, []);
 
   useEffect(() => {
     if (adminVerified) {
