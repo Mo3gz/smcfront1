@@ -188,7 +188,7 @@ const Inventory = ({ socket }) => {
                   required
                 >
                   <option value="">Choose a team...</option>
-                  {teams.map((team) => (
+                  {teams.filter(team => team.id !== (window?.user?.id || (user && user.id))).map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.teamName}
                     </option>

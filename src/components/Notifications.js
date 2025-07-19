@@ -90,6 +90,18 @@ const Notifications = () => {
     }
   }, [isVisible, user, fetchNotifications]);
 
+  useEffect(() => {
+    if (isVisible && notifications.length > 0) {
+      // Mark all as read in state
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+      // Optionally, you can also call an API to mark all as read on the backend
+      // (uncomment if you want to sync with backend)
+      // const config = createMobileAxiosConfig();
+      // axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, config);
+    }
+  }, [isVisible, notifications.length]);
+
   const modal = (
     <div style={{
       position: 'fixed',
