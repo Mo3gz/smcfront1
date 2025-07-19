@@ -93,6 +93,7 @@ const AdminDashboard = ({ socket }) => {
   const fetchTeamsWithCards = useCallback(async () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+      // Use the correct endpoint
       const response = await axios.get(`${API_BASE_URL}/api/admin/teams-cards`, { withCredentials: true });
       setTeamsWithCards(response.data);
     } catch (error) {
