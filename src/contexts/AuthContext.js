@@ -74,6 +74,19 @@ export const AuthProvider = ({ children }) => {
       };
       
       const response = await performMobileAuthCheck(authCheckFn);
+      
+      // Debug auth check response
+      console.log('🔍 Auth check response:', response.data);
+      console.log('🔍 Current user state:', user);
+      
+      // Only update user if the role hasn't changed (to prevent admin role from being overridden)
+      if (user && user.role === 'admin' && response.data.role !== 'admin') {
+        console.log('⚠️ Preventing auth check from overriding admin role');
+        console.log('Current user role:', user.role);
+        console.log('Auth check response role:', response.data.role);
+        return;
+      }
+      
       setUser(response.data);
     } catch (error) {
       console.error('Auth check failed:', error.response?.status, error.response?.data);
@@ -120,13 +133,25 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL, refreshToken, justLoggedIn]);
+  }, [API_BASE_URL, refreshToken, justLoggedIn, user]);
 
   useEffect(() => {
     // For mobile browsers, skip initial auth check to prevent conflicts
     if (isMobileBrowser()) {
       console.log('Mobile browser detected - skipping initial auth check');
       setLoading(false);
+      
+      // Try to restore user from localStorage
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          console.log('📱 Restoring user from localStorage:', userData);
+          setUser(userData);
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+        }
+      }
       return;
     }
     
@@ -235,12 +260,15 @@ export const AuthProvider = ({ children }) => {
       // Set user immediately from login response
       setUser(response.data.user);
       
+      // Store user data in localStorage as backup
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
       // For mobile, add a longer delay before allowing auth checks
       if (isMobileBrowser()) {
         setTimeout(() => {
           console.log('Mobile: Allowing auth checks after login delay');
           setJustLoggedIn(false);
-          // Silently check auth after delay
+          // Silently check auth after delay, but don't override admin role
           checkAuth().catch(error => {
             console.log('Post-login auth check failed (mobile):', error);
             // Don't logout on mobile if this fails, user is already logged in
