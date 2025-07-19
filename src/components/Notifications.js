@@ -6,6 +6,7 @@ import { createMobileAxiosConfig } from '../utils/mobileAuth';
 
 // Add socket.io import if not already present
 import io from 'socket.io-client';
+import ReactDOM from 'react-dom';
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -89,53 +90,7 @@ const Notifications = () => {
     }
   }, [isVisible, user, fetchNotifications]);
 
-  if (!isVisible) {
-    return (
-      <button 
-        onClick={() => setIsVisible(true)}
-        style={{
-          background: unreadCount > 0 ? '#ff4757' : '#667eea',
-          color: 'white',
-          border: 'none',
-          borderRadius: '50%',
-          width: '40px',
-          height: '40px',
-          cursor: 'pointer',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          position: 'relative',
-          marginRight: '10px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-        title={`${unreadCount} unread notifications`}
-      >
-        🔔
-        {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '-8px',
-            right: '-8px',
-            background: '#ff4757',
-            color: 'white',
-            borderRadius: '50%',
-            width: '20px',
-            height: '20px',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold'
-          }}>
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
-    );
-  }
-
-  return (
+  const modal = (
     <div style={{
       position: 'fixed',
       top: 0,
@@ -223,6 +178,52 @@ const Notifications = () => {
       </div>
     </div>
   );
+  if (!isVisible) {
+    return (
+      <button 
+        onClick={() => setIsVisible(true)}
+        style={{
+          background: unreadCount > 0 ? '#ff4757' : '#667eea',
+          color: 'white',
+          border: 'none',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          cursor: 'pointer',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          position: 'relative',
+          marginRight: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        title={`${unreadCount} unread notifications`}
+      >
+        🔔
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute',
+            top: '-8px',
+            right: '-8px',
+            background: '#ff4757',
+            color: 'white',
+            borderRadius: '50%',
+            width: '20px',
+            height: '20px',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold'
+          }}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
+    );
+  }
+  return ReactDOM.createPortal(modal, document.body);
 };
 
 export default Notifications; 
