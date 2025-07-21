@@ -10,6 +10,41 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [spinning, setSpinning] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [result, setResult] = useState(null);
+  const [discount, setDiscount] = useState(0);
+  const [promoValid, setPromoValid] = useState(null); // null: not checked, true: valid, false: invalid
+  const [checkingPromo, setCheckingPromo] = useState(false);
+  const [finalCost, setFinalCost] = useState(spinTypes.find(s => s.id === spinType).cost);
+
+  useEffect(() => {
+    // Update final cost when spinType or discount changes
+    const baseCost = spinTypes.find(s => s.id === spinType).cost;
+    setFinalCost(Math.max(0, Math.floor(baseCost * (1 - discount / 100))));
+  }, [spinType, discount]);
+
+  // Validate promo code when it changes
+  useEffect(() => {
+    if (!promoCode) {
+      setDiscount(0);
+      setPromoValid(null);
+      return;
+    }
+    setCheckingPromo(true);
+    axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
+      .then(res => {
+        if (res.data.valid) {
+          setDiscount(res.data.discount);
+          setPromoValid(true);
+        } else {
+          setDiscount(0);
+          setPromoValid(false);
+        }
+      })
+      .catch(() => {
+        setDiscount(0);
+        setPromoValid(false);
+      })
+      .finally(() => setCheckingPromo(false));
+  }, [promoCode, API_BASE_URL]);
 
   // Listen for real-time user updates (coins, score changes)
   useEffect(() => {
@@ -38,9 +73,8 @@ const Spin = ({ socket, userData, setUserData }) => {
 
   const handleSpin = async () => {
     if (spinning) return;
-
     const selectedSpin = spinTypes.find(s => s.id === spinType);
-    if (userData.coins < selectedSpin.cost) {
+    if (finalCost > 0 && userData.coins < finalCost) {
       toast.error('Insufficient coins!');
       return;
     }
@@ -151,6 +185,17 @@ const Spin = ({ socket, userData, setUserData }) => {
             />
             <Gift size={20} color="#667eea" style={{ alignSelf: 'center' }} />
           </div>
+          {checkingPromo && <div style={{ color: '#888', marginTop: 4 }}>Checking promo code...</div>}
+          {promoValid === true && (
+            <div style={{ color: 'green', marginTop: 4 }}>Promo code valid! Discount: {discount}%</div>
+          )}
+          {promoValid === false && (
+            <div style={{ color: 'red', marginTop: 4 }}>Invalid or already used promo code.</div>
+          )}
+        </div>
+        {/* Show price after discount */}
+        <div style={{ marginBottom: '16px', fontWeight: 600, fontSize: 16 }}>
+          Price after discount: {finalCost === 0 ? 'Free!' : `${finalCost} coins`}
         </div>
 
         {/* Spin Wheel */}
@@ -165,7 +210,7 @@ const Spin = ({ socket, userData, setUserData }) => {
           <button
             className="btn"
             onClick={handleSpin}
-            disabled={spinning}
+            disabled={spinning || (promoCode && promoValid === false)}
             style={{ 
               marginTop: '20px',
               display: 'flex',
@@ -173,7 +218,8 @@ const Spin = ({ socket, userData, setUserData }) => {
               justifyContent: 'center',
               gap: '8px',
               width: '200px',
-              margin: '20px auto 0'
+              margin: '20px auto 0',
+              background: finalCost === 0 ? '#4ecdc4' : undefined
             }}
           >
             {spinning ? (
@@ -184,7 +230,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             ) : (
               <>
                 <RotateCcw size={20} />
-                Spin Now!
+                {finalCost === 0 ? 'Spin for Free!' : 'Spin Now!'}
               </>
             )}
           </button>
