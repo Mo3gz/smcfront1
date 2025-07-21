@@ -464,17 +464,48 @@ const CardManagement = ({ teams }) => {
 };
 
 // Admin Notifications Component
+import React, { useState } from 'react';
 const AdminNotifications = ({ notifications }) => {
+  const [filter, setFilter] = useState('all');
+  const filterOptions = [
+    { label: 'All', value: 'all' },
+    { label: 'Spins', value: 'spin' },
+    { label: 'Cards', value: 'card-used' },
+    { label: 'Countries', value: 'country-bought' }
+  ];
+  const filteredNotifications = filter === 'all'
+    ? notifications
+    : notifications.filter(n => n.type === filter);
   return (
     <div className="card">
       <h3>Team Notifications</h3>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+        {filterOptions.map(opt => (
+          <button
+            key={opt.value}
+            className={filter === opt.value ? 'btn btn-primary' : 'btn'}
+            style={{
+              padding: '6px 18px',
+              borderRadius: '8px',
+              fontWeight: 600,
+              background: filter === opt.value ? '#667eea' : '#eee',
+              color: filter === opt.value ? 'white' : '#333',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+            onClick={() => setFilter(opt.value)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-        {notifications.length === 0 ? (
+        {filteredNotifications.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
             No notifications yet
           </p>
         ) : (
-          notifications.map(notification => (
+          filteredNotifications.map(notification => (
             <div key={notification.id} style={{
               padding: '12px',
               border: '1px solid #eee',
