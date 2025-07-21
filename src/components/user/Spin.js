@@ -29,7 +29,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     // Update final cost when spinType or discount changes
     const baseCost = spinTypes.find(s => s.id === spinType).cost;
     setFinalCost(Math.max(0, Math.floor(baseCost * (1 - discount / 100))));
-  }, [spinType, discount, spinTypes]);
+  }, [spinType, discount]);
 
   // Validate promo code when it changes
   useEffect(() => {
