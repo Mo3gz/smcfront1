@@ -4,6 +4,16 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
 
+// Move these above all hooks and state
+const spinTypes = [
+  { id: 'luck', name: 'Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
+  { id: 'attack', name: 'Attack Spin', cost: 50, icon: Zap, color: '#ff6b6b' },
+  { id: 'alliance', name: 'Alliance Spin', cost: 50, icon: Heart, color: '#4ecdc4' },
+  { id: 'random', name: 'Random Spin', cost: 25, icon: RotateCcw, color: '#667eea' }
+];
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+
 const Spin = ({ socket, userData, setUserData }) => {
   const [spinType, setSpinType] = useState('luck');
   const [promoCode, setPromoCode] = useState('');
@@ -19,7 +29,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     // Update final cost when spinType or discount changes
     const baseCost = spinTypes.find(s => s.id === spinType).cost;
     setFinalCost(Math.max(0, Math.floor(baseCost * (1 - discount / 100))));
-  }, [spinType, discount]);
+  }, [spinType, discount, spinTypes]);
 
   // Validate promo code when it changes
   useEffect(() => {
@@ -44,7 +54,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         setPromoValid(false);
       })
       .finally(() => setCheckingPromo(false));
-  }, [promoCode, API_BASE_URL]);
+  }, [promoCode]);
 
   // Listen for real-time user updates (coins, score changes)
   useEffect(() => {
@@ -62,18 +72,8 @@ const Spin = ({ socket, userData, setUserData }) => {
     }
   }, [socket, userData?.id, setUserData]);
 
-  const spinTypes = [
-    { id: 'luck', name: 'Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
-    { id: 'attack', name: 'Attack Spin', cost: 50, icon: Zap, color: '#ff6b6b' },
-    { id: 'alliance', name: 'Alliance Spin', cost: 50, icon: Heart, color: '#4ecdc4' },
-    { id: 'random', name: 'Random Spin', cost: 25, icon: RotateCcw, color: '#667eea' }
-  ];
-
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-
   const handleSpin = async () => {
     if (spinning) return;
-    const selectedSpin = spinTypes.find(s => s.id === spinType);
     if (finalCost > 0 && userData.coins < finalCost) {
       toast.error('Insufficient coins!');
       return;
