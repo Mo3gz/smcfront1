@@ -13,6 +13,7 @@ import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
 import Notifications from './Notifications';
+import Logo from '../../Logo.png';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
@@ -72,8 +73,8 @@ const UserDashboard = ({ socket }) => {
 
   return (
     <div className="container">
-      <div className="app-header">
-        <h1 className="app-title">Scout Game</h1>
+      <div className="app-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <img src={Logo} alt="Logo" style={{ height: 60, margin: '12px 0', objectFit: 'contain' }} />
         <div className="user-info">
           <div>
             <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
