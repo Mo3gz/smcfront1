@@ -34,20 +34,11 @@ function ProtectedRoute({ children, allowedRoles }) {
 
 function AppContent() {
   const { user, loading } = useAuth();
-  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     if (user) {
       socket.emit('join-team', user.id);
     }
-
-    socket.on('notification', (notification) => {
-      const notificationWithId = { ...notification, _id: Date.now() + Math.random() };
-      setNotifications(prev => [...prev, notificationWithId]);
-      setTimeout(() => {
-        setNotifications(prev => prev.filter(n => n._id !== notificationWithId._id));
-      }, 5000);
-    });
 
     socket.on('scoreboard-update', (scoreboard) => {
       // Handle real-time scoreboard updates
@@ -60,7 +51,6 @@ function AppContent() {
     });
 
     return () => {
-      socket.off('notification');
       socket.off('scoreboard-update');
       socket.off('user-update');
     };
