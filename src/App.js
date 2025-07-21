@@ -8,7 +8,6 @@ import AdminDashboard from './components/AdminDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
-import Logo from './assets/Logo.png';
 
 const socket = io('smcback-production-6d12.up.railway.app', {
   withCredentials: true,
