@@ -91,11 +91,6 @@ function AppContent() {
     <Router>
       <div className="app">
         <Toaster position="top-right" />
-        {notifications.map((notification) => (
-          <div key={notification._id} className="notification">
-            {notification.message}
-          </div>
-        ))}
 
         <Routes>
           {/* Redirect / to the correct dashboard */}
