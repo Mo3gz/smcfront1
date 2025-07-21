@@ -478,7 +478,17 @@ const AdminNotifications = ({ notifications }) => {
   return (
     <div className="card">
       <h3>Team Notifications</h3>
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+      <div style={{ 
+        display: 'flex', 
+        gap: '12px', 
+        marginBottom: '16px', 
+        overflowX: 'auto', 
+        WebkitOverflowScrolling: 'touch', 
+        scrollbarWidth: 'none', /* Firefox */
+        msOverflowStyle: 'none', /* IE 10+ */
+      }}
+        className="notification-filter-scroll"
+      >
         {filterOptions.map(opt => (
           <button
             key={opt.value}
@@ -490,7 +500,9 @@ const AdminNotifications = ({ notifications }) => {
               background: filter === opt.value ? '#667eea' : '#eee',
               color: filter === opt.value ? 'white' : '#333',
               border: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              minWidth: 90,
+              flex: '0 0 auto'
             }}
             onClick={() => setFilter(opt.value)}
           >
@@ -498,6 +510,9 @@ const AdminNotifications = ({ notifications }) => {
           </button>
         ))}
       </div>
+      <style>{`
+        .notification-filter-scroll::-webkit-scrollbar { display: none; }
+      `}</style>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
         {filteredNotifications.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
