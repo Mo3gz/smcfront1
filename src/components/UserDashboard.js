@@ -73,9 +73,9 @@ const UserDashboard = ({ socket }) => {
 
   return (
     <div className="container">
-      <div className="app-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <img src={Logo} alt="Logo" style={{ height: 60, margin: '12px 0', objectFit: 'contain' }} />
-        <div className="user-info">
+      <div className="app-header">
+        <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <img src={Logo} alt="Logo" style={{ height: 48, width: 48, objectFit: 'contain', borderRadius: 12, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }} />
           <div>
             <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
               {userData?.teamName}
