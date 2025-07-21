@@ -464,7 +464,6 @@ const CardManagement = ({ teams }) => {
 };
 
 // Admin Notifications Component
-import React, { useState } from 'react';
 const AdminNotifications = ({ notifications }) => {
   const [filter, setFilter] = useState('all');
   const filterOptions = [
