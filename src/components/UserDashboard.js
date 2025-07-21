@@ -13,7 +13,7 @@ import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
 import Notifications from './Notifications';
-import Logo from '../../Logo.png';
+import Logo from '../assets/Logo.png';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
