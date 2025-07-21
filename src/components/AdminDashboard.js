@@ -468,13 +468,15 @@ const AdminNotifications = ({ notifications }) => {
   const [filter, setFilter] = useState('all');
   const filterOptions = [
     { label: 'All', value: 'all' },
-    { label: 'Spins', value: 'spin' },
+    { label: 'Spins', value: 'spins' },
     { label: 'Cards', value: 'card-used' },
     { label: 'Countries', value: 'country-bought' }
   ];
   const filteredNotifications = filter === 'all'
     ? notifications
-    : notifications.filter(n => n.type === filter);
+    : filter === 'spins'
+      ? notifications.filter(n => n.type === 'spin' || n.type === 'admin-spin')
+      : notifications.filter(n => n.type === filter);
   return (
     <div className="card">
       <h3>Team Notifications</h3>
