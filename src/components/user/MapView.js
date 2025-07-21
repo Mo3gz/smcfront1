@@ -9,6 +9,7 @@ const MapView = ({ userData, setUserData, socket }) => {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ open: false, country: null });
 
   useEffect(() => {
     fetchCountries();
@@ -50,37 +51,38 @@ const MapView = ({ userData, setUserData, socket }) => {
     }
   };
 
-  const handleBuyCountry = async (country) => {
+  const handleBuyCountry = (country) => {
     if (country.owner) {
       toast.error('This country is already owned!');
       return;
     }
-
     if (userData.coins < country.cost) {
       toast.error('Insufficient coins!');
       return;
     }
+    setConfirmModal({ open: true, country });
+  };
 
+  const confirmBuyCountry = async () => {
+    const country = confirmModal.country;
+    if (!country) return;
+    setConfirmModal({ open: false, country: null });
     try {
       const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
         countryId: country.id
       }, { withCredentials: true });
-
-      // Update local state immediately for better UX
-      setCountries(prev => 
-        prev.map(c => 
-          c.id === country.id 
+      setCountries(prev =>
+        prev.map(c =>
+          c.id === country.id
             ? { ...c, owner: userData.id }
             : c
         )
       );
-
       setUserData(prev => ({
         ...prev,
         coins: response.data.user.coins,
         score: response.data.user.score
       }));
-
       toast.success(`Successfully bought ${country.name}!`);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to buy country');
@@ -226,6 +228,49 @@ const MapView = ({ userData, setUserData, socket }) => {
           </div>
         </div>
       </div>
+      {/* Confirmation Modal */}
+      {confirmModal.open && confirmModal.country && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '32px',
+            minWidth: '320px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ marginBottom: 16 }}>Confirm Purchase</h3>
+            <p style={{ marginBottom: 24 }}>
+              Are you sure you want to buy <b>{confirmModal.country.name}</b> for <b>{confirmModal.country.cost} coins</b>?
+            </p>
+            <button
+              className="btn"
+              style={{ marginRight: 16, background: '#667eea', color: 'white', padding: '8px 24px', borderRadius: '8px', border: 'none', fontWeight: 600 }}
+              onClick={confirmBuyCountry}
+            >
+              Yes, Buy
+            </button>
+            <button
+              className="btn"
+              style={{ background: '#eee', color: '#333', padding: '8px 24px', borderRadius: '8px', border: 'none', fontWeight: 600 }}
+              onClick={() => setConfirmModal({ open: false, country: null })}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
