@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import './SpinWheel.css';
 
 const SpinWheel = ({ spinType, spinning, result }) => {
@@ -25,7 +25,7 @@ const SpinWheel = ({ spinType, spinning, result }) => {
   };
 
   // Get cards based on spin type
-  const getCardsForSpin = () => {
+  const getCardsForSpin = useCallback(() => {
     if (spinType === 'random') {
       return [
         ...cardsByType.luck,
@@ -34,7 +34,7 @@ const SpinWheel = ({ spinType, spinning, result }) => {
       ];
     }
     return cardsByType[spinType] || [];
-  };
+  }, [spinType]);
 
   // Initialize wheel
   useEffect(() => {
@@ -119,7 +119,7 @@ const SpinWheel = ({ spinType, spinning, result }) => {
     ctx.fillStyle = '#fff';
     ctx.fill();
     
-  }, [spinType, spinning]);
+  }, [spinType, spinning, getCardsForSpin]);
 
   return (
     <div className="wheel-container">
