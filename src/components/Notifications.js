@@ -75,7 +75,20 @@ const Notifications = () => {
         setUnreadCount(prev => prev + 1);
       }
       setIsVisible(true); // Open modal automatically
-      toast.success('New notification received!');
+      // Custom toast for card-received
+      if (notification.type === 'card-received') {
+        toast.success('🎴 You received a new card! Check your inventory.', {
+          icon: '🎴',
+          style: {
+            background: '#4facfe',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '16px'
+          }
+        });
+      } else {
+        toast.success('New notification received!');
+      }
       fetchNotifications(); // Always refresh the full list from backend
     };
     socket.on('notification', handleNotification);
