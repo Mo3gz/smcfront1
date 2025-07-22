@@ -117,11 +117,11 @@ const WheelOfFortune = ({ spinType, result, spinning, cards }) => {
       if (resultIndex !== -1) {
         // Calculate the target rotation to land on the result
         const targetRotation = 360 - (resultIndex * segmentAngle) + 3600; // Add multiple rotations
-        setStartRotation(rotation % 360);
+        setStartRotation(prevRotation => prevRotation % 360);
         setRotation(targetRotation);
       }
     }
-  }, [result, currentCards, segmentAngle]);
+  }, [result, currentCards, segmentAngle, rotation]);
 
   // Generate wheel sections
   const renderWheelSections = () => {

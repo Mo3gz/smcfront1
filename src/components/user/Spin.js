@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
+import { RotateCcw, Zap, Heart, Shield } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
