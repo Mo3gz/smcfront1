@@ -112,7 +112,6 @@ const Spin = ({ socket, userData, setUserData }) => {
 
     setSpinning(true);
     setShowResult(false);
-    setSpinComplete(false);
     setResult(null);
     setShowConfetti(false);
 
@@ -145,7 +144,6 @@ const Spin = ({ socket, userData, setUserData }) => {
     
     setShowConfetti(true);
     setShowResult(true);
-    setSpinComplete(true);
     
     // Update user data with remaining coins from the server
     if (result.remainingCoins !== undefined) {
