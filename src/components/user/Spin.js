@@ -88,7 +88,7 @@ const WheelSegment = styled.div`
   left: 0;
   top: 0;
   background: ${props => props.color};
-  transform: rotate(${props => props.rotate}deg) skewY(${props => 90 - props.angle}deg);
+  transform: rotate(${props => props.rotate}deg) skewY(${props => props.angle - 90}deg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -99,41 +99,46 @@ const WheelSegment = styled.div`
   cursor: pointer;
   filter: ${props => props.isSelected ? 'brightness(1.2) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))' : 'none'};
   z-index: ${props => props.isSelected ? 5 : 1};
+  border-top-right-radius: 100%;
+  
+  /* Add gradient for better visual */
+  background: linear-gradient(
+    to bottom right,
+    ${props => props.color},
+    ${props => `${props.color}cc`}
+  );
   
   &:hover {
     filter: brightness(1.1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
     z-index: 2;
   }
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: ${props => props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'transparent'};
-    transition: background 0.3s ease;
-  }
-  
   & > div {
-    transform: skewY(${props => props.angle - 90}deg) rotate(${props => props.angle / 2}deg);
+    position: absolute;
     width: 70%;
     text-align: center;
     font-size: 12px;
     font-weight: bold;
     color: white;
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     word-break: break-word;
     line-height: 1.2;
-    transition: transform 0.3s ease;
-    position: relative;
+    transform: 
+      rotate(${props => props.angle / 2}deg)
+      translateX(40%)
+      rotate(${props => (props.angle / 2) * -1}deg);
+    text-align: left;
+    padding-left: 20%;
     z-index: 1;
   }
   
   ${props => props.isSelected && `
     & > div {
-      transform: skewY(${props.angle - 90}deg) rotate(${props.angle / 2}deg) scale(1.1);
+      transform: 
+        rotate(${props.angle / 2}deg)
+        translateX(40%)
+        rotate(${props.angle / 2 * -1}deg)
+        scale(1.1);
       font-weight: 800;
     }
   `}
@@ -279,52 +284,78 @@ const Spin = ({ socket, userData, setUserData }) => {
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/spin`, {
-        spinType,
-        promoCode: promoCode || undefined
-      }, { withCredentials: true });
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
 
-      // Get the cards for the current spin type
+      const response = await axios.post(
+        `${API_BASE_URL}/api/spin`,
+        {
+          spinType,
+          promoCode: promoCode || undefined
+        },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      // Get the card from the backend response
+      const resultCard = response.data.card;
+      
+      // Find the corresponding card in our frontend data
       let currentCards = [];
       if (spinType === 'random') {
-        // For random spin, pick a random type first
-        const types = ['luck', 'attack', 'alliance'];
-        const randomType = types[Math.floor(Math.random() * types.length)];
-        currentCards = cardsData[randomType];
+        // For random spin, we need to find which type the card belongs to
+        const cardTypes = ['luck', 'attack', 'alliance'];
+        for (const type of cardTypes) {
+          const found = cardsData[type].find(card => card.name === resultCard.name);
+          if (found) {
+            currentCards = cardsData[type];
+            break;
+          }
+        }
       } else {
         currentCards = cardsData[spinType];
       }
 
-      // Find the index of the result card
+      // Find the index of the result card in our frontend data
       const resultIndex = currentCards.findIndex(card => 
-        card.name === response.data.card.name && 
-        card.type === response.data.card.type
+        card.name === resultCard.name && 
+        card.type === resultCard.type
       );
 
       if (resultIndex === -1) {
-        throw new Error('Invalid card result from server');
+        console.warn('Card not found in frontend data, using backend data directly');
+        // If we can't find the card in our frontend data, use the backend data directly
+        setResult(resultCard);
+      } else {
+        // Calculate the rotation needed to land on the result
+        const segments = currentCards.length;
+        const segmentAngle = 360 / segments;
+        const targetRotation = 3600 + (360 - (resultIndex * segmentAngle)) + (segmentAngle / 2);
+        const currentRotation = wheelRotation % 360;
+        
+        // Add extra rotations for visual effect
+        const extraRotations = 5; // Number of full rotations before stopping
+        const totalRotation = wheelRotation + (360 * extraRotations) + (360 - currentRotation) + targetRotation;
+        
+        // Set the rotation with transition
+        setWheelRotation(totalRotation);
       }
 
-      // Calculate the rotation needed to land on the result
-      const segments = currentCards.length;
-      const segmentAngle = 360 / segments;
-      const targetRotation = 3600 + (360 - (resultIndex * segmentAngle)) + (segmentAngle / 2);
-      const currentRotation = wheelRotation % 360;
-      
-      // Add extra rotations for visual effect
-      const extraRotations = 5; // Number of full rotations before stopping
-      const totalRotation = wheelRotation + (360 * extraRotations) + (360 - currentRotation) + targetRotation;
-      
-      // Set the rotation with transition
-      setWheelRotation(totalRotation);
-
-          // Update user data and show result after animation
+      // Update user data and show result after animation
       setTimeout(() => {
         // First, show the confetti and update the result
         setShowConfetti(true);
-        setResult(response.data.card);
+        setResult(resultCard);
         
-        // Update user data
+        // Update user data with the remaining coins from the backend
         setUserData(prev => ({
           ...prev,
           coins: response.data.remainingCoins
@@ -332,7 +363,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         
         // Show congratulations message with a slight delay
         setTimeout(() => {
-          toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
+          toast.success(`🎉 Congratulations! You got ${resultCard.name}!`, {
             duration: 4000,
             position: 'top-center',
             style: {
@@ -369,30 +400,39 @@ const Spin = ({ socket, userData, setUserData }) => {
     return <IconComponent size={24} />;
   };
 
+  // Get cards for the current spin type
+  const getCurrentCards = () => {
+    if (spinType === 'random') {
+      // For random wheel, show a mix of cards from all types
+      return [
+        ...cardsData.luck.slice(0, 2),  // Take 2 cards from each type
+        ...cardsData.attack.slice(0, 2),
+        ...cardsData.alliance.slice(0, 2)
+      ];
+    }
+    return cardsData[spinType] || [];
+  };
+
   // Generate wheel segments based on current spin type
   const renderWheelSegments = () => {
-    let currentCards = [];
-    
-    if (spinType === 'random') {
-      // For random wheel, show all cards from all types
-      currentCards = [
-        ...cardsData.luck,
-        ...cardsData.attack,
-        ...cardsData.alliance
-      ];
-    } else {
-      currentCards = cardsData[spinType];
-    }
+    const currentCards = getCurrentCards();
+    if (currentCards.length === 0) return null;
 
     const segmentAngle = 360 / currentCards.length;
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A373', '#F4A261', '#E9C46A'];
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', 
+      '#96CEB4', '#FFEEAD', '#D4A373', 
+      '#F4A261', '#E9C46A', '#A8E6CF',
+      '#DCEDC1', '#FFD3B6', '#FFAAA5',
+      '#FF8B94'
+    ];
 
     return currentCards.map((card, index) => {
       const rotate = segmentAngle * index;
       const color = colors[index % colors.length];
       const isSelected = result && 
-                        card.name === result.name && 
-                        card.type === result.type;
+                        card.name === result?.name && 
+                        card.type === result?.type;
       
       return (
         <WheelSegment 
