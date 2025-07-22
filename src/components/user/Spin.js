@@ -111,11 +111,13 @@ const Spin = ({ socket, userData, setUserData }) => {
       return;
     }
 
-    // Start spinning immediately for better UX
-    setSpinning(true);
+    // Reset states
     setShowResult(false);
     setResult(null);
     setShowConfetti(false);
+    
+    // Start spinning
+    setSpinning(true);
 
     try {
       // Start the API call
@@ -128,10 +130,8 @@ const Spin = ({ socket, userData, setUserData }) => {
         createAuthConfig()
       );
 
-      // Add a small delay before setting the result to ensure the wheel starts spinning
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       // Set the result which will trigger the wheel to land on the correct position
+      // The wheel will start spinning when spinning=true and stop when it gets the result
       setResult({
         ...response.data.card,
         remainingCoins: response.data.remainingCoins
