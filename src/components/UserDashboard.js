@@ -169,7 +169,7 @@ const UserDashboard = ({ socket }) => {
             className={`nav-item ${activeTab === 'program' ? 'active' : ''}`}
             onClick={() => setActiveTab('program')}
           >
-            <span className="nav-icon">📅</span>
+            <span className="nav-icon" style={{ color: 'black' }}>🗓️</span>
             <span className="nav-text">Program</span>
           </div>
         </div>
