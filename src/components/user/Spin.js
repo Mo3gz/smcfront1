@@ -18,34 +18,19 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-prod
 // Define card types and their properties
 const allCards = {
   luck: [
-    { name: "i`amphoteric", type: 'luck', effect: '+400 Coins' },
-    { name: "Lose 250 Coins", type: 'luck', effect: 'Lose coins' },
-    { name: 'el 7aramy', type: 'luck', effect: 'Steal 100 coins' },
-    { name: 'Lucky 4', type: 'luck', effect: 'Bonus effect' },
-    { name: 'Lucky 5', type: 'luck', effect: 'Bonus effect' },
-    { name: 'Lucky 6', type: 'luck', effect: 'Bonus effect' },
-    { name: 'Lucky 7', type: 'luck', effect: 'Bonus effect' },
-    { name: 'Lucky 8', type: 'luck', effect: 'Bonus effect' }
+    { name: "i`amphoteric", type: 'luck', effect: '+400 Coins instantly' },
+    { name: "Everything Against Me", type: 'luck', effect: 'Instantly lose 250 Coins' },
+    { name: 'el 7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
   ],
   attack: [
     { name: 'wesh l wesh', type: 'attack', effect: '1v1 battle' },
-    { name: 'ana el 7aramy', type: 'attack', effect: 'Steal 100 coins' },
-    { name: 'ana w bas', type: 'attack', effect: 'Take risk' },
-    { name: 'Attack 4', type: 'attack', effect: 'Power strike' },
-    { name: 'Attack 5', type: 'attack', effect: 'Critical hit' },
-    { name: 'Attack 6', type: 'attack', effect: 'Special move' },
-    { name: 'Attack 7', type: 'attack', effect: 'Ultimate' },
-    { name: 'Attack 8', type: 'attack', effect: 'Final blow' }
+    { name: 'ana el 7aramy', type: 'attack', effect: 'Btakhod 100 coin men ay khema mnghir ay challenge' },
+    { name: 'ana w bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
   ],
   alliance: [
-    { name: 'el nadala', type: 'alliance', effect: 'Temporary alliance' },
-    { name: 'el sohab', type: 'alliance', effect: 'Basic alliance' },
-    { name: 'el melok', type: 'alliance', effect: 'Team challenges' },
-    { name: 'Alliance 4', type: 'alliance', effect: 'Team up' },
-    { name: 'Alliance 5', type: 'alliance', effect: 'Group buff' },
-    { name: 'Alliance 6', type: 'alliance', effect: 'Team heal' },
-    { name: 'Alliance 7', type: 'alliance', effect: 'Party bonus' },
-    { name: 'Alliance 8', type: 'alliance', effect: 'Ultimate team' }
+    { name: 'el nadala', type: 'alliance', effect: 'Bt3mel t7alof w tlghih f ay wa2t w takhod el coins 3ady' },
+    { name: 'el sohab', type: 'alliance', effect: 'Bt3mel t7alof 3ady' },
+    { name: 'el melok', type: 'alliance', effect: 'Btst5dm el khema el taniaa y3melo el challenges makanak' }
   ]
 };
 
@@ -242,9 +227,20 @@ const Spin = ({ socket, userData, setUserData }) => {
         {/* Wheel of Fortune */}
         <div style={{ margin: '20px 0 40px' }}>
           <WheelOfFortune 
-            items={spinType === 'random' 
-              ? [...allCards.luck, ...allCards.attack, ...allCards.alliance]
-              : allCards[spinType]}
+            items={(() => {
+              if (spinType === 'random') {
+                // Combine all cards from all types and shuffle them
+                const allCardsCombined = [
+                  ...allCards.luck,
+                  ...allCards.attack,
+                  ...allCards.alliance
+                ];
+                // Return all 9 cards for random spin
+                return allCardsCombined;
+              }
+              // For specific spin types, return only cards of that type
+              return allCards[spinType];
+            })()}
             onSpinEnd={handleSpinComplete}
             spinning={spinning}
           />
