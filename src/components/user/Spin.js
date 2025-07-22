@@ -200,12 +200,6 @@ const Spin = ({ socket, userData, setUserData }) => {
 
         {/* Spin Wheel */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div className="spin-wheel" style={{ 
-            transform: spinning ? 'rotate(1440deg)' : 'rotate(0deg)',
-            transition: spinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
-          }}>
-            <div className="spin-pointer"></div>
-          </div>
           
           <button
             className="btn"
