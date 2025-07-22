@@ -4,6 +4,25 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
 
+// Card definitions for each spin type
+const cardsByType = {
+  luck: [
+    { name: "i`amphoteric", type: 'luck', effect: '+400 Coins instantly' },
+    { name: "Everything Against Me", type: 'luck', effect: 'Instantly lose 250 Coins' },
+    { name: 'el 7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
+  ],
+  attack: [
+    { name: 'wesh l wesh', type: 'attack', effect: '1v1 battle' },
+    { name: 'ana el 7aramy', type: 'attack', effect: 'Btakhod 100 coin men ay khema mnghir ay challenge' },
+    { name: 'ana w bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
+  ],
+  alliance: [
+    { name: 'el nadala', type: 'alliance', effect: 'Bt3mel t7alof w tlghih f ay wa2t w takhod el coins 3ady' },
+    { name: 'el sohab', type: 'alliance', effect: 'Bt3mel t7alof 3ady' },
+    { name: 'el melok', type: 'alliance', effect: 'Btstkhdm el khema el taniaa y3melo el challenges makanak' }
+  ]
+};
+
 // Move these above all hooks and state
 const spinTypes = [
   { id: 'luck', name: 'Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
@@ -88,31 +107,48 @@ const Spin = ({ socket, userData, setUserData }) => {
         promoCode: promoCode || undefined
       }, { withCredentials: true });
 
+      // Get all cards for the selected spin type
+      const getCardsForSpin = (type) => {
+        if (type === 'random') {
+          return Object.values(cardsByType).flat();
+        }
+        return cardsByType[type] || [];
+      };
+
       // Simulate spin animation
-      setTimeout(() => {
-        setResult(response.data.card);
-        setShowConfetti(true);
-        setUserData(prev => ({
-          ...prev,
-          coins: response.data.remainingCoins
-        }));
-        setPromoCode('');
-        setSpinning(false);
+      const spinCards = getCardsForSpin(spinType);
+      let spinIterations = 0;
+      const spinInterval = setInterval(() => {
+        const randomCard = spinCards[Math.floor(Math.random() * spinCards.length)];
+        setResult(randomCard);
+        spinIterations++;
         
-        // Show congratulations message prominently
-        toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
-          duration: 4000,
-          position: 'top-center',
-          style: {
-            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }
-        });
-        
-        setTimeout(() => setShowConfetti(false), 3000);
-      }, 3000);
+        if (spinIterations > 15) {
+          clearInterval(spinInterval);
+          setResult(response.data.card);
+          setShowConfetti(true);
+          setUserData(prev => ({
+            ...prev,
+            coins: response.data.remainingCoins
+          }));
+          setPromoCode('');
+          setSpinning(false);
+          
+          // Show congratulations message prominently
+          toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
+            duration: 4000,
+            position: 'top-center',
+            style: {
+              background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }
+          });
+          
+          setTimeout(() => setShowConfetti(false), 3000);
+        }
+      }, 150);
 
     } catch (error) {
       toast.error(error.response?.data?.error || 'Spin failed!');
@@ -136,6 +172,34 @@ const Spin = ({ socket, userData, setUserData }) => {
       {showConfetti && <Confetti />}
 
       <div className="card">
+        {/* Display current spin type cards */}
+        {!spinning && (
+          <div style={{ marginBottom: '24px', padding: '16px', background: '#f8f9fa', borderRadius: '12px' }}>
+            <h3 style={{ marginBottom: '12px', color: '#333' }}>
+              {spinType === 'random' ? 'All Possible Cards' : `Possible ${spinType.charAt(0).toUpperCase() + spinType.slice(1)} Cards`}
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+              {(spinType === 'random' ? Object.values(cardsByType).flat() : cardsByType[spinType] || []).map((card, index) => (
+                <div 
+                  key={`${card.type}-${index}`}
+                  style={{
+                    background: 'white',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    borderLeft: `4px solid ${
+                      card.type === 'luck' ? '#feca57' : 
+                      card.type === 'attack' ? '#ff6b6b' : '#4ecdc4'
+                    }`
+                  }}
+                >
+                  <div style={{ fontWeight: '600', marginBottom: '4px' }}>{card.name}</div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>{card.effect}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {/* Spin Type Selection */}
         <div style={{ marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '16px', color: '#333' }}>Choose Spin Type</h3>
