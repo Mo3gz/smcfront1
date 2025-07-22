@@ -91,25 +91,7 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
       setIsSpinning(true);
       startTimeRef.current = 0;
       
-      // Calculate target rotation based on result
-      if (result) {
-        const cards = getCardsForSpin();
-        const cardIndex = cards.findIndex(card => card.name === result.name);
-        if (cardIndex !== -1) {
-          // Calculate the angle that would make the result card land at the top
-          const segmentAngle = (2 * Math.PI) / cards.length;
-          // We want the card to land at the top (270 degrees or 1.5π radians)
-          // So we calculate how much to rotate to make that happen
-          const targetCardAngle = (cardIndex * segmentAngle) + (segmentAngle / 2);
-          // The wheel needs to rotate to position the target card at the top
-          // We add 1.5π to position it at the top (270 degrees)
-          const rotationToTop = (2 * Math.PI) - targetCardAngle + (1.5 * Math.PI);
-          // Add full rotations to make the spin look natural
-          setTargetRotation(rotationToTop);
-        }
-      }
-      
-      // Start the animation
+      // Start the animation immediately
       animationRef.current = requestAnimationFrame(animateSpin);
     }
     
@@ -118,7 +100,26 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [spinning, result, isSpinning, animateSpin, getCardsForSpin]);
+  }, [spinning, isSpinning, animateSpin]);
+
+  // Update target rotation when result changes
+  useEffect(() => {
+    if (result) {
+      const cards = getCardsForSpin();
+      const cardIndex = cards.findIndex(card => card.name === result.name);
+      if (cardIndex !== -1) {
+        // Calculate the angle that would make the result card land at the top
+        const segmentAngle = (2 * Math.PI) / cards.length;
+        // We want the card to land at the top (270 degrees or 1.5π radians)
+        const targetCardAngle = (cardIndex * segmentAngle) + (segmentAngle / 2);
+        // The wheel needs to rotate to position the target card at the top
+        // We add 1.5π to position it at the top (270 degrees)
+        const rotationToTop = (2 * Math.PI) - targetCardAngle + (1.5 * Math.PI);
+        // Add full rotations to make the spin look natural
+        setTargetRotation(rotationToTop);
+      }
+    }
+  }, [result, getCardsForSpin]);
 
   // Initialize and draw wheel
   useEffect(() => {

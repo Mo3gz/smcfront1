@@ -111,12 +111,14 @@ const Spin = ({ socket, userData, setUserData }) => {
       return;
     }
 
+    // Start spinning immediately for better UX
     setSpinning(true);
     setShowResult(false);
     setResult(null);
     setShowConfetti(false);
 
     try {
+      // Start the API call
       const response = await axios.post(
         `${API_BASE_URL}/api/spin`,
         {
@@ -126,7 +128,10 @@ const Spin = ({ socket, userData, setUserData }) => {
         createAuthConfig()
       );
 
-      // Store the result and start the wheel animation
+      // Add a small delay before setting the result to ensure the wheel starts spinning
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Set the result which will trigger the wheel to land on the correct position
       setResult({
         ...response.data.card,
         remainingCoins: response.data.remainingCoins
