@@ -68,6 +68,40 @@ const spinTypes = [
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
+// Define card types and their properties
+const allCards = {
+  luck: [
+    { name: "i`amphoteric", type: 'luck', effect: '+400 Coins' },
+    { name: "Lose 250 Coins", type: 'luck', effect: 'Lose coins' },
+    { name: 'el 7aramy', type: 'luck', effect: 'Steal 100 coins' },
+    { name: 'Lucky 4', type: 'luck', effect: 'Bonus effect' },
+    { name: 'Lucky 5', type: 'luck', effect: 'Bonus effect' },
+    { name: 'Lucky 6', type: 'luck', effect: 'Bonus effect' },
+    { name: 'Lucky 7', type: 'luck', effect: 'Bonus effect' },
+    { name: 'Lucky 8', type: 'luck', effect: 'Bonus effect' }
+  ],
+  attack: [
+    { name: 'wesh l wesh', type: 'attack', effect: '1v1 battle' },
+    { name: 'ana el 7aramy', type: 'attack', effect: 'Steal 100 coins' },
+    { name: 'ana w bas', type: 'attack', effect: 'Take risk' },
+    { name: 'Attack 4', type: 'attack', effect: 'Power strike' },
+    { name: 'Attack 5', type: 'attack', effect: 'Critical hit' },
+    { name: 'Attack 6', type: 'attack', effect: 'Special move' },
+    { name: 'Attack 7', type: 'attack', effect: 'Ultimate' },
+    { name: 'Attack 8', type: 'attack', effect: 'Final blow' }
+  ],
+  alliance: [
+    { name: 'el nadala', type: 'alliance', effect: 'Temporary alliance' },
+    { name: 'el sohab', type: 'alliance', effect: 'Basic alliance' },
+    { name: 'el melok', type: 'alliance', effect: 'Team challenges' },
+    { name: 'Alliance 4', type: 'alliance', effect: 'Team up' },
+    { name: 'Alliance 5', type: 'alliance', effect: 'Group buff' },
+    { name: 'Alliance 6', type: 'alliance', effect: 'Team heal' },
+    { name: 'Alliance 7', type: 'alliance', effect: 'Party bonus' },
+    { name: 'Alliance 8', type: 'alliance', effect: 'Ultimate team' }
+  ]
+};
+
 const Spin = ({ socket, userData, setUserData }) => {
   const [spinType, setSpinType] = useState('luck');
   const [promoCode, setPromoCode] = useState('');
