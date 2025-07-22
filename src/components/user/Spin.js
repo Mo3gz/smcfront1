@@ -126,59 +126,47 @@ const Spin = ({ socket, userData, setUserData }) => {
       toast.error('Insufficient coins!');
       return;
     }
-    
-    // Reset states
-    setSpinning(true);
+
+    // Reset previous results
     setShowResult(false);
+    setResult(null);
     setShowConfetti(false);
-    
+
     try {
-      // Start the spin animation immediately
-      const spinStartTime = Date.now();
-      
-      // Make the API call to get the result
+      // 1. Get the result from the backend first
       const response = await axios.post(
         `${API_BASE_URL}/api/spin`,
         { spinType },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`
-          },
-          withCredentials: true
-        }
+        createAuthConfig()
       );
-      
-      // Calculate remaining time to ensure minimum spin duration
-      const elapsed = Date.now() - spinStartTime;
-      const remainingTime = Math.max(3000 - elapsed, 0); // Ensure at least 3s spin
-      
-      // Set the result but don't show it yet
+
+      // 2. Set the result state, which will calculate the target rotation in SpinWheel
       setResult(response.data);
-      
-      // Wait for the remaining spin time
-      await new Promise(resolve => setTimeout(resolve, remainingTime));
-      
-      // Show the result and confetti
-      setShowResult(true);
-      setShowConfetti(true);
-      fetchUserData(); // Refresh user data to update coins
-      
-      // Hide confetti after 5 seconds
-      setTimeout(() => {
-        setShowConfetti(false);
-      }, 5000);
-      
+
+      // 3. Now, set spinning to true to trigger the animation
+      setSpinning(true);
+
     } catch (error) {
       console.error('Error spinning the wheel:', error);
       toast.error(error.response?.data?.message || 'Failed to spin the wheel');
-      setSpinning(false); // Make sure to reset spinning state on error
+      setSpinning(false); // Reset on error
     }
   };
-  
+
   const handleSpinComplete = () => {
-    // This will be called when the animation completes
+    // This is called when the animation in SpinWheel finishes
+    console.log('Spin complete, showing results...');
+    setShowResult(true);
+    setShowConfetti(true);
+    fetchUserData(); // Refresh user data to update coins
+
+    // Reset spinning state
     setSpinning(false);
+
+    // Hide confetti after 5 seconds
+    setTimeout(() => {
+      setShowConfetti(false);
+    }, 5000);
   };
 
   const getSpinIcon = (type) => {

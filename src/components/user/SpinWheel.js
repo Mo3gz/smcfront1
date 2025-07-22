@@ -4,7 +4,7 @@ import './SpinWheel.css';
 // Animation constants
 const SPIN_DURATION = 3000; // 3 seconds
 
-const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) => {
+const SpinWheel = ({ spinType, spinning, result, onSpinComplete }) => {
   const [currentRotation, setCurrentRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
@@ -74,73 +74,67 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
     }
   }, [startRotation, targetRotation, onSpinComplete]);
 
-  // Start spinning when spinning prop changes
-  useEffect(() => {
-    if (spinning && !isSpinning) {
-      console.log('Starting spin animation');
-      setIsSpinning(true);
-      startTimeRef.current = performance.now();
-      
-      // Start the animation
-      const animate = (timestamp) => {
-        if (!startTimeRef.current) startTimeRef.current = timestamp;
-        
-        const elapsed = timestamp - startTimeRef.current;
-        const progress = Math.min(elapsed / SPIN_DURATION, 1);
-        
-        // Easing function (easeOutCubic)
-        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-        const easedProgress = easeOutCubic(progress);
-        
-        // Calculate rotation
-        const rotation = startRotation.current + ((targetRotation - startRotation.current) * easedProgress);
-        setCurrentRotation(rotation % (2 * Math.PI));
-        
-        if (progress < 1) {
-          animationRef.current = requestAnimationFrame(animate);
-        } else {
-          // Animation complete
-          console.log('Spin animation complete');
-          setIsSpinning(false);
-          if (onSpinComplete) {
-            onSpinComplete();
-          }
-        }
-      };
-      
-      animationRef.current = requestAnimationFrame(animate);
+  // Animate the spin
+  const animateSpin = useCallback((timestamp) => {
+    if (!startTimeRef.current) {
+      startTimeRef.current = timestamp;
     }
-    
+
+    const elapsed = timestamp - startTimeRef.current;
+    const progress = Math.min(elapsed / SPIN_DURATION, 1);
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+    const easedProgress = easeOutCubic(progress);
+
+    const rotation = startRotation.current + (targetRotation - startRotation.current) * easedProgress;
+    setCurrentRotation(rotation);
+
+    if (progress < 1) {
+      animationRef.current = requestAnimationFrame(animateSpin);
+    } else {
+      console.log('Animation finished');
+      setIsSpinning(false);
+      if (onSpinComplete) {
+        onSpinComplete();
+      }
+    }
+  }, [targetRotation, onSpinComplete]);
+
+  // Trigger the animation when `spinning` becomes true
+  useEffect(() => {
+    if (spinning) {
+      console.log('Spinning prop is true, starting animation...');
+      startTimeRef.current = null; // Reset start time for each spin
+      startRotation.current = currentRotation; // Capture the current rotation as the starting point
+      setIsSpinning(true);
+      animationRef.current = requestAnimationFrame(animateSpin);
+    }
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [spinning, isSpinning, targetRotation, onSpinComplete]);
+  }, [spinning, animateSpin]);
 
-  // Set up the target rotation when the component mounts or when spin type changes
+  // Calculate the target rotation whenever the result changes
   useEffect(() => {
-    const cards = getCardsForSpin();
-    if (cards.length > 0 && result) {
+    if (result) {
+      console.log('Result received, calculating target rotation...');
+      const cards = getCardsForSpin();
       const cardIndex = cards.findIndex(card => card.name === result.name);
+
       if (cardIndex !== -1) {
-        // Calculate the angle for the target card
         const segmentAngle = (2 * Math.PI) / cards.length;
-        const targetCardAngle = (cardIndex * segmentAngle) + (segmentAngle / 2);
-        
-        // Calculate rotation to position the card at the top (270 degrees)
-        const rotationToTop = (2 * Math.PI) - targetCardAngle + (1.5 * Math.PI);
-        
-        // Add full rotations (5 spins) before stopping at the target
-        const fullRotations = 5;
-        const totalRotation = (fullRotations * 2 * Math.PI) + rotationToTop;
-        
-        // Set the start and target rotations
-        startRotation.current = currentRotation;
+        const targetAngle = (cardIndex * segmentAngle) + (segmentAngle / 2);
+        const rotationToTop = (2 * Math.PI) - targetAngle + (1.5 * Math.PI); // Pointing at 270 degrees
+
+        const fullSpins = 5;
+        const totalRotation = (fullSpins * 2 * Math.PI) + rotationToTop;
+
         setTargetRotation(currentRotation + totalRotation);
       }
     }
-  }, [result, spinType, getCardsForSpin, currentRotation]);
+  }, [result, getCardsForSpin]);
 
   // Initialize and draw wheel
   useEffect(() => {
