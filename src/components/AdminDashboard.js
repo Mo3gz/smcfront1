@@ -469,15 +469,14 @@ const AdminNotifications = ({ notifications }) => {
   const filterOptions = [
     { label: 'All', value: 'all' },
     { label: 'Spins', value: 'spins' },
-    // { label: 'Cards', value: 'card-used' }, // Remove card-used filter from options
+    { label: 'Cards', value: 'card-used' },
     { label: 'Countries', value: 'country-bought' }
   ];
-  // Filter out 'card-used' notifications from all views
   const filteredNotifications = filter === 'all'
-    ? notifications.filter(n => n.type !== 'card-used')
+    ? notifications
     : filter === 'spins'
-      ? notifications.filter(n => (n.type === 'spin' || n.type === 'admin-spin'))
-      : notifications.filter(n => n.type === filter && n.type !== 'card-used');
+      ? notifications.filter(n => n.type === 'spin' || n.type === 'admin-spin')
+      : notifications.filter(n => n.type === filter);
   return (
     <div className="card">
       <h3>Team Notifications</h3>
