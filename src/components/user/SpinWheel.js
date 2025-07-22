@@ -8,7 +8,7 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
   const [currentRotation, setCurrentRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
-  const [startRotation, setStartRotation] = useState(0);
+  const startRotation = useRef(0);
   const animationRef = useRef(null);
   const startTimeRef = useRef(0);
   const canvasRef = useRef(null);
@@ -93,7 +93,7 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
         const easedProgress = easeOutCubic(progress);
         
         // Calculate rotation
-        const rotation = startRotation + ((targetRotation - startRotation) * easedProgress);
+        const rotation = startRotation.current + ((targetRotation - startRotation.current) * easedProgress);
         setCurrentRotation(rotation % (2 * Math.PI));
         
         if (progress < 1) {
@@ -116,7 +116,7 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [spinning, isSpinning, startRotation, targetRotation, onSpinComplete]);
+  }, [spinning, isSpinning, targetRotation, onSpinComplete]);
 
   // Set up the target rotation when the component mounts or when spin type changes
   useEffect(() => {
@@ -135,7 +135,8 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
         const fullRotations = 5;
         const totalRotation = (fullRotations * 2 * Math.PI) + rotationToTop;
         
-        // Set the target rotation
+        // Set the start and target rotations
+        startRotation.current = currentRotation;
         setTargetRotation(currentRotation + totalRotation);
       }
     }
