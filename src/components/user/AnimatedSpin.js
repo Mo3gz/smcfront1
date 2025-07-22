@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 
 // Styled components
 const Container = styled.div`max-width: 600px; margin: 2rem auto; padding: 2rem; border-radius: 15px; background: #1e293b;`;
