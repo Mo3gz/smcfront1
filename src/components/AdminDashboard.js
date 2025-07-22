@@ -491,85 +491,210 @@ const AdminNotifications = ({ notifications }) => {
   const [filter, setFilter] = useState('all');
   const filterOptions = [
     { label: 'All', value: 'all' },
+    { label: 'Admin Actions', value: 'admin-action' },
     { label: 'Spins', value: 'spins' },
     { label: 'Cards', value: 'card-used' },
     { label: 'Countries', value: 'country-bought' }
   ];
-  // Always filter to admin notifications only
-  let filteredNotifications = filter === 'all'
-    ? notifications.filter(n => n.recipientType === 'admin')
-    : filter === 'spins'
-      ? notifications.filter(n => (n.type === 'spin' || n.type === 'admin-spin') && n.recipientType === 'admin')
-      : notifications.filter(n => n.type === filter && n.recipientType === 'admin');
+
+  // Format notification message based on action type
+  const formatNotificationMessage = (notification) => {
+    if (notification.type === 'admin-action') {
+      // For admin actions, we already have a formatted message
+      return notification.message;
+    }
+    // For other notification types, use the existing format
+    return notification.message || `Used ${notification.cardName}`;
+  };
+
+  // Filter notifications based on selected filter
+  let filteredNotifications = [];
+  if (filter === 'all') {
+    filteredNotifications = notifications.filter(n => n.recipientType === 'admin');
+  } else if (filter === 'spins') {
+    filteredNotifications = notifications.filter(n => 
+      (n.type === 'spin' || n.type === 'admin-spin') && n.recipientType === 'admin'
+    );
+  } else if (filter === 'admin-action') {
+    filteredNotifications = notifications.filter(n => n.type === 'admin-action');
+  } else {
+    filteredNotifications = notifications.filter(n => n.type === filter && n.recipientType === 'admin');
+  }
+
+  // Sort by timestamp, newest first
+  filteredNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  // Get badge color based on notification type
+  const getBadgeColor = (type) => {
+    switch(type) {
+      case 'admin-action':
+        return { bg: '#e6f7ff', color: '#1890ff', text: 'Admin Action' };
+      case 'spin':
+      case 'admin-spin':
+        return { bg: '#f6ffed', color: '#52c41a', text: 'Spin' };
+      case 'card-used':
+        return { bg: '#fff7e6', color: '#fa8c16', text: 'Card Used' };
+      case 'country-bought':
+        return { bg: '#f9f0ff', color: '#722ed1', text: 'Country' };
+      default:
+        return { bg: '#f5f5f5', color: '#595959', text: type };
+    }
+  };
+
   return (
     <div className="card">
-      <h3>Team Notifications</h3>
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', overflowX: 'auto' }}>
-        {filterOptions.map(opt => (
-          <button
-            key={opt.value}
-            className={filter === opt.value ? 'btn btn-primary' : 'btn'}
-            style={{
-              padding: '6px 18px',
-              borderRadius: '8px',
-              fontWeight: 600,
-              background: filter === opt.value ? '#667eea' : '#eee',
-              color: filter === opt.value ? 'white' : '#333',
-              border: 'none',
-              cursor: 'pointer',
-              minWidth: 90,
-              flex: '0 0 auto'
-            }}
-            onClick={() => setFilter(opt.value)}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <h3>Admin Notifications</h3>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
+        {filterOptions.map(opt => {
+          const isActive = filter === opt.value;
+          return (
+            <button
+              key={opt.value}
+              className={isActive ? 'btn btn-primary' : 'btn'}
+              style={{
+                padding: '6px 16px',
+                borderRadius: '20px',
+                fontWeight: 600,
+                background: isActive ? '#4f46e5' : '#f3f4f6',
+                color: isActive ? 'white' : '#4b5563',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s',
+                boxShadow: isActive ? '0 2px 4px rgba(79, 70, 229, 0.2)' : 'none'
+              }}
+              onClick={() => setFilter(opt.value)}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
-      <style>{`
-        .notification-filter-scroll::-webkit-scrollbar { display: none; }
-      `}</style>
-      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+      
+      <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
         {filteredNotifications.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
-            No notifications yet
-          </p>
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '40px 20px',
+            color: '#6b7280',
+            fontSize: '15px'
+          }}>
+            <div style={{ marginBottom: '10px' }}>📭</div>
+            No notifications found
+          </div>
         ) : (
-          filteredNotifications.map(notification => (
-            <div key={notification.id} style={{
-              padding: '12px',
-              border: '1px solid #eee',
-              borderRadius: '8px',
-              marginBottom: '8px',
-              background: notification.read ? '#f9f9f9' : 'white'
-            }}>
-              <div style={{ fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {notification.teamName} - {notification.type}
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: '#e53e3e',
-                  background: '#ffe5e5',
-                  borderRadius: '6px',
-                  padding: '2px 8px',
-                  marginLeft: '8px'
+          filteredNotifications.map(notification => {
+            const badge = getBadgeColor(notification.type);
+            const isAdminAction = notification.type === 'admin-action';
+            
+            return (
+              <div 
+                key={notification.id} 
+                style={{
+                  padding: '16px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '10px',
+                  marginBottom: '12px',
+                  background: notification.read ? '#f9fafb' : 'white',
+                  transition: 'all 0.2s',
+                  ':hover': {
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                    borderColor: '#d1d5db'
+                  }
+                }}
+              >
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '8px'
                 }}>
-                  For Admin
-                </span>
-              </div>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
-                {notification.message || `Used ${notification.cardName}`}
-                {notification.selectedTeam && (
-                  <span style={{ display: 'block', color: '#2196f3', fontWeight: 500, marginTop: '4px' }}>
-                    Target: {notification.selectedTeam}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: badge.color,
+                      background: badge.bg,
+                      borderRadius: '12px',
+                      padding: '2px 10px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      height: '24px'
+                    }}>
+                      {badge.text}
+                    </span>
+                    {isAdminAction && notification.metadata?.targetTeamName && (
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        color: '#4b5563',
+                        background: '#f3f4f6',
+                        borderRadius: '12px',
+                        padding: '2px 10px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        height: '24px'
+                      }}>
+                        Team: {notification.metadata.targetTeamName}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ 
+                    fontSize: '12px', 
+                    color: '#9ca3af',
+                    whiteSpace: 'nowrap',
+                    marginLeft: '8px'
+                  }}>
+                    {new Date(notification.timestamp).toLocaleString()}
+                  </div>
+                </div>
+
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#111827',
+                  lineHeight: '1.5',
+                  marginBottom: '8px'
+                }}>
+                  {formatNotificationMessage(notification)}
+                </div>
+
+                {isAdminAction && notification.metadata && (
+                  <div style={{ 
+                    marginTop: '8px',
+                    padding: '8px',
+                    background: '#f8fafc',
+                    borderRadius: '6px',
+                    borderLeft: `3px solid ${badge.color}`
+                  }}>
+                    <div style={{ 
+                      fontSize: '12px',
+                      color: '#4b5563',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}>
+                      {Object.entries(notification.metadata).map(([key, value]) => {
+                        // Skip targetTeamName as it's already shown in the badge
+                        if (key === 'targetTeamName') return null;
+                        
+                        // Format the key for display
+                        const displayKey = key
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, str => str.toUpperCase());
+                        
+                        return (
+                          <div key={key} style={{ display: 'flex' }}>
+                            <span style={{ fontWeight: 600, minWidth: '100px' }}>{displayKey}:</span>
+                            <span>{String(value)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
               </div>
-              <div style={{ fontSize: '12px', color: '#999' }}>
-                {new Date(notification.timestamp).toLocaleString()}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
