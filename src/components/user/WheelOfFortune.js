@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 
 // Animation for the wheel spin
@@ -103,11 +103,11 @@ const WheelOfFortune = ({ spinType, result, spinning, cards }) => {
   const [startRotation, setStartRotation] = useState(0);
   const wheelRef = useRef(null);
   
-  // Get the current spin type's cards
-  const currentCards = cards[spinType] || [];
+  // Get the current spin type's cards with useMemo to prevent unnecessary recalculations
+  const currentCards = useMemo(() => cards[spinType] || [], [cards, spinType]);
   
   // Calculate wheel segments
-  const segmentAngle = 360 / currentCards.length;
+  const segmentAngle = useMemo(() => 360 / (currentCards.length || 1), [currentCards.length]);
   
   // Handle spin animation when result changes
   useEffect(() => {
