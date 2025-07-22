@@ -34,14 +34,14 @@ const Spin = ({ socket, userData, setUserData }) => {
   }, [spinType, discount]);
 
   // Get auth token from cookies
-  const getAuthToken = () => {
+  const getAuthToken = useCallback(() => {
     const cookies = document.cookie.split(';');
     const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
     return tokenCookie ? tokenCookie.split('=')[1] : null;
-  };
+  }, []);
 
   // Create axios config with auth headers
-  const createAuthConfig = () => {
+  const createAuthConfig = useCallback(() => {
     const token = getAuthToken();
     return {
       withCredentials: true,
@@ -50,7 +50,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         ...(token && { 'Authorization': `Bearer ${token}` })
       }
     };
-  };
+  }, [getAuthToken]);
 
   // Validate promo code when it changes
   useEffect(() => {
@@ -89,19 +89,20 @@ const Spin = ({ socket, userData, setUserData }) => {
 
   // Listen for real-time user updates (coins, score changes)
   useEffect(() => {
-    if (socket) {
-      socket.on('user-update', (updatedUser) => {
-        console.log('User updated via socket in Spin:', updatedUser);
-        if (updatedUser.id === userData?.id) {
-          setUserData(prev => ({ ...prev, ...updatedUser }));
-        }
-      });
+    if (!socket) return;
+    
+    const handleUserUpdate = (updatedUser) => {
+      console.log('User updated via socket in Spin:', updatedUser);
+      if (updatedUser.id === userData?.id) {
+        setUserData(prev => ({ ...prev, ...updatedUser }));
+      }
+    };
 
-      return () => {
-        socket.off('user-update');
-      };
-    }
-  }, [socket, userData?.id, setUserData, createAuthConfig]);
+    socket.on('user-update', handleUserUpdate);
+    return () => {
+      socket.off('user-update', handleUserUpdate);
+    };
+  }, [socket, userData?.id, setUserData]);
 
   const handleSpin = async () => {
     if (spinning) return;
