@@ -68,12 +68,23 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
     const easedProgress = easeOutCubic(progress);
     
-    // Calculate rotation (start fast, slow down to target)
-    const baseRotation = currentRotation + SPIN_SPEED;
-    const targetRotationValue = targetRotation || 0;
-    const rotation = baseRotation + (targetRotationValue - baseRotation) * easedProgress;
+    // Start with fast spinning, then slow down to the target
+    const spinSpeed = 0.3; // Base spin speed (higher = faster)
+    const deceleration = 0.9; // How quickly it slows down (0-1)
     
-    setCurrentRotation(rotation);
+    // Calculate rotation - start fast, slow down to target
+    let rotation;
+    if (progress < 0.8) {
+      // First 80% of time: spin fast
+      rotation = currentRotation + (spinSpeed * (1 - (progress * deceleration)));
+    } else {
+      // Last 20% of time: ease into final position
+      const finalProgress = (progress - 0.8) * 5; // Scale to 0-1 for the final part
+      const finalEase = easeOutCubic(finalProgress);
+      rotation = currentRotation + ((targetRotation - currentRotation) * finalEase);
+    }
+    
+    setCurrentRotation(rotation % (2 * Math.PI));
     
     if (progress < 1) {
       animationRef.current = requestAnimationFrame(animateSpin);
