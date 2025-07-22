@@ -4,28 +4,28 @@ import './SpinWheel.css';
 const SpinWheel = ({ spinType, spinning, result }) => {
   const canvasRef = useRef(null);
   const wheelRef = useRef(null);
-  
-  // Define cards by type
-  const cardsByType = {
-    luck: [
-      { name: "I'mphoteric", type: 'luck', effect: '+400 Coins instantly' },
-      { name: "Everything Against Me", type: 'luck', effect: 'Instantly lose 250 Coins' },
-      { name: 'El 7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
-    ],
-    attack: [
-      { name: 'Wesh l Wesh', type: 'attack', effect: '1v1 battle' },
-      { name: 'Ana el 7aramy', type: 'attack', effect: 'Btakhod 100 coin men ay khema mnghir ay challenge' },
-      { name: 'Ana w Bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
-    ],
-    alliance: [
-      { name: 'El Nadala', type: 'alliance', effect: 'Bt3mel t7alof w tlghih f ay wa2t w takhod el coins 3ady' },
-      { name: 'El Sohab', type: 'alliance', effect: 'Bt3mel t7alof 3ady' },
-      { name: 'El Melok', type: 'alliance', effect: 'Btst5dm el khema el taniaa y3melo el challenges makanak' }
-    ]
-  };
 
   // Get cards based on spin type
   const getCardsForSpin = useCallback(() => {
+    // Define cards by type inside useCallback to avoid dependency issues
+    const cardsByType = {
+      luck: [
+        { name: "I'mphoteric", type: 'luck', effect: '+400 Coins instantly' },
+        { name: "Everything Against Me", type: 'luck', effect: 'Instantly lose 250 Coins' },
+        { name: 'El 7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
+      ],
+      attack: [
+        { name: 'Wesh l Wesh', type: 'attack', effect: '1v1 battle' },
+        { name: 'Ana el 7aramy', type: 'attack', effect: 'Btakhod 100 coin men ay khema mnghir ay challenge' },
+        { name: 'Ana w Bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
+      ],
+      alliance: [
+        { name: 'El Nadala', type: 'alliance', effect: 'Bt3mel t7alof w tlghih f ay wa2t w takhod el coins 3ady' },
+        { name: 'El Sohab', type: 'alliance', effect: 'Bt3mel t7alof 3ady' },
+        { name: 'El Melok', type: 'alliance', effect: 'Btst5dm el khema el taniaa y3melo el challenges makanak' }
+      ]
+    };
+    
     if (spinType === 'random') {
       return [
         ...cardsByType.luck,
