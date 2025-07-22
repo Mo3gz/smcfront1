@@ -3,7 +3,6 @@ import './SpinWheel.css';
 
 // Animation constants
 const SPIN_DURATION = 5000; // 5 seconds
-const SPIN_SPEED = 0.05; // Base rotation speed
 
 const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) => {
   const [currentRotation, setCurrentRotation] = useState(0);
@@ -66,7 +65,6 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
     
     // Easing function (easeOutCubic)
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-    const easedProgress = easeOutCubic(progress);
     
     // Start with fast spinning, then slow down to the target
     const spinSpeed = 0.3; // Base spin speed (higher = faster)
