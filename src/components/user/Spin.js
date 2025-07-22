@@ -261,18 +261,10 @@ const Spin = ({ socket, userData, setUserData }) => {
             <SpinWheel 
               spinType={spinType} 
               spinning={spinning} 
-              result={result} 
+              result={result}
+              showResult={showResult}
               onSpinComplete={handleSpinComplete}
             />
-            {showResult && result && (
-              <div className="result-overlay">
-                <div className="result-popup">
-                  <h3>You got:</h3>
-                  <h2>{result.name}</h2>
-                  <p>{result.effect}</p>
-                </div>
-              </div>
-            )}
           </div>
           
           <button

@@ -5,7 +5,7 @@ import './SpinWheel.css';
 const SPIN_DURATION = 5000; // 5 seconds
 const SPIN_ROTATIONS = 5; // Number of full rotations
 
-const SpinWheel = ({ spinType, spinning, result, onSpinComplete }) => {
+const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) => {
   const [currentRotation, setCurrentRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
