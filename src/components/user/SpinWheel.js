@@ -3,7 +3,6 @@ import './SpinWheel.css';
 
 // Animation constants
 const SPIN_DURATION = 5000; // 5 seconds
-const SPIN_ROTATIONS = 5; // Number of full rotations
 const SPIN_SPEED = 0.05; // Base rotation speed
 
 const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) => {
