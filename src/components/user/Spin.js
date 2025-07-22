@@ -224,7 +224,7 @@ const Spin = ({ socket, userData, setUserData }) => {
               placeholder="Enter promo code for discount"
               style={{ flex: 1 }}
             />
-            <Gift size={20} color="#667eea" style={{ alignSelf: 'center' }} />
+            <Shield size={20} color="#667eea" style={{ alignSelf: 'center' }} />
           </div>
           {checkingPromo && <div style={{ color: '#888', marginTop: 4 }}>Checking promo code...</div>}
           {promoValid === true && (
