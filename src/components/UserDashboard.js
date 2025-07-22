@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
-import Spin from './user/Spin';
+import AnimatedSpin from './user/AnimatedSpin';
 import MapView from './user/MapView';
 import Notifications from './Notifications';
 import Logo from '../assets/Logo.png';
@@ -63,7 +63,12 @@ const UserDashboard = ({ socket }) => {
       case 'inventory':
         return <Inventory socket={socket} />;
       case 'spin':
-        return <Spin socket={socket} userData={userData} setUserData={setUserData} />;
+        return (
+          <div className="w-full">
+            <h2 className="text-2xl font-bold mb-4">Card Picker</h2>
+            <AnimatedSpin socket={socket} userData={userData} setUserData={setUserData} />
+          </div>
+        );
       case 'map':
         return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
       default:
