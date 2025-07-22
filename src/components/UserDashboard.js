@@ -15,6 +15,7 @@ import MapView from './user/MapView';
 import Notifications from './Notifications';
 import Logo from '../assets/Logo.png';
 import ProgramOfTheDay from './ProgramOfTheDay';
+import CalendarIcon from '../assets/CalendarIcon';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
@@ -169,7 +170,7 @@ const UserDashboard = ({ socket }) => {
             className={`nav-item ${activeTab === 'program' ? 'active' : ''}`}
             onClick={() => setActiveTab('program')}
           >
-            <span className="nav-icon" style={{ color: 'black' }}>🗓️</span>
+            <span className="nav-icon"><CalendarIcon width={24} height={24} /></span>
             <span className="nav-text">Program</span>
           </div>
         </div>
