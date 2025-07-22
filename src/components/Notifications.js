@@ -149,14 +149,25 @@ const Notifications = () => {
             notifications.map(notification => (
               <div key={notification.id} style={{
                 padding: '12px',
-                border: '1px solid #eee',
+                border: notification.type === 'card-received' ? '2px solid #4facfe' : '1px solid #eee',
                 borderRadius: '8px',
                 marginBottom: '12px',
                 background: notification.read ? '#f9f9f9' : 'white',
                 boxShadow: notification.read ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'
               }}>
-                <div style={{ fontWeight: '600', marginBottom: '4px', color: '#333' }}>
+                <div style={{ fontWeight: '600', marginBottom: '4px', color: '#333', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {notification.type}
+                  {notification.type === 'card-received' && (
+                    <span style={{
+                      background: '#4facfe',
+                      color: 'white',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      marginLeft: '8px'
+                    }}>New Card</span>
+                  )}
                 </div>
                 <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
                   {notification.message}
