@@ -1,61 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
+import styled, { keyframes } from 'styled-components';
+import WheelOfFortune from './WheelOfFortune';
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
+
+const SpinContainer = styled.div`
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  animation: ${fadeIn} 0.5s ease-out;
+`;
+
+const SpinButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 200px;
+  margin: 30px auto 0;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: ${props => props.$free ? '#4ecdc4' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  animation: ${pulse} 2s infinite;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    animation: none;
+  }
+`;
 
 // Move these above all hooks and state
-const allCards = {
-  luck: [
-    { name: "i`amphoteric", type: 'luck', effect: '+400 Coins instantly' },
-    { name: "Everything Against Me", type: 'luck', effect: 'Instantly lose 250 Coins' },
-    { name: 'el 7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
-  ],
-  attack: [
-    { name: 'wesh l wesh', type: 'attack', effect: '1v1 battle' },
-    { name: 'ana el 7aramy', type: 'attack', effect: 'Btakhod 100 coin men ay khema mnghir ay challenge' },
-    { name: 'ana w bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
-  ],
-  alliance: [
-    { name: 'el nadala', type: 'alliance', effect: 'Bt3mel t7alof w tlghih f ay wa2t w takhod el coins 3ady' },
-    { name: 'el sohab', type: 'alliance', effect: 'Bt3mel t7alof 3ady' },
-    { name: 'el melok', type: 'alliance', effect: 'Btst5dm el khema el taniaa y3melo el challenges makanak' }
-  ]
-};
-
 const spinTypes = [
-  { 
-    id: 'luck', 
-    name: 'Lucky Spin', 
-    cost: 50, 
-    icon: Shield, 
-    color: '#feca57',
-    cards: allCards.luck
-  },
-  { 
-    id: 'attack', 
-    name: 'Attack Spin', 
-    cost: 50, 
-    icon: Zap, 
-    color: '#ff6b6b',
-    cards: allCards.attack
-  },
-  { 
-    id: 'alliance', 
-    name: 'Alliance Spin', 
-    cost: 50, 
-    icon: Heart, 
-    color: '#4ecdc4',
-    cards: allCards.alliance
-  },
-  { 
-    id: 'random', 
-    name: 'Random Spin', 
-    cost: 25, 
-    icon: RotateCcw, 
-    color: '#667eea',
-    cards: [...allCards.luck, ...allCards.attack, ...allCards.alliance]
-  }
+  { id: 'luck', name: 'Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
+  { id: 'attack', name: 'Attack Spin', cost: 50, icon: Zap, color: '#ff6b6b' },
+  { id: 'alliance', name: 'Alliance Spin', cost: 50, icon: Heart, color: '#4ecdc4' },
+  { id: 'random', name: 'Random Spin', cost: 25, icon: RotateCcw, color: '#667eea' }
 ];
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
@@ -118,6 +126,25 @@ const Spin = ({ socket, userData, setUserData }) => {
     }
   }, [socket, userData?.id, setUserData]);
 
+  const handleSpinComplete = useCallback((card) => {
+    setShowConfetti(true);
+    setResult(card);
+    
+    // Show congratulations message prominently
+    toast.success(`🎉 Congratulations! You got ${card.name}!`, {
+      duration: 4000,
+      position: 'top-center',
+      style: {
+        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        color: 'white',
+        fontSize: '16px',
+        fontWeight: 'bold'
+      }
+    });
+    
+    setTimeout(() => setShowConfetti(false), 3000);
+  }, []);
+
   const handleSpin = async () => {
     if (spinning) return;
     if (finalCost > 0 && userData.coins < finalCost) {
@@ -134,31 +161,18 @@ const Spin = ({ socket, userData, setUserData }) => {
         promoCode: promoCode || undefined
       }, { withCredentials: true });
 
-      // Simulate spin animation
+      // The wheel will handle the animation and call handleSpinComplete when done
+      setUserData(prev => ({
+        ...prev,
+        coins: response.data.remainingCoins
+      }));
+      
+      // Set the result after a delay to match the wheel animation
       setTimeout(() => {
-        setResult(response.data.card);
-        setShowConfetti(true);
-        setUserData(prev => ({
-          ...prev,
-          coins: response.data.remainingCoins
-        }));
-        setPromoCode('');
+        handleSpinComplete(response.data.card);
         setSpinning(false);
-        
-        // Show congratulations message prominently
-        toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
-          duration: 4000,
-          position: 'top-center',
-          style: {
-            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }
-        });
-        
-        setTimeout(() => setShowConfetti(false), 3000);
-      }, 3000);
+        setPromoCode('');
+      }, 1000); // Slight delay to ensure wheel starts spinning
 
     } catch (error) {
       toast.error(error.response?.data?.error || 'Spin failed!');
@@ -244,28 +258,39 @@ const Spin = ({ socket, userData, setUserData }) => {
           Price after discount: {finalCost === 0 ? 'Free!' : `${finalCost} coins`}
         </div>
 
-        {/* Spin Wheel */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div className="spin-wheel" style={{ 
-            transform: spinning ? 'rotate(1440deg)' : 'rotate(0deg)',
-            transition: spinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
-          }}>
-            <div className="spin-pointer"></div>
-          </div>
+        {/* Wheel of Fortune */}
+        <div style={{ margin: '20px 0 40px' }}>
+          <WheelOfFortune 
+            items={spinType === 'random' 
+              ? [...allCards.luck, ...allCards.attack, ...allCards.alliance]
+              : allCards[spinType]}
+            onSpinEnd={handleSpinComplete}
+            spinning={spinning}
+          />
           
           <button
             className="btn"
             onClick={handleSpin}
             disabled={spinning || (promoCode && promoValid === false)}
             style={{ 
-              marginTop: '20px',
+              marginTop: '30px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               width: '200px',
-              margin: '20px auto 0',
-              background: finalCost === 0 ? '#4ecdc4' : undefined
+              margin: '0 auto',
+              background: finalCost === 0 ? '#4ecdc4' : undefined,
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: '600',
+              borderRadius: '50px',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              opacity: spinning ? 0.7 : 1,
+              pointerEvents: spinning ? 'none' : 'auto'
             }}
           >
             {spinning ? (
@@ -276,7 +301,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             ) : (
               <>
                 <RotateCcw size={20} />
-                {finalCost === 0 ? 'Spin for Free!' : 'Spin Now!'}
+                {finalCost === 0 ? 'Spin for Free!' : `SPIN (${finalCost} Coins)`}
               </>
             )}
           </button>
@@ -316,78 +341,6 @@ const Spin = ({ socket, userData, setUserData }) => {
           </div>
         )}
 
-        {/* Available Cards */}
-        <div style={{ marginTop: '24px' }}>
-          <h4 style={{ color: '#667eea', marginBottom: '16px', textAlign: 'center' }}>Available Cards</h4>
-          <div style={{ 
-            background: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: '12px',
-            padding: '16px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-          }}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
-              gap: '12px',
-              marginBottom: '16px'
-            }}>
-              {spinTypes.find(s => s.id === spinType).cards.map((card, index) => (
-                <div 
-                  key={index}
-                  style={{
-                    background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)',
-                    padding: '12px 8px',
-                    borderRadius: '8px',
-                    textAlign: 'center',
-                    border: '1px solid #e2e8f0',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer',
-                    ':hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
-                    }
-                  }}
-                  onClick={() => {
-                    toast.success(card.name, {
-                      description: card.effect,
-                      duration: 3000,
-                      position: 'top-center'
-                    });
-                  }}
-                >
-                  <div style={{ 
-                    fontSize: '14px', 
-                    fontWeight: '600',
-                    color: '#2d3748',
-                    marginBottom: '4px'
-                  }}>
-                    {card.name}
-                  </div>
-                  <div style={{
-                    fontSize: '10px',
-                    background: 'rgba(102, 126, 234, 0.1)',
-                    color: '#4a5568',
-                    padding: '2px 6px',
-                    borderRadius: '10px',
-                    display: 'inline-block',
-                    textTransform: 'capitalize'
-                  }}>
-                    {card.type}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ 
-              fontSize: '12px', 
-              color: '#718096',
-              textAlign: 'center',
-              marginTop: '8px'
-            }}>
-              Click on a card to see its effect
-            </div>
-          </div>
-        </div>
-
         {/* Spin Info */}
         <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(102, 126, 234, 0.1)', borderRadius: '12px' }}>
           <h4 style={{ color: '#667eea', marginBottom: '12px' }}>Spin Information</h4>
@@ -403,4 +356,4 @@ const Spin = ({ socket, userData, setUserData }) => {
   );
 };
 
-export default Spin;
+export default Spin; 
