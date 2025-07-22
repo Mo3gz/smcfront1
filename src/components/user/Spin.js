@@ -20,6 +20,8 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [promoCode, setPromoCode] = useState('');
   const [spinning, setSpinning] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [spinComplete, setSpinComplete] = useState(false);
   const [result, setResult] = useState(null);
   const [discount, setDiscount] = useState(0);
   const [promoValid, setPromoValid] = useState(null); // null: not checked, true: valid, false: invalid
@@ -110,7 +112,10 @@ const Spin = ({ socket, userData, setUserData }) => {
     }
 
     setSpinning(true);
+    setShowResult(false);
+    setSpinComplete(false);
     setResult(null);
+    setShowConfetti(false);
 
     try {
       const response = await axios.post(
@@ -122,36 +127,54 @@ const Spin = ({ socket, userData, setUserData }) => {
         createAuthConfig()
       );
 
-      // Simulate spin animation
-      setTimeout(() => {
-        setResult(response.data.card);
-        setShowConfetti(true);
-        setUserData(prev => ({
-          ...prev,
-          coins: response.data.remainingCoins
-        }));
-        setPromoCode('');
-        setSpinning(false);
-        
-        // Show congratulations message prominently
-        toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
-          duration: 4000,
-          position: 'top-center',
-          style: {
-            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }
-        });
-        
-        setTimeout(() => setShowConfetti(false), 3000);
-      }, 3000);
-
+      // Store the result and start the wheel animation
+      setResult({
+        ...response.data.card,
+        remainingCoins: response.data.remainingCoins
+      });
+      
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Spin failed!');
+      console.error('Spin error:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to spin. Please try again.';
+      toast.error(errorMessage);
       setSpinning(false);
     }
+  };
+
+  const handleSpinComplete = () => {
+    if (!result) return;
+    
+    setShowConfetti(true);
+    setShowResult(true);
+    setSpinComplete(true);
+    
+    // Update user data with remaining coins from the server
+    if (result.remainingCoins !== undefined) {
+      setUserData(prev => ({
+        ...prev,
+        coins: result.remainingCoins
+      }));
+    }
+    
+    // Reset promo code after successful spin
+    setPromoCode('');
+    setDiscount(0);
+    setPromoValid(null);
+    
+    // Show congratulations message
+    toast.success(`🎉 Congratulations! You got ${result.name}!`, {
+      duration: 4000,
+      position: 'top-center',
+      style: {
+        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        color: 'white',
+        fontSize: '16px',
+        fontWeight: 'bold'
+      }
+    });
+    
+    // Hide confetti after animation
+    setTimeout(() => setShowConfetti(false), 3000);
   };
 
   const getSpinIcon = (type) => {
@@ -234,11 +257,23 @@ const Spin = ({ socket, userData, setUserData }) => {
 
         {/* Spin Wheel */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <SpinWheel 
-            spinType={spinType} 
-            spinning={spinning} 
-            result={result} 
-          />
+          <div className="wheel-container">
+            <SpinWheel 
+              spinType={spinType} 
+              spinning={spinning} 
+              result={result} 
+              onSpinComplete={handleSpinComplete}
+            />
+            {showResult && result && (
+              <div className="result-overlay">
+                <div className="result-popup">
+                  <h3>You got:</h3>
+                  <h2>{result.name}</h2>
+                  <p>{result.effect}</p>
+                </div>
+              </div>
+            )}
+          </div>
           
           <button
             className="btn"

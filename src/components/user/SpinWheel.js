@@ -1,7 +1,16 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import './SpinWheel.css';
 
-const SpinWheel = ({ spinType, spinning, result }) => {
+// Number of full rotations before stopping
+const SPIN_DURATION = 5000; // 5 seconds
+const SPIN_ROTATIONS = 5; // Number of full rotations
+
+const SpinWheel = ({ spinType, spinning, result, onSpinComplete }) => {
+  const [currentRotation, setCurrentRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [targetRotation, setTargetRotation] = useState(0);
+  const animationRef = useRef(null);
+  const startTimeRef = useRef(0);
   const canvasRef = useRef(null);
   const wheelRef = useRef(null);
 
@@ -36,15 +45,87 @@ const SpinWheel = ({ spinType, spinning, result }) => {
     return cardsByType[spinType] || [];
   }, [spinType]);
 
-  // Initialize wheel
+  // Calculate the angle for a specific card
+  const getCardAngle = useCallback((cards, cardName) => {
+    const cardsList = getCardsForSpin();
+    const index = cardsList.findIndex(card => card.name === cardName);
+    if (index === -1) return 0;
+    
+    const segmentAngle = (2 * Math.PI) / cardsList.length;
+    // Return the middle angle of the segment (in radians)
+    return (index * segmentAngle) + (segmentAngle / 2);
+  }, [getCardsForSpin]);
+
+  // Handle spin animation
+  const animateSpin = useCallback((timestamp) => {
+    if (!startTimeRef.current) {
+      startTimeRef.current = timestamp;
+    }
+    
+    const elapsed = timestamp - startTimeRef.current;
+    const progress = Math.min(elapsed / SPIN_DURATION, 1);
+    
+    // Easing function (easeOutCubic)
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+    const easedProgress = easeOutCubic(progress);
+    
+    // Calculate rotation (multiple full rotations + target rotation)
+    const rotation = (SPIN_ROTATIONS * 2 * Math.PI * (1 - easedProgress)) + 
+                    (targetRotation * easedProgress);
+    
+    setCurrentRotation(rotation);
+    
+    if (progress < 1) {
+      animationRef.current = requestAnimationFrame(animateSpin);
+    } else {
+      // Animation complete
+      setIsSpinning(false);
+      if (onSpinComplete) {
+        onSpinComplete();
+      }
+    }
+  }, [targetRotation, onSpinComplete]);
+
+  // Start spinning when spinning prop changes
+  useEffect(() => {
+    if (spinning && !isSpinning) {
+      setIsSpinning(true);
+      startTimeRef.current = 0;
+      
+      // Calculate target rotation based on result
+      if (result) {
+        const cards = getCardsForSpin();
+        const cardIndex = cards.findIndex(card => card.name === result.name);
+        if (cardIndex !== -1) {
+          // Calculate the angle that would make the result card land at the top
+          const segmentAngle = (2 * Math.PI) / cards.length;
+          // We want the card to land at the top (270 degrees or 1.5π radians)
+          // So we calculate how much to rotate to make that happen
+          const targetCardAngle = (cardIndex * segmentAngle) + (segmentAngle / 2);
+          // The wheel needs to rotate to position the target card at the top
+          // We add 1.5π to position it at the top (270 degrees)
+          const rotationToTop = (2 * Math.PI) - targetCardAngle + (1.5 * Math.PI);
+          // Add full rotations to make the spin look natural
+          setTargetRotation(rotationToTop);
+        }
+      }
+      
+      // Start the animation
+      animationRef.current = requestAnimationFrame(animateSpin);
+    }
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [spinning, result, isSpinning, animateSpin, getCardsForSpin]);
+
+  // Initialize and draw wheel
   useEffect(() => {
     const canvas = canvasRef.current;
-    const wheel = wheelRef.current;
-    if (!canvas || !wheel) return;
-
-    const cards = getCardsForSpin();
-    if (cards.length === 0) return;
-
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
@@ -53,65 +134,72 @@ const SpinWheel = ({ spinType, spinning, result }) => {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    // Save the current transformation
+    ctx.save();
+    
+    // Apply rotation for spinning animation
+    ctx.translate(centerX, centerY);
+    ctx.rotate(currentRotation);
+    ctx.translate(-centerX, -centerY);
+    
+    // Get cards for current spin type
+    const cards = getCardsForSpin();
+    if (cards.length === 0) return;
+    
     // Draw wheel segments
     const segmentAngle = (2 * Math.PI) / cards.length;
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5'];
     
     cards.forEach((card, index) => {
+      // Draw segment
       const startAngle = index * segmentAngle - Math.PI / 2;
       const endAngle = (index + 1) * segmentAngle - Math.PI / 2;
       
-      // Draw segment
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.arc(centerX, centerY, radius, startAngle, endAngle);
       ctx.closePath();
-      ctx.fillStyle = colors[index % colors.length];
+      
+      // Set segment color based on card type
+      const colors = {
+        luck: '#feca57',
+        attack: '#ff6b6b',
+        alliance: '#4ecdc4'
+      };
+      
+      ctx.fillStyle = colors[card.type] || '#667eea';
       ctx.fill();
       
-      // Draw segment border
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      // Draw text
+      // Add text
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.rotate(startAngle + segmentAngle / 2);
       
-      // Adjust text position
-      const textRadius = radius * 0.7;
+      // Calculate text size to fit in segment
+      const maxWidth = radius * 0.8;
+      const fontSize = Math.min(16, maxWidth / Math.max(...card.name.split(' ').map(word => word.length)) * 2);
+      ctx.font = `bold ${fontSize}px Arial`;
       
       // Draw text
       ctx.fillStyle = '#fff';
-      ctx.font = `bold ${Math.max(10, 14 - cards.length)}px Arial`;
-      ctx.textAlign = 'right';
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       
-      // Split long text into multiple lines
-      const maxChars = 10;
+      // Split text into words and position them vertically
       const words = card.name.split(' ');
-      let line = '';
-      let y = -textRadius / 2;
+      const lineHeight = fontSize * 1.2;
+      const totalHeight = words.length * lineHeight - (lineHeight - fontSize);
+      let y = -totalHeight / 2;
       
-      for (const word of words) {
-        const testLine = line + (line ? ' ' : '') + word;
-        if (testLine.length <= maxChars) {
-          line = testLine;
-        } else {
-          if (line) {
-            ctx.fillText(line, textRadius - 20, y);
-            y += 15;
-          }
-          line = word;
-        }
-      }
-      if (line) {
-        ctx.fillText(line, textRadius - 20, y);
-      }
+      words.forEach(word => {
+        ctx.fillText(word, radius * 0.3, y);
+        y += lineHeight;
+      });
       
       ctx.restore();
     });
+    
+    // Restore the transformation before drawing the center circle
+    ctx.restore();
     
     // Draw center circle
     ctx.beginPath();
@@ -119,26 +207,26 @@ const SpinWheel = ({ spinType, spinning, result }) => {
     ctx.fillStyle = '#fff';
     ctx.fill();
     
-  }, [spinType, spinning, getCardsForSpin]);
+  }, [spinType, getCardsForSpin, currentRotation]);
 
   return (
     <div className="wheel-container">
-      <div 
-        ref={wheelRef} 
-        className="wheel" 
-        style={{ transform: spinning ? 'rotate(1440deg)' : 'rotate(0deg)' }}
-      >
-        <canvas 
-          ref={canvasRef} 
-          width={300} 
-          height={300}
-          style={{
-            transition: spinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-            transform: spinning ? 'rotate(1440deg)' : 'rotate(0deg)'
-          }}
-        />
-      </div>
-      <div className="wheel-pointer"></div>
+      <canvas
+        ref={canvasRef}
+        width={300}
+        height={300}
+        className={`wheel ${isSpinning ? 'spinning' : ''}`}
+      />
+      <div className="wheel-pointer" />
+      {result && (
+        <div className={`result-overlay ${showResult ? 'show' : ''}`}>
+          <div className="result-popup">
+            <h3>You got:</h3>
+            <h2>{result.name}</h2>
+            <p>{result.effect}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
