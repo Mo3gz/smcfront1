@@ -3,6 +3,7 @@ import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
+import SpinWheel from './SpinWheel';
 
 // Move these above all hooks and state
 const spinTypes = [
@@ -200,12 +201,11 @@ const Spin = ({ socket, userData, setUserData }) => {
 
         {/* Spin Wheel */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div className="spin-wheel" style={{ 
-            transform: spinning ? 'rotate(1440deg)' : 'rotate(0deg)',
-            transition: spinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
-          }}>
-            <div className="spin-pointer"></div>
-          </div>
+          <SpinWheel 
+            spinType={spinType} 
+            spinning={spinning} 
+            result={result} 
+          />
           
           <button
             className="btn"
