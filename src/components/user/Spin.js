@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { RotateCcw, Zap, Heart, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
-import WheelOfFortune from './WheelOfFortune';
 
 // Move these above all hooks and state
 const spinTypes = [
@@ -14,25 +13,6 @@ const spinTypes = [
 ];
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-
-// Define card types and their properties
-const allCards = {
-  luck: [
-    { name: "i`amphoteric", type: 'luck', effect: '+400 Coins instantly' },
-    { name: "Everything Against Me", type: 'luck', effect: 'Instantly lose 250 Coins' },
-    { name: 'el 7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
-  ],
-  attack: [
-    { name: 'wesh l wesh', type: 'attack', effect: '1v1 battle' },
-    { name: 'ana el 7aramy', type: 'attack', effect: 'Btakhod 100 coin men ay khema mnghir ay challenge' },
-    { name: 'ana w bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
-  ],
-  alliance: [
-    { name: 'el nadala', type: 'alliance', effect: 'Bt3mel t7alof w tlghih f ay wa2t w takhod el coins 3ady' },
-    { name: 'el sohab', type: 'alliance', effect: 'Bt3mel t7alof 3ady' },
-    { name: 'el melok', type: 'alliance', effect: 'Btst5dm el khema el taniaa y3melo el challenges makanak' }
-  ]
-};
 
 const Spin = ({ socket, userData, setUserData }) => {
   const [spinType, setSpinType] = useState('luck');
@@ -92,25 +72,6 @@ const Spin = ({ socket, userData, setUserData }) => {
     }
   }, [socket, userData?.id, setUserData]);
 
-  const handleSpinComplete = useCallback((card) => {
-    setShowConfetti(true);
-    setResult(card);
-    
-    // Show congratulations message prominently
-    toast.success(`🎉 Congratulations! You got ${card.name}!`, {
-      duration: 4000,
-      position: 'top-center',
-      style: {
-        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        color: 'white',
-        fontSize: '16px',
-        fontWeight: 'bold'
-      }
-    });
-    
-    setTimeout(() => setShowConfetti(false), 3000);
-  }, []);
-
   const handleSpin = async () => {
     if (spinning) return;
     if (finalCost > 0 && userData.coins < finalCost) {
@@ -127,18 +88,31 @@ const Spin = ({ socket, userData, setUserData }) => {
         promoCode: promoCode || undefined
       }, { withCredentials: true });
 
-      // The wheel will handle the animation and call handleSpinComplete when done
-      setUserData(prev => ({
-        ...prev,
-        coins: response.data.remainingCoins
-      }));
-      
-      // Set the result after a delay to match the wheel animation
+      // Simulate spin animation
       setTimeout(() => {
-        handleSpinComplete(response.data.card);
-        setSpinning(false);
+        setResult(response.data.card);
+        setShowConfetti(true);
+        setUserData(prev => ({
+          ...prev,
+          coins: response.data.remainingCoins
+        }));
         setPromoCode('');
-      }, 1000); // Slight delay to ensure wheel starts spinning
+        setSpinning(false);
+        
+        // Show congratulations message prominently
+        toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
+          duration: 4000,
+          position: 'top-center',
+          style: {
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        });
+        
+        setTimeout(() => setShowConfetti(false), 3000);
+      }, 3000);
 
     } catch (error) {
       toast.error(error.response?.data?.error || 'Spin failed!');
@@ -209,7 +183,7 @@ const Spin = ({ socket, userData, setUserData }) => {
               placeholder="Enter promo code for discount"
               style={{ flex: 1 }}
             />
-            <Shield size={20} color="#667eea" style={{ alignSelf: 'center' }} />
+            <Gift size={20} color="#667eea" style={{ alignSelf: 'center' }} />
           </div>
           {checkingPromo && <div style={{ color: '#888', marginTop: 4 }}>Checking promo code...</div>}
           {promoValid === true && (
@@ -224,50 +198,28 @@ const Spin = ({ socket, userData, setUserData }) => {
           Price after discount: {finalCost === 0 ? 'Free!' : `${finalCost} coins`}
         </div>
 
-        {/* Wheel of Fortune */}
-        <div style={{ margin: '20px 0 40px' }}>
-          <WheelOfFortune 
-            items={(() => {
-              if (spinType === 'random') {
-                // Combine all cards from all types and shuffle them
-                const allCardsCombined = [
-                  ...allCards.luck,
-                  ...allCards.attack,
-                  ...allCards.alliance
-                ];
-                // Return all 9 cards for random spin
-                return allCardsCombined;
-              }
-              // For specific spin types, return only cards of that type
-              return allCards[spinType];
-            })()}
-            onSpinEnd={handleSpinComplete}
-            spinning={spinning}
-          />
+        {/* Spin Wheel */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div className="spin-wheel" style={{ 
+            transform: spinning ? 'rotate(1440deg)' : 'rotate(0deg)',
+            transition: spinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+          }}>
+            <div className="spin-pointer"></div>
+          </div>
           
           <button
             className="btn"
             onClick={handleSpin}
             disabled={spinning || (promoCode && promoValid === false)}
             style={{ 
-              marginTop: '30px',
+              marginTop: '20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               width: '200px',
-              margin: '0 auto',
-              background: finalCost === 0 ? '#4ecdc4' : undefined,
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: '600',
-              borderRadius: '50px',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease',
-              opacity: spinning ? 0.7 : 1,
-              pointerEvents: spinning ? 'none' : 'auto'
+              margin: '20px auto 0',
+              background: finalCost === 0 ? '#4ecdc4' : undefined
             }}
           >
             {spinning ? (
@@ -278,7 +230,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             ) : (
               <>
                 <RotateCcw size={20} />
-                {finalCost === 0 ? 'Spin for Free!' : `SPIN (${finalCost} Coins)`}
+                {finalCost === 0 ? 'Spin for Free!' : 'Spin Now!'}
               </>
             )}
           </button>
