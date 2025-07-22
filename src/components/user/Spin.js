@@ -85,7 +85,7 @@ const Spin = ({ socket, userData, setUserData }) => {
       }
     })
     .finally(() => setCheckingPromo(false));
-  }, [promoCode]);
+  }, [promoCode, createAuthConfig]);
 
   // Listen for real-time user updates (coins, score changes)
   useEffect(() => {
