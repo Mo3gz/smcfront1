@@ -58,7 +58,7 @@ const SpinWheel = ({ spinType, spinning, result, onSpinComplete }) => {
     
     // Calculate current rotation using easing
     const easedProgress = easeOutCubic(progress);
-    const rotation = startRotation + ((targetRotation - startRotation) * easedProgress);
+    const rotation = startRotation.current + ((targetRotation - startRotation.current) * easedProgress);
     
     // Update the rotation, keeping it within 2π
     setCurrentRotation(rotation % (2 * Math.PI));
@@ -67,31 +67,6 @@ const SpinWheel = ({ spinType, spinning, result, onSpinComplete }) => {
       animationRef.current = requestAnimationFrame(animateSpin);
     } else {
       // Animation complete
-      setIsSpinning(false);
-      if (onSpinComplete) {
-        onSpinComplete();
-      }
-    }
-  }, [startRotation, targetRotation, onSpinComplete]);
-
-  // Animate the spin
-  const animateSpin = useCallback((timestamp) => {
-    if (!startTimeRef.current) {
-      startTimeRef.current = timestamp;
-    }
-
-    const elapsed = timestamp - startTimeRef.current;
-    const progress = Math.min(elapsed / SPIN_DURATION, 1);
-    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-    const easedProgress = easeOutCubic(progress);
-
-    const rotation = startRotation.current + (targetRotation - startRotation.current) * easedProgress;
-    setCurrentRotation(rotation);
-
-    if (progress < 1) {
-      animationRef.current = requestAnimationFrame(animateSpin);
-    } else {
-      console.log('Animation finished');
       setIsSpinning(false);
       if (onSpinComplete) {
         onSpinComplete();
