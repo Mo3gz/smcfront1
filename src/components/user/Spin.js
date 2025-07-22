@@ -32,6 +32,25 @@ const Spin = ({ socket, userData, setUserData }) => {
     setFinalCost(Math.max(0, Math.floor(baseCost * (1 - discount / 100))));
   }, [spinType, discount]);
 
+  // Get auth token from cookies
+  const getAuthToken = () => {
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+    return tokenCookie ? tokenCookie.split('=')[1] : null;
+  };
+
+  // Create axios config with auth headers
+  const createAuthConfig = () => {
+    const token = getAuthToken();
+    return {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
+    };
+  };
+
   // Validate promo code when it changes
   useEffect(() => {
     if (!promoCode) {
@@ -40,21 +59,31 @@ const Spin = ({ socket, userData, setUserData }) => {
       return;
     }
     setCheckingPromo(true);
-    axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
-      .then(res => {
-        if (res.data.valid) {
-          setDiscount(res.data.discount);
-          setPromoValid(true);
-        } else {
-          setDiscount(0);
-          setPromoValid(false);
-        }
-      })
-      .catch(() => {
+    
+    axios.post(
+      `${API_BASE_URL}/api/promocode/validate`,
+      { code: promoCode },
+      createAuthConfig()
+    )
+    .then(res => {
+      if (res.data.valid) {
+        setDiscount(res.data.discount);
+        setPromoValid(true);
+      } else {
         setDiscount(0);
         setPromoValid(false);
-      })
-      .finally(() => setCheckingPromo(false));
+      }
+    })
+    .catch((error) => {
+      console.error('Promo code validation error:', error);
+      setDiscount(0);
+      setPromoValid(false);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+        // Optionally redirect to login
+      }
+    })
+    .finally(() => setCheckingPromo(false));
   }, [promoCode]);
 
   // Listen for real-time user updates (coins, score changes)
@@ -84,10 +113,14 @@ const Spin = ({ socket, userData, setUserData }) => {
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/spin`, {
-        spinType,
-        promoCode: promoCode || undefined
-      }, { withCredentials: true });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/spin`,
+        {
+          spinType,
+          promoCode: promoCode || undefined
+        },
+        createAuthConfig()
+      );
 
       // Simulate spin animation
       setTimeout(() => {
