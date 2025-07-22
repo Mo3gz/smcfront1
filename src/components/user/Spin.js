@@ -65,6 +65,8 @@ const Wheel = styled.div`
   transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
   transform: rotate(${props => props.rotation || 0}deg);
   will-change: transform;
+  border-radius: 50%;
+  overflow: hidden;
   
   &::before {
     content: '';
@@ -82,63 +84,74 @@ const Wheel = styled.div`
 
 const WheelSegment = styled.div`
   position: absolute;
-  width: 50%;
-  height: 50%;
-  transform-origin: 100% 100%;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
   left: 0;
   top: 0;
+  clip-path: polygon(50% 50%, 100% 0, 100% 50%, 100% 100%, 50% 100%, 0 100%, 0 0);
   background: ${props => props.color};
-  transform: rotate(${props => props.rotate}deg) skewY(${props => props.angle - 90}deg);
+  transform: rotate(${props => props.rotate}deg);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: none;
   box-sizing: border-box;
   transition: all 0.3s ease;
   cursor: pointer;
   filter: ${props => props.isSelected ? 'brightness(1.2) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))' : 'none'};
-  z-index: ${props => props.isSelected ? 5 : 1};
-  border-top-right-radius: 100%;
-  
-  /* Add gradient for better visual */
-  background: linear-gradient(
-    to bottom right,
-    ${props => props.color},
-    ${props => `${props.color}cc`}
-  );
-  
-  &:hover {
-    filter: brightness(1.1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
-    z-index: 2;
-  }
   
   & > div {
     position: absolute;
+    width: 120%;
+    height: 120%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(${props => 90 - (props.rotate + 60)}deg);
+    text-align: center;
+    padding: 0 20%;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  &:hover {
+    filter: brightness(1.1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+  }
+  
+  &::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: ${props => props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'transparent'};
+    transition: background 0.3s ease;
+  }
+  
+  & > div {
+    transform: skewY(${props => props.angle - 90}deg) rotate(${props => props.angle / 2}deg);
     width: 70%;
     text-align: center;
     font-size: 12px;
     font-weight: bold;
     color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
     word-break: break-word;
     line-height: 1.2;
-    transform: 
-      rotate(${props => props.angle / 2}deg)
-      translateX(40%)
-      rotate(${props => (props.angle / 2) * -1}deg);
-    text-align: left;
-    padding-left: 20%;
+    transition: transform 0.3s ease;
+    position: relative;
     z-index: 1;
   }
   
   ${props => props.isSelected && `
     & > div {
-      transform: 
-        rotate(${props.angle / 2}deg)
-        translateX(40%)
-        rotate(${props.angle / 2 * -1}deg)
-        scale(1.1);
+      transform: skewY(${props.angle - 90}deg) rotate(${props.angle / 2}deg) scale(1.1);
       font-weight: 800;
     }
   `}
@@ -308,46 +321,46 @@ const Spin = ({ socket, userData, setUserData }) => {
       // Get the card from the backend response
       const resultCard = response.data.card;
       
-      // Find the corresponding card in our frontend data
+      // For the 3-segment wheel, we'll map the result to one of the 3 segments
+      let resultIndex = 0;
       let currentCards = [];
+      
       if (spinType === 'random') {
-        // For random spin, we need to find which type the card belongs to
-        const cardTypes = ['luck', 'attack', 'alliance'];
-        for (const type of cardTypes) {
-          const found = cardsData[type].find(card => card.name === resultCard.name);
-          if (found) {
-            currentCards = cardsData[type];
-            break;
-          }
-        }
+        // For random spin, map to one of the 3 types
+        const typeIndex = ['luck', 'attack', 'alliance'].indexOf(resultCard.type);
+        resultIndex = typeIndex >= 0 ? typeIndex : 0;
+        currentCards = [
+          { name: 'LUCK', type: 'luck' },
+          { name: 'ATTACK', type: 'attack' },
+          { name: 'ALLIANCE', type: 'alliance' }
+        ];
       } else {
-        currentCards = cardsData[spinType];
+        // For specific types, use the first 3 cards of that type
+        const cards = cardsData[spinType];
+        currentCards = [
+          cards[0] || { name: 'CARD 1', type: spinType },
+          cards[1] || { name: 'CARD 2', type: spinType },
+          cards[2] || { name: 'CARD 3', type: spinType }
+        ];
+        
+        // Find which of the 3 segments was selected
+        resultIndex = cards.findIndex(card => card.name === resultCard.name);
+        if (resultIndex === -1 || resultIndex > 2) resultIndex = 0;
       }
 
-      // Find the index of the result card in our frontend data
-      const resultIndex = currentCards.findIndex(card => 
-        card.name === resultCard.name && 
-        card.type === resultCard.type
-      );
-
-      if (resultIndex === -1) {
-        console.warn('Card not found in frontend data, using backend data directly');
-        // If we can't find the card in our frontend data, use the backend data directly
-        setResult(resultCard);
-      } else {
-        // Calculate the rotation needed to land on the result
-        const segments = currentCards.length;
-        const segmentAngle = 360 / segments;
-        const targetRotation = 3600 + (360 - (resultIndex * segmentAngle)) + (segmentAngle / 2);
-        const currentRotation = wheelRotation % 360;
-        
-        // Add extra rotations for visual effect
-        const extraRotations = 5; // Number of full rotations before stopping
-        const totalRotation = wheelRotation + (360 * extraRotations) + (360 - currentRotation) + targetRotation;
-        
-        // Set the rotation with transition
-        setWheelRotation(totalRotation);
-      }
+      // Calculate the rotation needed to land on the result segment
+      const segmentAngle = 120; // 360 / 3 segments
+      // Calculate the target position (center of the segment)
+      const targetSegmentCenter = (resultIndex * segmentAngle) + (segmentAngle / 2);
+      // Add full rotations for visual effect
+      const fullRotations = 5; // Number of full rotations before stopping
+      const totalRotation = (fullRotations * 360) + (360 - (wheelRotation % 360)) + targetSegmentCenter;
+      
+      // Set the rotation with transition
+      setWheelRotation(totalRotation);
+      
+      // Update the displayed result
+      setResult(currentCards[resultIndex] || resultCard);
 
       // Update user data and show result after animation
       setTimeout(() => {
@@ -400,39 +413,36 @@ const Spin = ({ socket, userData, setUserData }) => {
     return <IconComponent size={24} />;
   };
 
-  // Get cards for the current spin type
-  const getCurrentCards = () => {
-    if (spinType === 'random') {
-      // For random wheel, show a mix of cards from all types
-      return [
-        ...cardsData.luck.slice(0, 2),  // Take 2 cards from each type
-        ...cardsData.attack.slice(0, 2),
-        ...cardsData.alliance.slice(0, 2)
-      ];
-    }
-    return cardsData[spinType] || [];
-  };
-
   // Generate wheel segments based on current spin type
   const renderWheelSegments = () => {
-    const currentCards = getCurrentCards();
-    if (currentCards.length === 0) return null;
+    let currentCards = [];
+    
+    if (spinType === 'random') {
+      // For random wheel, show all card types
+      currentCards = [
+        { name: 'LUCK', type: 'luck' },
+        { name: 'ATTACK', type: 'attack' },
+        { name: 'ALLIANCE', type: 'alliance' }
+      ];
+    } else {
+      // For specific types, show 3 cards of that type
+      const cards = cardsData[spinType];
+      currentCards = [
+        cards[0] || { name: 'CARD 1', type: spinType },
+        cards[1] || { name: 'CARD 2', type: spinType },
+        cards[2] || { name: 'CARD 3', type: spinType }
+      ];
+    }
 
-    const segmentAngle = 360 / currentCards.length;
-    const colors = [
-      '#FF6B6B', '#4ECDC4', '#45B7D1', 
-      '#96CEB4', '#FFEEAD', '#D4A373', 
-      '#F4A261', '#E9C46A', '#A8E6CF',
-      '#DCEDC1', '#FFD3B6', '#FFAAA5',
-      '#FF8B94'
-    ];
+    const segmentAngle = 120; // 360 / 3 segments
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1'];
 
-    return currentCards.map((card, index) => {
+    return currentCards.slice(0, 3).map((card, index) => {
       const rotate = segmentAngle * index;
       const color = colors[index % colors.length];
       const isSelected = result && 
-                        card.name === result?.name && 
-                        card.type === result?.type;
+                        card.name === result.name && 
+                        card.type === result.type;
       
       return (
         <WheelSegment 
