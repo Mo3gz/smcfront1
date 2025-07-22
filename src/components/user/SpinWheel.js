@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import './SpinWheel.css';
 
 // Animation constants
-const SPIN_DURATION = 5000; // 5 seconds
+const SPIN_DURATION = 3000; // 3 seconds
 
 const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) => {
   const [currentRotation, setCurrentRotation] = useState(0);
@@ -77,11 +77,38 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
   // Start spinning when spinning prop changes
   useEffect(() => {
     if (spinning && !isSpinning) {
+      console.log('Starting spin animation');
       setIsSpinning(true);
-      startTimeRef.current = 0;
+      startTimeRef.current = performance.now();
       
-      // Start the animation immediately
-      animationRef.current = requestAnimationFrame(animateSpin);
+      // Start the animation
+      const animate = (timestamp) => {
+        if (!startTimeRef.current) startTimeRef.current = timestamp;
+        
+        const elapsed = timestamp - startTimeRef.current;
+        const progress = Math.min(elapsed / SPIN_DURATION, 1);
+        
+        // Easing function (easeOutCubic)
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+        const easedProgress = easeOutCubic(progress);
+        
+        // Calculate rotation
+        const rotation = startRotation + ((targetRotation - startRotation) * easedProgress);
+        setCurrentRotation(rotation % (2 * Math.PI));
+        
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          // Animation complete
+          console.log('Spin animation complete');
+          setIsSpinning(false);
+          if (onSpinComplete) {
+            onSpinComplete();
+          }
+        }
+      };
+      
+      animationRef.current = requestAnimationFrame(animate);
     }
     
     return () => {
@@ -89,32 +116,30 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [spinning, isSpinning, animateSpin]);
+  }, [spinning, isSpinning, startRotation, targetRotation, onSpinComplete]);
 
-  // Update target rotation when result changes
+  // Set up the target rotation when the component mounts or when spin type changes
   useEffect(() => {
-    if (result) {
-      const cards = getCardsForSpin();
+    const cards = getCardsForSpin();
+    if (cards.length > 0 && result) {
       const cardIndex = cards.findIndex(card => card.name === result.name);
       if (cardIndex !== -1) {
-        // Calculate the angle that would make the result card land at the top
+        // Calculate the angle for the target card
         const segmentAngle = (2 * Math.PI) / cards.length;
-        // We want the card to land at the top (270 degrees or 1.5π radians)
         const targetCardAngle = (cardIndex * segmentAngle) + (segmentAngle / 2);
-        // The wheel needs to rotate to position the target card at the top
-        // We add 1.5π to position it at the top (270 degrees)
+        
+        // Calculate rotation to position the card at the top (270 degrees)
         const rotationToTop = (2 * Math.PI) - targetCardAngle + (1.5 * Math.PI);
         
-        // Calculate full rotations (5 full spins before stopping)
-        const fullRotations = 5; // number of spins before stopping
+        // Add full rotations (5 spins) before stopping at the target
+        const fullRotations = 5;
         const totalRotation = (fullRotations * 2 * Math.PI) + rotationToTop;
         
-        // Set the start and target rotations for the animation
-        setStartRotation(currentRotation);
+        // Set the target rotation
         setTargetRotation(currentRotation + totalRotation);
       }
     }
-  }, [result, getCardsForSpin, currentRotation]);
+  }, [result, spinType, getCardsForSpin, currentRotation]);
 
   // Initialize and draw wheel
   useEffect(() => {

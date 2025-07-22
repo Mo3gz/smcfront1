@@ -106,78 +106,63 @@ const Spin = ({ socket, userData, setUserData }) => {
 
   const handleSpin = async () => {
     if (spinning) return;
-    if (finalCost > 0 && userData.coins < finalCost) {
+    if (userData.coins < finalCost) {
       toast.error('Insufficient coins!');
       return;
     }
-
+    
     // Reset states
+    setSpinning(true);
     setShowResult(false);
-    setResult(null);
     setShowConfetti(false);
     
-    // Start spinning
-    setSpinning(true);
-
     try {
-      // Start the API call
+      // Start the spin animation immediately
+      const spinStartTime = Date.now();
+      
+      // Make the API call to get the result
       const response = await axios.post(
         `${API_BASE_URL}/api/spin`,
+        { spinType },
         {
-          spinType,
-          promoCode: promoCode || undefined
-        },
-        createAuthConfig()
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getAuthToken()}`
+          },
+          withCredentials: true
+        }
       );
-
-      // Set the result which will trigger the wheel to land on the correct position
-      // The wheel will start spinning when spinning=true and stop when it gets the result
-      setResult({
-        ...response.data.card,
-        remainingCoins: response.data.remainingCoins
-      });
+      
+      // Calculate remaining time to ensure minimum spin duration
+      const elapsed = Date.now() - spinStartTime;
+      const remainingTime = Math.max(3000 - elapsed, 0); // Ensure at least 3s spin
+      
+      // Set the result but don't show it yet
+      setResult(response.data);
+      
+      // Wait for the remaining spin time
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+      
+      // Show the result and confetti
+      setShowResult(true);
+      setShowConfetti(true);
+      fetchUserData(); // Refresh user data to update coins
+      
+      // Hide confetti after 5 seconds
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 5000);
       
     } catch (error) {
-      console.error('Spin error:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to spin. Please try again.';
-      toast.error(errorMessage);
-      setSpinning(false);
+      console.error('Error spinning the wheel:', error);
+      toast.error(error.response?.data?.message || 'Failed to spin the wheel');
+      setSpinning(false); // Make sure to reset spinning state on error
     }
   };
-
+  
   const handleSpinComplete = () => {
-    if (!result) return;
-    
-    setShowConfetti(true);
-    setShowResult(true);
-    
-    // Update user data with remaining coins from the server
-    if (result.remainingCoins !== undefined) {
-      setUserData(prev => ({
-        ...prev,
-        coins: result.remainingCoins
-      }));
-    }
-    
-    // Reset promo code after successful spin
-    setPromoCode('');
-    setDiscount(0);
-    setPromoValid(null);
-    
-    // Show congratulations message
-    toast.success(`🎉 Congratulations! You got ${result.name}!`, {
-      duration: 4000,
-      position: 'top-center',
-      style: {
-        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        color: 'white',
-        fontSize: '16px',
-        fontWeight: 'bold'
-      }
-    });
-    
-    // Hide confetti after animation
-    setTimeout(() => setShowConfetti(false), 3000);
+    // This will be called when the animation completes
+    setSpinning(false);
   };
 
   const getSpinIcon = (type) => {
