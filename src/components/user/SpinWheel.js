@@ -8,6 +8,7 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
   const [currentRotation, setCurrentRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
+  const [startRotation, setStartRotation] = useState(0);
   const animationRef = useRef(null);
   const startTimeRef = useRef(0);
   const canvasRef = useRef(null);
@@ -19,12 +20,12 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
       luck: [
         { name: "I'mphoteric", type: 'luck', effect: '+400 Coins instantly' },
         { name: "Everything Against Me", type: 'luck', effect: 'Instantly lose 250 Coins' },
-        { name: 'El 7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
+        { name: 'El-7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
       ],
       attack: [
-        { name: 'Wesh l Wesh', type: 'attack', effect: '1v1 battle' },
-        { name: 'Ana el 7aramy', type: 'attack', effect: 'Btakhod 100 coin men ay khema mnghir ay challenge' },
-        { name: 'Ana w Bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
+        { name: 'Wesh-le-Wesh', type: 'attack', effect: '1v1 battle' },
+        { name: 'Ana-el-7aramy', type: 'attack', effect: 'Btakhod 100 coin men ay khema mnghir ay challenge' },
+        { name: 'Ana-w-Bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
       ],
       alliance: [
         { name: 'El-Nadala', type: 'alliance', effect: 'Bt3mel t7alof w tlghih f ay wa2t w takhod el coins 3ady' },
@@ -43,45 +44,23 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
     return cardsByType[spinType] || [];
   }, [spinType]);
 
-  // Calculate the angle for a specific card (commented out as it's not currently used)
-  // const getCardAngle = useCallback((cards, cardName) => {
-  //   const cardsList = getCardsForSpin();
-  //   const index = cardsList.findIndex(card => card.name === cardName);
-  //   if (index === -1) return 0;
-    
-  //   const segmentAngle = (2 * Math.PI) / cardsList.length;
-  //   // Return the middle angle of the segment (in radians)
-  //   return (index * segmentAngle) + (segmentAngle / 2);
-  // }, [getCardsForSpin]);
-
   // Handle spin animation
   const animateSpin = useCallback((timestamp) => {
     if (!startTimeRef.current) {
       startTimeRef.current = timestamp;
     }
-    
+
     const elapsed = timestamp - startTimeRef.current;
     const progress = Math.min(elapsed / SPIN_DURATION, 1);
     
     // Easing function (easeOutCubic)
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
     
-    // Start with fast spinning, then slow down to the target
-    const spinSpeed = 0.3; // Base spin speed (higher = faster)
-    const deceleration = 0.9; // How quickly it slows down (0-1)
+    // Calculate current rotation using easing
+    const easedProgress = easeOutCubic(progress);
+    const rotation = startRotation + ((targetRotation - startRotation) * easedProgress);
     
-    // Calculate rotation - start fast, slow down to target
-    let rotation;
-    if (progress < 0.8) {
-      // First 80% of time: spin fast
-      rotation = currentRotation + (spinSpeed * (1 - (progress * deceleration)));
-    } else {
-      // Last 20% of time: ease into final position
-      const finalProgress = (progress - 0.8) * 5; // Scale to 0-1 for the final part
-      const finalEase = easeOutCubic(finalProgress);
-      rotation = currentRotation + ((targetRotation - currentRotation) * finalEase);
-    }
-    
+    // Update the rotation, keeping it within 2π
     setCurrentRotation(rotation % (2 * Math.PI));
     
     if (progress < 1) {
@@ -93,7 +72,7 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
         onSpinComplete();
       }
     }
-  }, [currentRotation, targetRotation, onSpinComplete]);
+  }, [startRotation, targetRotation, onSpinComplete]);
 
   // Start spinning when spinning prop changes
   useEffect(() => {
@@ -125,11 +104,17 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
         // The wheel needs to rotate to position the target card at the top
         // We add 1.5π to position it at the top (270 degrees)
         const rotationToTop = (2 * Math.PI) - targetCardAngle + (1.5 * Math.PI);
-        // Add full rotations to make the spin look natural
-        setTargetRotation(rotationToTop);
+        
+        // Calculate full rotations (5 full spins before stopping)
+        const fullRotations = 5; // number of spins before stopping
+        const totalRotation = (fullRotations * 2 * Math.PI) + rotationToTop;
+        
+        // Set the start and target rotations for the animation
+        setStartRotation(currentRotation);
+        setTargetRotation(currentRotation + totalRotation);
       }
     }
-  }, [result, getCardsForSpin]);
+  }, [result, getCardsForSpin, currentRotation]);
 
   // Initialize and draw wheel
   useEffect(() => {
