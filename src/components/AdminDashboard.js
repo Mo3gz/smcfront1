@@ -78,7 +78,7 @@ const AdminDashboard = ({ socket }) => {
   useEffect(() => {
     if (socket && adminVerified) {
       socket.on('admin-notification', (notification) => {
-        setNotifications(prev => [notification, ...prev]);
+        fetchNotifications(); // Only fetch from backend, don't add directly
         toast.info(`New notification from ${notification.teamName}`);
       });
       // Listen for real-time scoreboard updates
@@ -107,7 +107,7 @@ const AdminDashboard = ({ socket }) => {
         socket.off('inventory-update');
       };
     }
-  }, [socket, adminVerified, fetchTeamsWithCards]);
+  }, [socket, adminVerified, fetchTeamsWithCards, fetchNotifications]);
 
   useEffect(() => {
     if (adminVerified) {
