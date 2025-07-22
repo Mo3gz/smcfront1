@@ -466,26 +466,18 @@ const CardManagement = ({ teams }) => {
 // Admin Notifications Component
 const AdminNotifications = ({ notifications }) => {
   const [filter, setFilter] = useState('all');
-  const [recipientFilter, setRecipientFilter] = useState('all');
   const filterOptions = [
     { label: 'All', value: 'all' },
     { label: 'Spins', value: 'spins' },
     { label: 'Cards', value: 'card-used' },
     { label: 'Countries', value: 'country-bought' }
   ];
-  const recipientOptions = [
-    { label: 'All', value: 'all' },
-    { label: 'Admin', value: 'admin' },
-    { label: 'User', value: 'user' }
-  ];
+  // Always filter to admin notifications only
   let filteredNotifications = filter === 'all'
-    ? notifications
+    ? notifications.filter(n => n.recipientType === 'admin')
     : filter === 'spins'
-      ? notifications.filter(n => n.type === 'spin' || n.type === 'admin-spin')
-      : notifications.filter(n => n.type === filter);
-  if (recipientFilter !== 'all') {
-    filteredNotifications = filteredNotifications.filter(n => n.recipientType === recipientFilter);
-  }
+      ? notifications.filter(n => (n.type === 'spin' || n.type === 'admin-spin') && n.recipientType === 'admin')
+      : notifications.filter(n => n.type === filter && n.recipientType === 'admin');
   return (
     <div className="card">
       <h3>Team Notifications</h3>
@@ -506,28 +498,6 @@ const AdminNotifications = ({ notifications }) => {
               flex: '0 0 auto'
             }}
             onClick={() => setFilter(opt.value)}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', overflowX: 'auto' }}>
-        {recipientOptions.map(opt => (
-          <button
-            key={opt.value}
-            className={recipientFilter === opt.value ? 'btn btn-primary' : 'btn'}
-            style={{
-              padding: '6px 18px',
-              borderRadius: '8px',
-              fontWeight: 600,
-              background: recipientFilter === opt.value ? '#667eea' : '#eee',
-              color: recipientFilter === opt.value ? 'white' : '#333',
-              border: 'none',
-              cursor: 'pointer',
-              minWidth: 90,
-              flex: '0 0 auto'
-            }}
-            onClick={() => setRecipientFilter(opt.value)}
           >
             {opt.label}
           </button>
@@ -555,13 +525,13 @@ const AdminNotifications = ({ notifications }) => {
                 <span style={{
                   fontSize: '11px',
                   fontWeight: 700,
-                  color: notification.recipientType === 'admin' ? '#e53e3e' : '#3182ce',
-                  background: notification.recipientType === 'admin' ? '#ffe5e5' : '#e6f0ff',
+                  color: '#e53e3e',
+                  background: '#ffe5e5',
                   borderRadius: '6px',
                   padding: '2px 8px',
                   marginLeft: '8px'
                 }}>
-                  {notification.recipientType === 'admin' ? 'For Admin' : 'For User'}
+                  For Admin
                 </span>
               </div>
               <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
