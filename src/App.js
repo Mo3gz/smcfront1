@@ -36,9 +36,16 @@ function AppContent() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+
+    const handleConnect = () => {
       socket.emit('join-team', user.id);
-    }
+    };
+
+    socket.on('connect', handleConnect);
+
+    // Join on mount as well
+    socket.emit('join-team', user.id);
 
     socket.on('scoreboard-update', (scoreboard) => {
       // Handle real-time scoreboard updates
@@ -51,6 +58,7 @@ function AppContent() {
     });
 
     return () => {
+      socket.off('connect', handleConnect);
       socket.off('scoreboard-update');
       socket.off('user-update');
     };
