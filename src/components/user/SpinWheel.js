@@ -4,7 +4,7 @@ import './SpinWheel.css';
 // Animation constants
 const SPIN_DURATION = 3000; // 3 seconds
 
-const SpinWheel = ({ spinType, spinning, result, onSpinComplete }) => {
+const SpinWheel = ({ spinType, spinning, result, onSpinComplete, showResult }) => {
   const [currentRotation, setCurrentRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
