@@ -21,7 +21,6 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [spinning, setSpinning] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [spinComplete, setSpinComplete] = useState(false);
   const [result, setResult] = useState(null);
   const [discount, setDiscount] = useState(0);
   const [promoValid, setPromoValid] = useState(null); // null: not checked, true: valid, false: invalid
@@ -102,7 +101,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         socket.off('user-update');
       };
     }
-  }, [socket, userData?.id, setUserData]);
+  }, [socket, userData?.id, setUserData, createAuthConfig]);
 
   const handleSpin = async () => {
     if (spinning) return;

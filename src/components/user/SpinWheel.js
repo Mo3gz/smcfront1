@@ -12,7 +12,6 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
   const animationRef = useRef(null);
   const startTimeRef = useRef(0);
   const canvasRef = useRef(null);
-  const wheelRef = useRef(null);
 
   // Get cards based on spin type
   const getCardsForSpin = useCallback(() => {
@@ -45,16 +44,16 @@ const SpinWheel = ({ spinType, spinning, result, showResult, onSpinComplete }) =
     return cardsByType[spinType] || [];
   }, [spinType]);
 
-  // Calculate the angle for a specific card
-  const getCardAngle = useCallback((cards, cardName) => {
-    const cardsList = getCardsForSpin();
-    const index = cardsList.findIndex(card => card.name === cardName);
-    if (index === -1) return 0;
+  // Calculate the angle for a specific card (commented out as it's not currently used)
+  // const getCardAngle = useCallback((cards, cardName) => {
+  //   const cardsList = getCardsForSpin();
+  //   const index = cardsList.findIndex(card => card.name === cardName);
+  //   if (index === -1) return 0;
     
-    const segmentAngle = (2 * Math.PI) / cardsList.length;
-    // Return the middle angle of the segment (in radians)
-    return (index * segmentAngle) + (segmentAngle / 2);
-  }, [getCardsForSpin]);
+  //   const segmentAngle = (2 * Math.PI) / cardsList.length;
+  //   // Return the middle angle of the segment (in radians)
+  //   return (index * segmentAngle) + (segmentAngle / 2);
+  // }, [getCardsForSpin]);
 
   // Handle spin animation
   const animateSpin = useCallback((timestamp) => {
