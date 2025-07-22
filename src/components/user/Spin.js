@@ -90,6 +90,49 @@ const Spin = ({ socket, userData, setUserData }) => {
 
       // Simulate spin animation
       setTimeout(() => {
+        // Special instant-action cards
+        if (response.data.card.name === "i`amphoteric") {
+          setUserData(prev => ({
+            ...prev,
+            coins: (prev.coins || 0) + 150
+          }));
+          toast.success('You received i`amphoteric! +150 coins instantly!', {
+            duration: 4000,
+            position: 'top-center',
+            style: {
+              background: '#4CAF50',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }
+          });
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 3000);
+          setPromoCode('');
+          setSpinning(false);
+          return;
+        } else if (response.data.card.name === 'Everything Against Me') {
+          setUserData(prev => ({
+            ...prev,
+            coins: (prev.coins || 0) + 75
+          }));
+          toast.success('You received Everything Against Me! +75 coins instantly!', {
+            duration: 4000,
+            position: 'top-center',
+            style: {
+              background: '#4CAF50',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }
+          });
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 3000);
+          setPromoCode('');
+          setSpinning(false);
+          return;
+        }
+        // Default: normal card
         setResult(response.data.card);
         setShowConfetti(true);
         setUserData(prev => ({
@@ -98,7 +141,6 @@ const Spin = ({ socket, userData, setUserData }) => {
         }));
         setPromoCode('');
         setSpinning(false);
-        
         // Show congratulations message prominently
         toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
           duration: 4000,
@@ -110,7 +152,6 @@ const Spin = ({ socket, userData, setUserData }) => {
             fontWeight: 'bold'
           }
         });
-        
         setTimeout(() => setShowConfetti(false), 3000);
       }, 3000);
 
