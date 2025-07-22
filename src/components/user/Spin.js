@@ -87,6 +87,22 @@ const Spin = ({ socket, userData, setUserData }) => {
     .finally(() => setCheckingPromo(false));
   }, [promoCode, createAuthConfig]);
 
+  // Fetch user data from the server
+  const fetchUserData = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/users/me`,
+        createAuthConfig()
+      );
+      setUserData(response.data);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+      }
+    }
+  }, [createAuthConfig, setUserData]);
+
   // Listen for real-time user updates (coins, score changes)
   useEffect(() => {
     if (!socket) return;
