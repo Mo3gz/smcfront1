@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
-import SpinWheel from './SpinWheel';
 
 // Move these above all hooks and state
 const spinTypes = [
@@ -20,7 +19,6 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [promoCode, setPromoCode] = useState('');
   const [spinning, setSpinning] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [showResult, setShowResult] = useState(false);
   const [result, setResult] = useState(null);
   const [discount, setDiscount] = useState(0);
   const [promoValid, setPromoValid] = useState(null); // null: not checked, true: valid, false: invalid
@@ -33,25 +31,6 @@ const Spin = ({ socket, userData, setUserData }) => {
     setFinalCost(Math.max(0, Math.floor(baseCost * (1 - discount / 100))));
   }, [spinType, discount]);
 
-  // Get auth token from cookies
-  const getAuthToken = useCallback(() => {
-    const cookies = document.cookie.split(';');
-    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
-    return tokenCookie ? tokenCookie.split('=')[1] : null;
-  }, []);
-
-  // Create axios config with auth headers
-  const createAuthConfig = useCallback(() => {
-    const token = getAuthToken();
-    return {
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` })
-      }
-    };
-  }, [getAuthToken]);
-
   // Validate promo code when it changes
   useEffect(() => {
     if (!promoCode) {
@@ -60,113 +39,85 @@ const Spin = ({ socket, userData, setUserData }) => {
       return;
     }
     setCheckingPromo(true);
-    
-    axios.post(
-      `${API_BASE_URL}/api/promocode/validate`,
-      { code: promoCode },
-      createAuthConfig()
-    )
-    .then(res => {
-      if (res.data.valid) {
-        setDiscount(res.data.discount);
-        setPromoValid(true);
-      } else {
+    axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
+      .then(res => {
+        if (res.data.valid) {
+          setDiscount(res.data.discount);
+          setPromoValid(true);
+        } else {
+          setDiscount(0);
+          setPromoValid(false);
+        }
+      })
+      .catch(() => {
         setDiscount(0);
         setPromoValid(false);
-      }
-    })
-    .catch((error) => {
-      console.error('Promo code validation error:', error);
-      setDiscount(0);
-      setPromoValid(false);
-      if (error.response?.status === 401) {
-        toast.error('Session expired. Please log in again.');
-        // Optionally redirect to login
-      }
-    })
-    .finally(() => setCheckingPromo(false));
-  }, [promoCode, createAuthConfig]);
-
-  // Fetch user data from the server
-  const fetchUserData = useCallback(async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/users/me`,
-        createAuthConfig()
-      );
-      setUserData(response.data);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      if (error.response?.status === 401) {
-        toast.error('Session expired. Please log in again.');
-      }
-    }
-  }, [createAuthConfig, setUserData]);
+      })
+      .finally(() => setCheckingPromo(false));
+  }, [promoCode]);
 
   // Listen for real-time user updates (coins, score changes)
   useEffect(() => {
-    if (!socket) return;
-    
-    const handleUserUpdate = (updatedUser) => {
-      console.log('User updated via socket in Spin:', updatedUser);
-      if (updatedUser.id === userData?.id) {
-        setUserData(prev => ({ ...prev, ...updatedUser }));
-      }
-    };
+    if (socket) {
+      socket.on('user-update', (updatedUser) => {
+        console.log('User updated via socket in Spin:', updatedUser);
+        if (updatedUser.id === userData?.id) {
+          setUserData(prev => ({ ...prev, ...updatedUser }));
+        }
+      });
 
-    socket.on('user-update', handleUserUpdate);
-    return () => {
-      socket.off('user-update', handleUserUpdate);
-    };
+      return () => {
+        socket.off('user-update');
+      };
+    }
   }, [socket, userData?.id, setUserData]);
 
   const handleSpin = async () => {
     if (spinning) return;
-    if (userData.coins < finalCost) {
+    if (finalCost > 0 && userData.coins < finalCost) {
       toast.error('Insufficient coins!');
       return;
     }
 
-    // Reset previous results
-    setShowResult(false);
+    setSpinning(true);
     setResult(null);
-    setShowConfetti(false);
 
     try {
-      // 1. Get the result from the backend first
-      const response = await axios.post(
-        `${API_BASE_URL}/api/spin`,
-        { spinType },
-        createAuthConfig()
-      );
+      const response = await axios.post(`${API_BASE_URL}/api/spin`, {
+        spinType,
+        promoCode: promoCode || undefined
+      }, { withCredentials: true });
 
-      // 2. Set the result state, which will calculate the target rotation in SpinWheel
-      setResult(response.data);
-
-      // 3. Now, set spinning to true to trigger the animation
-      setSpinning(true);
+      // Simulate spin animation
+      setTimeout(() => {
+        setResult(response.data.card);
+        setShowConfetti(true);
+        setUserData(prev => ({
+          ...prev,
+          coins: response.data.remainingCoins
+        }));
+        setPromoCode('');
+        setSpinning(false);
+        
+        // Show congratulations message prominently
+        toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
+          duration: 4000,
+          position: 'top-center',
+          style: {
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        });
+        
+        setTimeout(() => setShowConfetti(false), 3000);
+      }, 3000);
 
     } catch (error) {
-      console.error('Error spinning the wheel:', error);
-      toast.error(error.response?.data?.message || 'Failed to spin the wheel');
-      setSpinning(false); // Reset on error
+      toast.error(error.response?.data?.error || 'Spin failed!');
+      setSpinning(false);
     }
-  };
-
-  const handleSpinComplete = () => {
-    // This is called when the animation in SpinWheel finishes
-    console.log('Spin complete, showing results...');
-    setShowResult(true);
-    setShowConfetti(true);
-    fetchUserData(); // Refresh user data to update coins
-
-    // Reset spinning state
-    setSpinning(false);
-
-    // Hide confetti after 5 seconds
-    setTimeout(() => {
-      setShowConfetti(false);
-    }, 5000);
   };
 
   const getSpinIcon = (type) => {
@@ -249,14 +200,11 @@ const Spin = ({ socket, userData, setUserData }) => {
 
         {/* Spin Wheel */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div className="wheel-container">
-            <SpinWheel 
-              spinType={spinType} 
-              spinning={spinning} 
-              result={result}
-              showResult={showResult}
-              onSpinComplete={handleSpinComplete}
-            />
+          <div className="spin-wheel" style={{ 
+            transform: spinning ? 'rotate(1440deg)' : 'rotate(0deg)',
+            transition: spinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+          }}>
+            <div className="spin-pointer"></div>
           </div>
           
           <button
