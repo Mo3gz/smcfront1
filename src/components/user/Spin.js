@@ -1,62 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { RotateCcw, Zap, Heart, Shield } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Confetti from 'react-confetti';
-import styled, { keyframes } from 'styled-components';
 import WheelOfFortune from './WheelOfFortune';
-
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const pulse = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
-
-const SpinContainer = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 24px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-  animation: ${fadeIn} 0.5s ease-out;
-`;
-
-const SpinButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 200px;
-  margin: 30px auto 0;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-  background: ${props => props.$free ? '#4ecdc4' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-  animation: ${pulse} 2s infinite;
-  
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-  }
-  
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    animation: none;
-  }
-`;
 
 // Move these above all hooks and state
 const spinTypes = [
