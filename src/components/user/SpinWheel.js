@@ -6,7 +6,6 @@ const SPIN_DURATION = 3000; // 3 seconds
 
 const SpinWheel = ({ spinType, spinning, result, onSpinComplete, showResult }) => {
   const [currentRotation, setCurrentRotation] = useState(0);
-  const [isSpinning, setIsSpinning] = useState(false);
   const [targetRotation, setTargetRotation] = useState(0);
   const startRotation = useRef(0);
   const animationRef = useRef(null);
@@ -67,7 +66,6 @@ const SpinWheel = ({ spinType, spinning, result, onSpinComplete, showResult }) =
       animationRef.current = requestAnimationFrame(animateSpin);
     } else {
       // Animation complete
-      setIsSpinning(false);
       if (onSpinComplete) {
         onSpinComplete();
       }
@@ -80,7 +78,6 @@ const SpinWheel = ({ spinType, spinning, result, onSpinComplete, showResult }) =
       console.log('Spinning prop is true, starting animation...');
       startTimeRef.current = null; // Reset start time for each spin
       startRotation.current = currentRotation; // Capture the current rotation as the starting point
-      setIsSpinning(true);
       animationRef.current = requestAnimationFrame(animateSpin);
     }
 
@@ -89,7 +86,7 @@ const SpinWheel = ({ spinType, spinning, result, onSpinComplete, showResult }) =
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [spinning, animateSpin]);
+  }, [spinning, animateSpin, currentRotation]);
 
   // Calculate the target rotation whenever the result changes
   useEffect(() => {
@@ -109,7 +106,7 @@ const SpinWheel = ({ spinType, spinning, result, onSpinComplete, showResult }) =
         setTargetRotation(currentRotation + totalRotation);
       }
     }
-  }, [result, getCardsForSpin]);
+  }, [result, getCardsForSpin, currentRotation]);
 
   // Initialize and draw wheel
   useEffect(() => {
