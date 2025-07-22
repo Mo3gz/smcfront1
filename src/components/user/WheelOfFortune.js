@@ -3,8 +3,8 @@ import styled from 'styled-components';
 
 const WheelContainer = styled.div`
   width: 100%;
-  max-width: 600px;  /* Increased max width */
-  min-height: 400px;  /* Added min height */
+  max-width: 600px;
+  min-height: 400px;
   margin: 0 auto;
   position: relative;
   aspect-ratio: 1/1;
@@ -24,7 +24,8 @@ const Wheel = styled.div`
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
   transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
   transform: rotate(${props => props.rotation}deg);
-  border: 8px solid #2c3e50;  /* Added border to wheel */
+  border: 8px solid #2c3e50;
+  box-sizing: border-box;
 `;
 
 const WheelSegment = styled.div`
@@ -35,42 +36,43 @@ const WheelSegment = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-left: 30px;  /* Increased padding */
+  padding-left: 0;
   box-sizing: border-box;
   background: ${props => props.color};
   transform: rotate(${props => props.rotation}deg) skewY(${props => props.skew}deg);
   left: 0;
   top: 0;
-  border: 1px solid rgba(255, 255, 255, 0.3);  /* Added border between segments */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
   
   span {
-    transform: skewY(${props => -props.skew}deg) rotate(${props => props.rotation/2}deg);
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    transform: skewY(${props => -props.skew}deg) rotate(${props => (props.rotation + props.skew) / 2}deg) translateX(-50%);
+    transform-origin: center center;
     display: inline-block;
     width: 100%;
     text-align: center;
-    font-size: 16px;  /* Increased font size */
+    font-size: 14px;
     font-weight: bold;
     color: white;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);  /* Enhanced text shadow */
-    padding: 0 25px;  /* Increased padding */
-    box-sizing: border-box;
-    white-space: nowrap;  /* Prevent text wrapping */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    white-space: nowrap;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    max-width: 80%;
     overflow: hidden;
     text-overflow: ellipsis;
-    transform-origin: center center;
-    
-    /* Better contrast for text */
-    background: rgba(0, 0, 0, 0.2);
-    padding: 4px 8px;
-    border-radius: 12px;
   }
 `;
 
 const Pointer = styled.div`
   position: absolute;
-  top: -20px;
+  bottom: -10px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(180deg);
   width: 0;
   height: 0;
   border-left: 20px solid transparent;
