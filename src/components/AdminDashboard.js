@@ -284,6 +284,33 @@ const AdminDashboard = ({ socket }) => {
   );
 };
 
+// Add the card list at the top of the file (copy from backend getCardsByType)
+const allCards = {
+  luck: [
+    { name: 'Hidden Treasure', type: 'luck', effect: '+400 Points instantly' },
+    { name: 'Camp Tax', type: 'luck', effect: '-300 Points go to the Bank' },
+    { name: 'Golden Ticket', type: 'luck', effect: 'Pay 200 Points → If you win the next challenge, take +500 Points!' },
+    { name: 'Mysterious Trader', type: 'luck', effect: 'Pay 150 Points → Get a random Attack Card' },
+    { name: 'Everything Against Me', type: 'luck', effect: 'Instantly lose 250 Points' },
+    { name: 'Double Up', type: 'luck', effect: 'Double your current points if you win any challenge in the next 30 minutes' },
+    { name: 'Shady Deal', type: 'luck', effect: 'Steal 100 Points from any tent' }
+  ],
+  attack: [
+    { name: 'Raid', type: 'attack', effect: 'Choose one team to raid. If you win the challenge, steal 300 Points from them.' },
+    { name: 'Control Battle', type: 'attack', effect: 'Select one team to challenge in a one-on-one tent battle. Winner gets +500 Points.' },
+    { name: 'Double Strike', type: 'attack', effect: 'Select one team to ally with and attack another tent together.' },
+    { name: 'Break Alliances', type: 'attack', effect: 'Force 2 allied tents to break their alliance' },
+    { name: 'Broad Day Robbery', type: 'attack', effect: 'Take 100 Points instantly from any tent' }
+  ],
+  alliance: [
+    { name: 'Strategic Alliance', type: 'alliance', effect: 'Select one team to form an alliance with for 1 full day.' },
+    { name: 'Betrayal Alliance', type: 'alliance', effect: 'Form an alliance, then betray them at the end to steal their points.' },
+    { name: 'Golden Partnership', type: 'alliance', effect: 'Choose a team to team up with in the next challenge.' },
+    { name: 'Temporary Truce', type: 'alliance', effect: 'Select 2 teams to pause all attacks between them for 1 full day.' },
+    { name: 'Hidden Leader', type: 'alliance', effect: 'You become the challenge leader. Ally with another team.' }
+  ]
+};
+
 // Promo Codes Component
 const PromoCodes = ({ teams }) => {
   const [code, setCode] = useState('');
@@ -374,16 +401,15 @@ const CardManagement = ({ teams }) => {
   const [teamId, setTeamId] = useState('');
   const [cardName, setCardName] = useState('');
   const [cardType, setCardType] = useState('luck');
-
+  // Find the selected card object for effect display
+  const selectedCard = allCards[cardType].find(card => card.name === cardName);
   const cardTypes = [
     { value: 'luck', label: 'Luck Card' },
     { value: 'attack', label: 'Attack Card' },
     { value: 'alliance', label: 'Alliance Card' }
   ];
-
   const handleGiveCard = async (e) => {
     e.preventDefault();
-    
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
       await axios.post(`${API_BASE_URL}/api/admin/cards`, {
@@ -391,7 +417,6 @@ const CardManagement = ({ teams }) => {
         cardName,
         cardType
       }, { withCredentials: true });
-
       toast.success('Card given successfully!');
       setTeamId('');
       setCardName('');
@@ -405,7 +430,6 @@ const CardManagement = ({ teams }) => {
       }
     }
   };
-
   return (
     <div className="card">
       <h3>Give Card to Team</h3>
@@ -426,25 +450,12 @@ const CardManagement = ({ teams }) => {
             ))}
           </select>
         </div>
-        
-        <div style={{ marginBottom: '16px' }}>
-          <label>Card Name</label>
-          <input
-            type="text"
-            className="input"
-            value={cardName}
-            onChange={(e) => setCardName(e.target.value)}
-            placeholder="Enter card name"
-            required
-          />
-        </div>
-        
         <div style={{ marginBottom: '16px' }}>
           <label>Card Type</label>
           <select
             className="input"
             value={cardType}
-            onChange={(e) => setCardType(e.target.value)}
+            onChange={e => { setCardType(e.target.value); setCardName(''); }}
             required
           >
             {cardTypes.map(type => (
@@ -454,8 +465,27 @@ const CardManagement = ({ teams }) => {
             ))}
           </select>
         </div>
-        
-        <button type="submit" className="btn">
+        <div style={{ marginBottom: '16px' }}>
+          <label>Card Name</label>
+          <select
+            className="input"
+            value={cardName}
+            onChange={e => setCardName(e.target.value)}
+            required
+            disabled={!cardType}
+          >
+            <option value="">Select a card</option>
+            {allCards[cardType].map(card => (
+              <option key={card.name} value={card.name}>{card.name}</option>
+            ))}
+          </select>
+        </div>
+        {selectedCard && (
+          <div style={{ marginBottom: '16px', color: '#666', fontStyle: 'italic', fontSize: '14px' }}>
+            <strong>Effect:</strong> {selectedCard.effect}
+          </div>
+        )}
+        <button type="submit" className="btn" disabled={!teamId || !cardName || !cardType}>
           Give Card
         </button>
       </form>
