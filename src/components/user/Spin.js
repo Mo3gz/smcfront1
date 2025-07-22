@@ -198,39 +198,182 @@ const Spin = ({ socket, userData, setUserData }) => {
           Price after discount: {finalCost === 0 ? 'Free!' : `${finalCost} coins`}
         </div>
 
-        {/* Spin Wheel */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div className="spin-wheel" style={{ 
+        {/* Enhanced Spin Wheel */}
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: '24px',
+          position: 'relative',
+          padding: '20px 0'
+        }}>
+          {/* Wheel Container */}
+          <div style={{
+            width: '280px',
+            height: '280px',
+            margin: '0 auto',
+            position: 'relative',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+            border: '8px solid #2d3748',
+            backgroundColor: '#2d3748',
             transform: spinning ? 'rotate(1440deg)' : 'rotate(0deg)',
-            transition: spinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+            transition: spinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+            background: `
+              conic-gradient(
+                #f56565 0% 25%,
+                #4299e1 25% 50%,
+                #48bb78 50% 75%,
+                #f6e05e 75% 100%
+              )
+            `
           }}>
-            <div className="spin-pointer"></div>
+            {/* Wheel Segments */}
+            <div style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(45deg, transparent 49.5%, white 49.5%, white 50.5%, transparent 50.5%)',
+              backgroundSize: '20px 20px',
+              opacity: 0.3
+            }} />
+            
+            {/* Center Circle */}
+            <div style={{
+              position: 'absolute',
+              width: '60px',
+              height: '60px',
+              background: '#2d3748',
+              borderRadius: '50%',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              border: '4px solid white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 2
+            }}>
+              <div style={{
+                width: '20px',
+                height: '20px',
+                background: 'white',
+                borderRadius: '50%'
+              }} />
+            </div>
+            
+            {/* Spin Type Indicator */}
+            <div style={{
+              position: 'absolute',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              {spinTypes.find(s => s.id === spinType).name}
+            </div>
+            
+            {/* Spin Cost */}
+            <div style={{
+              position: 'absolute',
+              bottom: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(255, 255, 255, 0.9)',
+              color: '#2d3748',
+              padding: '4px 16px',
+              borderRadius: '20px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}>
+              <span>🎫</span>
+              <span>{finalCost === 0 ? 'FREE SPIN!' : `${finalCost} coins`}</span>
+            </div>
           </div>
           
+          {/* Pointer */}
+          <div style={{
+            position: 'absolute',
+            top: '-10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '0',
+            height: '0',
+            borderLeft: '20px solid transparent',
+            borderRight: '20px solid transparent',
+            borderTop: '30px solid #e53e3e',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+            zIndex: 10
+          }}></div>
+          
+          {/* Spin Button */}
           <button
             className="btn"
             onClick={handleSpin}
             disabled={spinning || (promoCode && promoValid === false)}
             style={{ 
-              marginTop: '20px',
+              marginTop: '40px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              width: '200px',
-              margin: '20px auto 0',
-              background: finalCost === 0 ? '#4ecdc4' : undefined
+              gap: '10px',
+              width: '220px',
+              padding: '14px 24px',
+              margin: '40px auto 0',
+              background: finalCost === 0 
+                ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' 
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+              transition: 'all 0.3s ease',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              ':hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)'
+              },
+              ':active': {
+                transform: 'translateY(0)'
+              },
+              ':disabled': {
+                background: '#cbd5e0',
+                cursor: 'not-allowed',
+                transform: 'none',
+                boxShadow: 'none'
+              }
             }}
           >
             {spinning ? (
               <>
-                <div className="spinner" style={{ width: '20px', height: '20px' }}></div>
-                Spinning...
+                <div className="spinner" style={{ 
+                  width: '20px', 
+                  height: '20px',
+                  border: '3px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '50%',
+                  borderTopColor: 'white',
+                  animation: 'spin 1s ease-in-out infinite'
+                }}></div>
+                <span>Spinning...</span>
               </>
             ) : (
               <>
                 <RotateCcw size={20} />
-                {finalCost === 0 ? 'Spin for Free!' : 'Spin Now!'}
+                <span>{finalCost === 0 ? 'SPIN FOR FREE!' : 'SPIN NOW!'}</span>
               </>
             )}
           </button>
