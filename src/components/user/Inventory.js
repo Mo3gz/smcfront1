@@ -116,7 +116,7 @@ const Inventory = ({ socket }) => {
   }
 
   return (
-    <div>
+    <div className="inventory-container">
       <div className="header">
         <h1>📦 Inventory</h1>
         <p>Your collected cards</p>
@@ -238,6 +238,12 @@ const Inventory = ({ socket }) => {
           </div>
         </div>
       )}
+      {/* Footer for developer credit */}
+      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
+        <p style={{ margin: 0 }}>
+          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
+        </p>
+      </div>
     </div>
   );
 };

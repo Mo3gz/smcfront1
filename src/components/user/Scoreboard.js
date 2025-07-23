@@ -173,7 +173,7 @@ const Scoreboard = ({ socket }) => {
   }
 
   return (
-    <div>
+    <div className="scoreboard-container">
       <div className="header">
         <h1>🏆 Scoreboard</h1>
         <p>Live team rankings</p>
@@ -234,6 +234,11 @@ const Scoreboard = ({ socket }) => {
             </div>
           ))
         )}
+      </div>
+      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
+        <p style={{ margin: 0 }}>
+          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
+        </p>
       </div>
     </div>
   );

@@ -115,7 +115,7 @@ const MapView = ({ userData, setUserData, socket }) => {
   }
 
   return (
-    <div>
+    <div className="mapview-container">
       <div className="header">
         <h1>🗺️ World Map</h1>
         <p>Conquer countries to boost your score!</p>
@@ -271,6 +271,12 @@ const MapView = ({ userData, setUserData, socket }) => {
           </div>
         </div>
       )}
+      {/* Footer for developer credit */}
+      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
+        <p style={{ margin: 0 }}>
+          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
+        </p>
+      </div>
     </div>
   );
 };
