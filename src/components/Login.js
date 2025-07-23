@@ -12,11 +12,11 @@ const Login = () => {
   const { login } = useAuth();
 
   // Demo credentials for easy access
-  const demoCredentials = [
-    { username: 'ayman', password: 'password', role: 'Admin' },
-    { username: 'team1', password: 'password', role: 'Team 1' },
-    { username: 'team2', password: 'password', role: 'Team 2' }
-  ];
+  // const demoCredentials = [
+  //   { username: 'ayman', password: 'password', role: 'Admin' },
+  //   { username: 'team1', password: 'password', role: 'Team 1' },
+  //   { username: 'team2', password: 'password', role: 'Team 2' }
+  // ];
 
   // Validation functions
   const validateUsername = (value) => {
@@ -66,17 +66,13 @@ const Login = () => {
   };
 
   // Quick login with demo credentials
-  const handleQuickLogin = async (credential) => {
-    setUsername(credential.username);
-    setPassword(credential.password);
-    
-    // Clear any existing errors
-    setErrors({});
-    
-    // Simulate form submission
-    const formData = { username: credential.username, password: credential.password };
-    await handleLogin(formData);
-  };
+  // const handleQuickLogin = async (credential) => {
+  //   setUsername(credential.username);
+  //   setPassword(credential.password);
+  //   setErrors({});
+  //   const formData = { username: credential.username, password: credential.password };
+  //   await handleLogin(formData);
+  // };
 
   // Main login handler
   const handleLogin = async (formData = null) => {
@@ -273,6 +269,7 @@ const Login = () => {
           </form>
 
           {/* Quick Login Demo Credentials */}
+          {/*
           <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(102, 126, 234, 0.1)', borderRadius: '12px' }}>
             <h3 style={{ color: '#667eea', marginBottom: '12px', fontSize: '16px' }}>Quick Login:</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -298,6 +295,7 @@ const Login = () => {
               ))}
             </div>
           </div>
+          */}
         </div>
       </div>
       
