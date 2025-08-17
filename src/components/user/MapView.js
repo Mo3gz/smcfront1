@@ -44,24 +44,48 @@ const MapView = ({ userData, setUserData, socket }) => {
 
   const fetchCountries = async () => {
     try {
+      const token = localStorage.getItem('token');
+      console.log('🔑 Token from localStorage:', token ? 'Found' : 'Not found');
+      
       const [countriesRes, miningRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/api/countries`),
         axios.get(`${API_BASE_URL}/api/mining/stats`, {
           headers: { 
-            'Authorization': `Bearer ${localStorage.getItem('token')}` 
-          }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        }).catch(err => {
+          console.error('Mining stats error:', err.response?.data || err.message);
+          throw err;
         })
       ]);
       
+      console.log('Countries response:', countriesRes.status, countriesRes.data?.length);
+      console.log('Mining stats response:', miningRes.status, miningRes.data);
+      
       setCountries(countriesRes.data);
       setMiningStats({
-        totalMiningRate: miningRes.data.totalMiningRate || 0,
-        estimatedNextHour: miningRes.data.estimatedNextHour || 0
+        totalMiningRate: miningRes.data?.totalMiningRate || 0,
+        estimatedNextHour: miningRes.data?.estimatedNextHour || 0
       });
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching data:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
+      });
+      
       if (error.response?.status === 401) {
-        // Handle unauthorized
+        toast.error('Session expired. Please log in again.');
+        // Redirect to login or refresh token
+      } else {
+        toast.error('Failed to load map data. Please try again.');
       }
     } finally {
       setLoading(false);
