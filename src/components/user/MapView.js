@@ -47,22 +47,49 @@ const MapView = ({ userData, setUserData, socket }) => {
       const token = localStorage.getItem('token');
       console.log('🔑 Token from localStorage:', token ? 'Found' : 'Not found');
       
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      // First, test the token with a simple endpoint
+      try {
+        const testResponse = await axios.get(`${API_BASE_URL}/api/debug/token-test`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        });
+        console.log('✅ Token test successful:', testResponse.data);
+      } catch (testError) {
+        console.error('❌ Token test failed:', {
+          status: testError.response?.status,
+          data: testError.response?.data,
+          message: testError.message
+        });
+        throw testError;
+      }
+      
+      // If token test passes, fetch the actual data
       const [countriesRes, miningRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/countries`),
+        axios.get(`${API_BASE_URL}/api/countries`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        }),
         axios.get(`${API_BASE_URL}/api/mining/stats`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
           withCredentials: true
-        }).catch(err => {
-          console.error('Mining stats error:', err.response?.data || err.message);
-          throw err;
         })
       ]);
       
-      console.log('Countries response:', countriesRes.status, countriesRes.data?.length);
-      console.log('Mining stats response:', miningRes.status, miningRes.data);
+      console.log('✅ Countries response:', countriesRes.status, countriesRes.data?.length);
+      console.log('✅ Mining stats response:', miningRes.status, miningRes.data);
       
       setCountries(countriesRes.data);
       setMiningStats({
