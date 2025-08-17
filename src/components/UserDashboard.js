@@ -167,7 +167,33 @@ const UserDashboard = ({ socket }) => {
               <div className="stat-value">{userData?.score || 0}</div>
               <div className="stat-label">Score</div>
             </div>
+            <div className="stat-item">
+              <div className="stat-value">
+                <div className="flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon">
+                    <path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z"></path>
+                    <path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"></path>
+                    <path d="M4 15v-3a6 6 0 0 1 6-6h0"></path>
+                    <path d="M14 6h0a6 6 0 0 1 6 6v3"></path>
+                  </svg>
+                  <span>17/h</span>
+                </div>
+              </div>
+              <div className="stat-label">Mining Rate</div>
+            </div>
           </div>
+          <button 
+            className="flex items-center gap-2 px-4 py-2 mt-4 rounded-lg font-medium transition-colors bg-yellow-500 hover:bg-yellow-600 text-white"
+            onClick={() => {}}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-coins">
+              <circle cx="8" cy="8" r="6"></circle>
+              <path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path>
+              <path d="M7 6h1v4"></path>
+              <path d="m16.71 13.88.7.71-2.82 2.82"></path>
+            </svg>
+            Collect 17 coins
+          </button>
         </div>
 
         {renderContent()}
