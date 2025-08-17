@@ -37,34 +37,32 @@ const UserDashboard = ({ socket }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem('token');
-        if (!token) return;
         
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
         const response = await axios.get(
           `${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/user`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
-            },
-            withCredentials: true
+            }
           }
         );
         
-        if (response.data) {
-          console.log('User data received:', response.data);
-          setUserData(response.data);
-        } else {
-          console.error('No user data in response:', response);
-          throw new Error('No user data received from server');
+        console.log('User data received:', response.data);
+        
+        if (!response.data) {
+          throw new Error('No user data received');
         }
+        
+        setUserData(response.data);
       } catch (error) {
-        console.error('Error fetching user data:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          url: error.config?.url
-        });
+        console.error('Error fetching user data:', error);
         
         if (error.response?.status === 401) {
           // Handle unauthorized (token might be invalid/expired)
@@ -83,7 +81,7 @@ const UserDashboard = ({ socket }) => {
     };
     
     fetchUserData();
-  }, []);
+  }, [logout]);
 
   // Auto-collect coins on component mount and when mining rate changes
   useEffect(() => {
