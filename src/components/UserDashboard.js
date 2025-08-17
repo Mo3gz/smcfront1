@@ -225,7 +225,7 @@ const UserDashboard = ({ socket }) => {
               <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <HardHat size={12} className="text-yellow-500" />
                 <span style={{ fontSize: '11px', color: '#666' }}>
-                  Mining: {miningStats.totalMiningRate}/h
+                  Mining: {(miningStats.totalMiningRate / 60).toFixed(2)}/min
                 </span>
               </div>
             )}
