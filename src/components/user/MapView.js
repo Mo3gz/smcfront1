@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Coins, HardHat, Clock } from 'lucide-react';
+import { Coins, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
