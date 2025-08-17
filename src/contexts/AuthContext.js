@@ -31,31 +31,28 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔍 Checking authentication...');
       const config = createAxiosConfig();
-      let response;
-      try {
-        response = await axios.get(`${API_BASE_URL}/api/auth/me`, config);
-      } catch (error) {
-        // If 401 and we have a token in localStorage, try with token in header
-        if (error.response?.status === 401) {
-          const token = localStorage.getItem('authToken');
-          if (token) {
-            const tokenConfig = {
-              ...config,
-              headers: {
-                ...config.headers,
-                'x-auth-token': token
-              }
-            };
-            response = await axios.get(`${API_BASE_URL}/api/auth/me`, tokenConfig);
-          } else {
-            throw error;
-          }
-        } else {
-          throw error;
-        }
+      
+      // Get token from cookies if available
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
+      
+      // If we have a token in localStorage but not in cookies, use it in headers
+      if (!token && localStorage.getItem('authToken')) {
+        config.headers['x-auth-token'] = localStorage.getItem('authToken');
       }
+      
+      const response = await axios.get(`${API_BASE_URL}/api/auth/me`, config);
+      
+      // Backend returns user data directly
       setUser(response.data);
       localStorage.setItem('user', JSON.stringify(response.data));
+      
+      // Save token if we got one in the response
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+      }
     } catch (error) {
       setUser(null);
       localStorage.removeItem('user');
@@ -78,11 +75,9 @@ export const AuthProvider = ({ children }) => {
         { username, password }, 
         config
       );
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
-      }
+      // Backend returns user data directly, not nested under 'user' property
+      setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
       return { success: true };
     } catch (error) {
       let errorMessage = 'Login failed. Please try again.';
