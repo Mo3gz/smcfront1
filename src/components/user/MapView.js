@@ -42,7 +42,7 @@ const MapView = ({ userData, setUserData, socket }) => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/countries`);
+      const response = await axios.get(`${API_BASE_URL}/api/countries/all`);
       setCountries(response.data);
     } catch (error) {
       console.error('Error fetching countries:', error);
@@ -68,7 +68,7 @@ const MapView = ({ userData, setUserData, socket }) => {
     if (!country) return;
     setConfirmModal({ open: false, country: null });
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
+      const response = await axios.post(`${API_BASE_URL}/api/countries/purchase`, {
         countryId: country.id
       }, { withCredentials: true });
       setCountries(prev =>

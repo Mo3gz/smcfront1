@@ -32,7 +32,7 @@ const Notifications = () => {
       console.log('🔔 Fetching notifications for user:', user?.id);
       
       const config = createMobileAxiosConfig();
-      const response = await axios.get(`${API_BASE_URL}/api/notifications`, config);
+      const response = await axios.get(`${API_BASE_URL}/api/notifications/my`, config);
       
       console.log('🔔 Notifications response:', response.data);
       setNotifications(response.data);
@@ -112,7 +112,7 @@ const Notifications = () => {
       setUnreadCount(0);
       // Sync with backend
       const config = createMobileAxiosConfig();
-      axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, config).catch(() => {});
+      axios.post(`${API_BASE_URL}/api/notifications/mark-all-read`, {}, config).catch(() => {});
     }
   }, [isVisible, notifications.length, API_BASE_URL]);
 

@@ -18,7 +18,7 @@ const Inventory = ({ socket }) => {
 
   const fetchInventory = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/inventory`, { withCredentials: true });
+      const response = await axios.get(`${API_BASE_URL}/api/inventory/my`, { withCredentials: true });
       setInventory(response.data);
     } catch (error) {
       console.error('Error fetching inventory:', error);
@@ -29,7 +29,7 @@ const Inventory = ({ socket }) => {
 
   const fetchTeams = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
+      const response = await axios.get(`${API_BASE_URL}/api/teams/leaderboard`);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -64,7 +64,7 @@ const Inventory = ({ socket }) => {
     if (!selectedCard) return;
 
     try {
-      await axios.post(`${API_BASE_URL}/api/cards/use`, {
+      await axios.post(`${API_BASE_URL}/api/inventory/use`, {
         cardId: selectedCard.id,
         selectedTeam,
         description
