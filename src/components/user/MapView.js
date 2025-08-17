@@ -227,12 +227,13 @@ const MapView = ({ userData, setUserData, socket }) => {
         <div className="flex items-center gap-4">
           <button
             onClick={handleCollectMining}
-            disabled={collecting || miningStats.estimatedNextHour <= 0}
+            disabled={collecting || (miningStats.estimatedNextHour <= 0 && miningStats.totalMiningRate <= 0)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              collecting || miningStats.estimatedNextHour <= 0
+              collecting || (miningStats.estimatedNextHour <= 0 && miningStats.totalMiningRate <= 0)
                 ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500'
                 : 'bg-yellow-500 hover:bg-yellow-600 text-white'
             }`}
+            title={miningStats.totalMiningRate <= 0 ? "No active mining" : ""}
           >
             {collecting ? (
               'Collecting...'
@@ -241,6 +242,8 @@ const MapView = ({ userData, setUserData, socket }) => {
                 <Coins size={16} />
                 {miningStats.estimatedNextHour > 0
                   ? `Collect ${Math.floor(miningStats.estimatedNextHour)} coins`
+                  : miningStats.totalMiningRate > 0
+                  ? 'Check for coins'
                   : 'Nothing to collect'}
               </>
             )}
