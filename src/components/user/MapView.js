@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Coins } from 'lucide-react';
+import { Coins, HardHat, Clock, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { formatDistanceToNow } from 'date-fns';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
@@ -10,12 +11,13 @@ const MapView = ({ userData, setUserData, socket }) => {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ open: false, country: null });
+  const [miningStats, setMiningStats] = useState({ totalMiningRate: 0, estimatedNextHour: 0 });
+  const [collecting, setCollecting] = useState(false);
 
   useEffect(() => {
     fetchCountries();
   }, []);
 
-  // Listen for real-time country updates
   useEffect(() => {
     if (socket) {
       socket.on('countries-update', (updatedCountries) => {
@@ -42,10 +44,25 @@ const MapView = ({ userData, setUserData, socket }) => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/countries`);
-      setCountries(response.data);
+      const [countriesRes, miningRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/countries`),
+        axios.get(`${API_BASE_URL}/api/mining/stats`, {
+          headers: { 
+            'Authorization': `Bearer ${localStorage.getItem('token')}` 
+          }
+        })
+      ]);
+      
+      setCountries(countriesRes.data);
+      setMiningStats({
+        totalMiningRate: miningRes.data.totalMiningRate || 0,
+        estimatedNextHour: miningRes.data.estimatedNextHour || 0
+      });
     } catch (error) {
-      console.error('Error fetching countries:', error);
+      console.error('Error fetching data:', error);
+      if (error.response?.status === 401) {
+        // Handle unauthorized
+      }
     } finally {
       setLoading(false);
     }
@@ -106,6 +123,40 @@ const MapView = ({ userData, setUserData, socket }) => {
     return '#333';
   };
 
+  const handleCollectMining = async () => {
+    try {
+      setCollecting(true);
+      const response = await axios.post(
+        `${API_BASE_URL}/api/mining/collect`,
+        {},
+        { 
+          headers: { 
+            'Authorization': `Bearer ${localStorage.getItem('token')}` 
+          } 
+        }
+      );
+      
+      if (response.data.success) {
+        toast.success(`Collected ${response.data.coinsCollected} coins!`);
+        setUserData(prev => ({
+          ...prev,
+          coins: response.data.newBalance
+        }));
+        fetchCountries(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Error collecting coins:', error);
+      toast.error(error.response?.data?.error || 'Failed to collect coins');
+    } finally {
+      setCollecting(false);
+    }
+  };
+
+  const getTimeSinceLastMined = (lastMined) => {
+    if (!lastMined) return 'Never';
+    return formatDistanceToNow(new Date(lastMined), { addSuffix: true });
+  };
+
   if (loading) {
     return (
       <div className="loading">
@@ -115,9 +166,39 @@ const MapView = ({ userData, setUserData, socket }) => {
   }
 
   return (
-    <div className="mapview-container">
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">World Map</h2>
+        <div className="flex items-center gap-4">
+          {miningStats.totalMiningRate > 0 && (
+            <div className="mining-indicator">
+              <HardHat size={16} className="icon" />
+              <span>Mining: {miningStats.totalMiningRate}/h</span>
+            </div>
+          )}
+          <button
+            onClick={handleCollectMining}
+            disabled={collecting || miningStats.estimatedNextHour <= 0}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              collecting || miningStats.estimatedNextHour <= 0
+                ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500'
+                : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+            }`}
+          >
+            {collecting ? (
+              'Collecting...'
+            ) : (
+              <>
+                <Coins size={16} />
+                {miningStats.estimatedNextHour > 0
+                  ? `Collect ${Math.floor(miningStats.estimatedNextHour)} coins`
+                  : 'Nothing to collect'}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
       <div className="header">
-        <h1>🗺️ World Map</h1>
         <p>Conquer countries to boost your score!</p>
         {lastUpdate && (
           <div style={{ 
@@ -178,13 +259,9 @@ const MapView = ({ userData, setUserData, socket }) => {
               onClick={() => !country.owner && handleBuyCountry(country)}
             >
               <div className="country-name">{country.name}</div>
-              <div className="country-cost" style={{ 
-                color: country.owner ? 'rgba(255, 255, 255, 0.8)' : '#666' 
-              }}>
+              <div className="country-cost">
                 {country.owner ? (
-                  <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-                    +{country.score} points
-                  </span>
+                  <span>+{country.score} points</span>
                 ) : (
                   <>
                     <Coins size={14} style={{ marginRight: '4px' }} />
@@ -192,6 +269,26 @@ const MapView = ({ userData, setUserData, socket }) => {
                   </>
                 )}
               </div>
+              {country.owner === userData?.id && country.miningRate > 0 && (
+                <div className="country-mining-info">
+                  <div className="mining-rate">
+                    <HardHat size={12} className="icon" />
+                    <span>{country.miningRate} coins/h</span>
+                  </div>
+                  {country.lastMined && (
+                    <div className="mining-rate mt-1">
+                      <Clock size={12} className="icon" />
+                      <span>{getTimeSinceLastMined(country.lastMined)}</span>
+                    </div>
+                  )}
+                  {country.totalMined > 0 && (
+                    <div className="mining-rate mt-1">
+                      <Coins size={12} className="icon" />
+                      <span>Total: {country.totalMined} coins</span>
+                    </div>
+                  )}
+                </div>
+              )}
               {country.owner === userData?.id && (
                 <div style={{ 
                   fontSize: '10px', 
