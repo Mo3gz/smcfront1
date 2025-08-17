@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Coins } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import api from '../../utils/api';
+import axios from 'axios';
 
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
 const MapView = ({ userData, setUserData, socket }) => {
   const [countries, setCountries] = useState([]);
@@ -42,7 +42,7 @@ const MapView = ({ userData, setUserData, socket }) => {
 
   const fetchCountries = async () => {
     try {
-      const response = await api.get('/api/countries');
+      const response = await axios.get(`${API_BASE_URL}/api/countries`);
       setCountries(response.data);
     } catch (error) {
       console.error('Error fetching countries:', error);
@@ -68,9 +68,9 @@ const MapView = ({ userData, setUserData, socket }) => {
     if (!country) return;
     setConfirmModal({ open: false, country: null });
     try {
-      const response = await api.post('/api/countries/buy', {
+      const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
         countryId: country.id
-      });
+      }, { withCredentials: true });
       setCountries(prev =>
         prev.map(c =>
           c.id === country.id
@@ -115,7 +115,7 @@ const MapView = ({ userData, setUserData, socket }) => {
   }
 
   return (
-    <div className="mapview-container">
+    <div>
       <div className="header">
         <h1>🗺️ World Map</h1>
         <p>Conquer countries to boost your score!</p>
@@ -271,12 +271,6 @@ const MapView = ({ userData, setUserData, socket }) => {
           </div>
         </div>
       )}
-      {/* Footer for developer credit */}
-      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
-        <p style={{ margin: 0 }}>
-          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
-        </p>
-      </div>
     </div>
   );
 };

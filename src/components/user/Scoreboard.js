@@ -33,15 +33,14 @@ const Scoreboard = ({ socket }) => {
       socket.on('scoreboard-update', (updatedUsers) => {
         console.log('Scoreboard updated via socket:', updatedUsers);
         
-        // Include only non-admin users and sort by score
+        // Filter only user teams and sort by score
         const updatedScoreboard = updatedUsers
-          .filter(user => user.role !== 'admin') // Exclude admins
+          .filter(user => user.role === 'user')
           .map(user => ({
             id: user.id || user._id,
-            teamName: user.teamName || user.username,
+            teamName: user.teamName,
             score: user.score,
-            coins: user.coins,
-            role: user.role || 'user'
+            coins: user.coins
           }))
           .sort((a, b) => b.score - a.score);
         
@@ -174,7 +173,7 @@ const Scoreboard = ({ socket }) => {
   }
 
   return (
-    <div className="scoreboard-container">
+    <div>
       <div className="header">
         <h1>🏆 Scoreboard</h1>
         <p>Live team rankings</p>
@@ -235,11 +234,6 @@ const Scoreboard = ({ socket }) => {
             </div>
           ))
         )}
-      </div>
-      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
-        <p style={{ margin: 0 }}>
-          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
-        </p>
       </div>
     </div>
   );

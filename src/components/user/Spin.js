@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import api from '../../utils/api';
+import axios from 'axios';
 import Confetti from 'react-confetti';
 
 // Move these above all hooks and state
@@ -12,7 +12,7 @@ const spinTypes = [
   { id: 'random', name: 'Random Spin', cost: 25, icon: RotateCcw, color: '#667eea' }
 ];
 
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
 const Spin = ({ socket, userData, setUserData }) => {
   const [spinType, setSpinType] = useState('luck');
@@ -39,7 +39,7 @@ const Spin = ({ socket, userData, setUserData }) => {
       return;
     }
     setCheckingPromo(true);
-    api.post('/api/inventory/promocode/validate', { code: promoCode })
+    axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
       .then(res => {
         if (res.data.valid) {
           setDiscount(res.data.discount);
@@ -83,10 +83,10 @@ const Spin = ({ socket, userData, setUserData }) => {
     setResult(null);
 
     try {
-      const response = await api.post('/api/inventory/spin', {
+      const response = await axios.post(`${API_BASE_URL}/api/spin`, {
         spinType,
         promoCode: promoCode || undefined
-      });
+      }, { withCredentials: true });
 
       // Simulate spin animation
       setTimeout(() => {
@@ -114,9 +114,9 @@ const Spin = ({ socket, userData, setUserData }) => {
         } else if (response.data.card.name === 'Everything Against Me') {
           setUserData(prev => ({
             ...prev,
-            coins: (prev.coins || 0) + 75
+            coins: (prev.coins || 0) - 75
           }));
-          toast.success('You received Everything Against Me! +75 coins instantly!', {
+          toast.success('You received Everything Against Me! -75 coins instantly!', {
             duration: 4000,
             position: 'top-center',
             style: {
@@ -168,7 +168,7 @@ const Spin = ({ socket, userData, setUserData }) => {
   };
 
   return (
-    <div className="spin-container">
+    <div>
       <div className="header">
         <h1>🎰 Spin & Win</h1>
         <p>Try your luck to get powerful cards!</p>
@@ -315,11 +315,6 @@ const Spin = ({ socket, userData, setUserData }) => {
             <p><strong>Random Spin:</strong> Get any type of card (cheaper!)</p>
           </div>
         </div>
-      </div>
-      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
-        <p style={{ margin: 0 }}>
-          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
-        </p>
       </div>
     </div>
   );

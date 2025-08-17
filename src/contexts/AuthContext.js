@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { API_CONFIG, getApiUrl } from '../config/api';
 
 const AuthContext = createContext();
 
@@ -16,134 +15,55 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+  
   // Simple axios configuration
   const createAxiosConfig = () => ({
-    ...API_CONFIG.REQUEST_CONFIG,
-    timeout: 10000
+    withCredentials: true,
+    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json',
+    }
   });
 
   // Check if user is authenticated
   const checkAuth = useCallback(async () => {
     try {
       console.log('🔍 Checking authentication...');
-      
-      // First try with stored user data
-      const storedUser = localStorage.getItem('user');
-      const storedToken = localStorage.getItem('authToken');
-      
-      console.log('📦 Stored auth data:', { 
-        hasUser: !!storedUser, 
-        hasToken: !!storedToken,
-        token: storedToken ? storedToken.substring(0, 20) + '...' : null
-      });
-      
       const config = createAxiosConfig();
       let response;
-      
       try {
-        // Try with cookies first (backend priority)
-        response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), config);
-        console.log('✅ Authentication successful with cookies');
-        
-        // IMPORTANT: Extract token from response headers and store it
-        const tokenFromHeaders = response.headers['x-auth-token'];
-        if (tokenFromHeaders) {
-          localStorage.setItem('authToken', tokenFromHeaders);
-          console.log('🔑 Stored token from response headers:', tokenFromHeaders.substring(0, 20) + '...');
-        } else if (storedToken) {
-          // Keep existing token if no new one in headers
-          console.log('🔑 Using existing stored token');
-        } else {
-          console.warn('⚠️ No token found in headers or localStorage');
-        }
-        
+        response = await axios.get(`${API_BASE_URL}/api/user`, config);
       } catch (error) {
-        console.log('❌ Cookie auth failed, trying token:', error.response?.status);
-        
         // If 401 and we have a token in localStorage, try with token in header
-        if (error.response?.status === 401 && storedToken) {
-          const tokenConfig = {
-            ...config,
-            headers: {
-              ...config.headers,
-              'Authorization': `Bearer ${storedToken}`,
-              'x-auth-token': storedToken
-            }
-          };
-          response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), tokenConfig);
-          console.log('✅ Authentication successful with token');
+        if (error.response?.status === 401) {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            const tokenConfig = {
+              ...config,
+              headers: {
+                ...config.headers,
+                'x-auth-token': token
+              }
+            };
+            response = await axios.get(`${API_BASE_URL}/api/user`, tokenConfig);
+          } else {
+            throw error;
+          }
         } else {
           throw error;
         }
       }
-      
       setUser(response.data);
       localStorage.setItem('user', JSON.stringify(response.data));
-      
-      // Final check: ensure we have a token
-      const finalToken = localStorage.getItem('authToken');
-      console.log('👤 User set:', response.data.username, response.data.role);
-      console.log('🔑 Final auth token status:', !!finalToken, finalToken ? 'Length: ' + finalToken.length : 'No token');
-      
     } catch (error) {
-      console.error('❌ Authentication check failed:', error.response?.data || error.message);
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('authToken');
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  // Get current auth token (helper function)
-  const getAuthToken = () => {
-    return localStorage.getItem('authToken');
-  };
-
-  // Set auth token manually (helper function)
-  const setAuthToken = (token) => {
-    if (token) {
-      localStorage.setItem('authToken', token);
-      console.log('🔑 Auth token set manually');
-    }
-  };
-
-  // Refresh auth token (helper function)
-  const refreshAuthToken = async () => {
-    try {
-      console.log('🔄 Manually refreshing auth token...');
-      const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), createAxiosConfig());
-      if (response.headers['x-auth-token']) {
-        localStorage.setItem('authToken', response.headers['x-auth-token']);
-        console.log('✅ Auth token refreshed from headers');
-        return true;
-      } else {
-        console.warn('⚠️ No token found in response headers during refresh');
-        return false;
-      }
-    } catch (error) {
-      console.error('❌ Failed to refresh auth token:', error);
-      return false;
-    }
-  };
-
-  // Check if we have a valid token
-  const hasValidToken = () => {
-    const token = localStorage.getItem('authToken');
-    return !!token && token.length > 10; // Basic validation
-  };
-
-  // Force token refresh and retry
-  const forceTokenRefresh = async () => {
-    console.log('🔄 Force refreshing auth token...');
-    const success = await refreshAuthToken();
-    if (success) {
-      console.log('✅ Token refresh successful, you can now retry your request');
-    } else {
-      console.error('❌ Token refresh failed');
-    }
-    return success;
-  };
+  }, [API_BASE_URL]);
 
   // Initial auth check
   useEffect(() => {
@@ -154,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const config = createAxiosConfig();
-      const response = await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), 
+      const response = await axios.post(`${API_BASE_URL}/api/login`, 
         { username, password }, 
         config
       );
@@ -183,7 +103,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGOUT), {}, createAxiosConfig());
+      await axios.post(`${API_BASE_URL}/api/logout`, {}, createAxiosConfig());
     } catch (error) {
       // Ignore errors
     } finally {
@@ -195,16 +115,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check admin status (simplified - check user role)
-  const checkAdminStatus = () => {
-    if (!user) {
-      return { success: false, error: 'User not authenticated' };
+  // Check admin status
+  const checkAdminStatus = async () => {
+    try {
+      const config = createAxiosConfig();
+      let response;
+      try {
+        response = await axios.get(`${API_BASE_URL}/api/admin/check`, config);
+      } catch (error) {
+        // If 401 and we have a token in localStorage, try with token in header
+        if (error.response?.status === 401) {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            const tokenConfig = {
+              ...config,
+              headers: {
+                ...config.headers,
+                'x-auth-token': token
+              }
+            };
+            response = await axios.get(`${API_BASE_URL}/api/admin/check`, tokenConfig);
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
+      return { success: true, user: response.data.user };
+    } catch (error) {
+      console.error('Admin check failed:', error.response?.status, error.response?.data);
+      return { success: false, error: error.response?.data?.error || 'Admin check failed' };
     }
-    return { 
-      success: user.role === 'admin', 
-      user,
-      error: user.role !== 'admin' ? 'User is not an admin' : null
-    };
   };
 
   const value = {
@@ -213,12 +155,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     checkAuth,
-    checkAdminStatus,
-    getAuthToken,
-    setAuthToken,
-    refreshAuthToken,
-    hasValidToken,
-    forceTokenRefresh
+    checkAdminStatus
   };
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Zap, Shield, Heart } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import api from '../../utils/api';
+import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Inventory = ({ socket }) => {
@@ -14,27 +14,27 @@ const Inventory = ({ socket }) => {
   const [description, setDescription] = useState('');
   const [teams, setTeams] = useState([]);
 
-
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
   const fetchInventory = useCallback(async () => {
     try {
-      const response = await api.get('/api/inventory');
+      const response = await axios.get(`${API_BASE_URL}/api/inventory`, { withCredentials: true });
       setInventory(response.data);
     } catch (error) {
       console.error('Error fetching inventory:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [API_BASE_URL]);
 
   const fetchTeams = useCallback(async () => {
     try {
-      const response = await api.get('/api/auth/scoreboard');
+      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
     }
-  }, []);
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     fetchInventory();
@@ -63,31 +63,12 @@ const Inventory = ({ socket }) => {
   const handleUseCard = async () => {
     if (!selectedCard) return;
 
-    // Validate that target is selected for cards that need it
-    if ((selectedCard.type === 'attack' || selectedCard.type === 'alliance') && !selectedTeam) {
-      toast.error('Please select a target team');
-      return;
-    }
-
     try {
-      const requestData = {
-        itemId: selectedCard.id,
+      await axios.post(`${API_BASE_URL}/api/cards/use`, {
+        cardId: selectedCard.id,
+        selectedTeam,
         description
-      };
-
-      // Only include targetUserId for cards that need it
-      if (selectedCard.type === 'attack' || selectedCard.type === 'alliance') {
-        requestData.targetUserId = selectedTeam;
-      }
-
-      console.log('🎮 Sending card use request:', {
-        card: selectedCard,
-        requestData,
-        user: user
-      });
-
-      const response = await api.post('/api/inventory/use', requestData);
-      console.log('✅ Card use response:', response.data);
+      }, { withCredentials: true });
 
       toast.success(`Used ${selectedCard.name}!`);
       setShowModal(false);
@@ -96,13 +77,6 @@ const Inventory = ({ socket }) => {
       setDescription('');
       fetchInventory(); // Refresh inventory
     } catch (error) {
-      console.error('❌ Card usage error:', {
-        error: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        selectedCard,
-        selectedTeam
-      });
       toast.error(error.response?.data?.error || 'Failed to use card');
     }
   };
@@ -142,7 +116,7 @@ const Inventory = ({ socket }) => {
   }
 
   return (
-    <div className="inventory-container">
+    <div>
       <div className="header">
         <h1>📦 Inventory</h1>
         <p>Your collected cards</p>
@@ -207,7 +181,7 @@ const Inventory = ({ socket }) => {
             {(selectedCard.type === 'attack' || selectedCard.type === 'alliance') && (
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-                  Select Target Team
+                  Select Team
                 </label>
                 <select
                   className="input"
@@ -215,10 +189,8 @@ const Inventory = ({ socket }) => {
                   onChange={(e) => setSelectedTeam(e.target.value)}
                   required
                 >
-                  <option value="">Choose a target team...</option>
-                  {teams
-                    .filter(team => team.id !== (user && user.id) && team.role !== 'admin') // Exclude current user and admins
-                    .map((team) => (
+                  <option value="">Choose a team...</option>
+                  {teams.filter(team => team.id !== (user && user.id)).map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.teamName}
                     </option>
@@ -245,7 +217,7 @@ const Inventory = ({ socket }) => {
               <button
                 className="btn"
                 onClick={handleUseCard}
-                disabled={(selectedCard.type === 'attack' || selectedCard.type === 'alliance') && !selectedTeam}
+                disabled={!selectedTeam && (selectedCard.type === 'attack' || selectedCard.type === 'alliance')}
                 style={{ flex: 1 }}
               >
                 Use Card
@@ -266,12 +238,6 @@ const Inventory = ({ socket }) => {
           </div>
         </div>
       )}
-      {/* Footer for developer credit */}
-      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
-        <p style={{ margin: 0 }}>
-          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
-        </p>
-      </div>
     </div>
   );
 };
