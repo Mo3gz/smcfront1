@@ -221,12 +221,6 @@ const MapView = ({ userData, setUserData, socket }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">World Map</h2>
         <div className="flex items-center gap-4">
-          {miningStats.totalMiningRate > 0 && (
-            <div className="mining-indicator">
-              <HardHat size={16} className="icon" />
-              <span>Mining: {miningStats.totalMiningRate}/h</span>
-            </div>
-          )}
           <button
             onClick={handleCollectMining}
             disabled={collecting || miningStats.estimatedNextHour <= 0}
@@ -312,11 +306,21 @@ const MapView = ({ userData, setUserData, socket }) => {
               <div className="country-name">{country.name}</div>
               <div className="country-cost">
                 {country.owner ? (
-                  <span>+{country.score} points</span>
+                  <span>+{country.score} score</span>
                 ) : (
                   <>
-                    <Coins size={14} style={{ marginRight: '4px' }} />
-                    {country.cost} coins
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Coins size={14} style={{ marginRight: '4px' }} />
+                        {country.cost} coins
+                      </div>
+                      {country.miningRate > 0 && (
+                        <div className="mining-rate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '12px' }}>
+                          <HardHat size={12} />
+                          <span>+{country.miningRate}/h</span>
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
