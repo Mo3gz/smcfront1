@@ -6,9 +6,7 @@ import {
   Package, 
   RotateCcw, 
   Map, 
-  LogOut,
-  HardHat,
-  Zap
+  LogOut
 } from 'lucide-react';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
@@ -18,126 +16,14 @@ import Notifications from './Notifications';
 import Logo from '../assets/Logo.png';
 import ProgramOfTheDay from './ProgramOfTheDay';
 import CalendarIcon from '../assets/CalendarIcon';
-import axios from 'axios';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('scoreboard');
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(user);
   const [socketConnected, setSocketConnected] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [miningStats, setMiningStats] = useState({
-    totalMiningRate: 0,
-    estimatedNextHour: 0,
-    lastCollected: null,
-    countries: []
-  });
-
-  // Fetch user data on component mount
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
-
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/user`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        console.log('User data received:', response.data);
-        
-        if (!response.data) {
-          throw new Error('No user data received');
-        }
-        
-        setUserData(response.data);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        
-        if (error.response?.status === 401) {
-          // Handle unauthorized (token might be invalid/expired)
-          toast.error('Session expired. Please log in again.');
-          logout();
-        } else if (error.response?.status === 404) {
-          // Handle not found
-          toast.error('User endpoint not found. Please contact support.');
-        } else {
-          // Handle other errors
-          toast.error(`Failed to load user data: ${error.message}`);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchUserData();
-  }, [logout]);
-
-  // Auto-collect coins on component mount and when mining rate changes
-  useEffect(() => {
-    const collectMiningRewards = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        
-        const response = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/mining/collect`,
-          {},
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            withCredentials: true
-          }
-        );
-        
-        if (response.data.success && userData) {
-          setUserData(prev => ({
-            ...prev,
-            coins: response.data.newBalance
-          }));
-        }
-      } catch (error) {
-        console.error('Error collecting mining rewards:', error);
-      }
-    };
-    
-    if (userData) {
-      collectMiningRewards();
-    }
-  }, [userData]);
 
   useEffect(() => {
-    const fetchMiningStats = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/mining/stats`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        const data = await response.json();
-        if (response.ok) {
-          setMiningStats(data);
-        }
-      } catch (error) {
-        console.error('Error fetching mining stats:', error);
-      }
-    };
-
-    fetchMiningStats();
-    const interval = setInterval(fetchMiningStats, 60000); // Update every minute
-
     // Check socket connection status
     if (socket) {
       setSocketConnected(socket.connected);
@@ -165,8 +51,6 @@ const UserDashboard = ({ socket }) => {
         socket.off('user-update');
       };
     }
-
-    return () => clearInterval(interval);
   }, [socket, user.id]);
 
   const handleLogout = async () => {
@@ -175,22 +59,6 @@ const UserDashboard = ({ socket }) => {
   };
 
   const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      );
-    }
-
-    if (!userData) {
-      return (
-        <div className="text-center py-10">
-          <p className="text-red-500">Failed to load user data. Please refresh the page.</p>
-        </div>
-      );
-    }
-
     switch (activeTab) {
       case 'scoreboard':
         return <Scoreboard socket={socket} />;
@@ -199,9 +67,7 @@ const UserDashboard = ({ socket }) => {
       case 'spin':
         return <Spin socket={socket} userData={userData} setUserData={setUserData} />;
       case 'map':
-        return userData ? (
-          <MapView userData={userData} setUserData={setUserData} socket={socket} />
-        ) : null;
+        return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
       case 'program':
         return <ProgramOfTheDay />;
       default:
@@ -221,14 +87,6 @@ const UserDashboard = ({ socket }) => {
             <div style={{ fontSize: '12px', color: '#666' }}>
               Team Member
             </div>
-            {miningStats.totalMiningRate > 0 && (
-              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <HardHat size={12} className="text-yellow-500" />
-                <span style={{ fontSize: '11px', color: '#666' }}>
-                  Mining: {(miningStats.totalMiningRate / 60).toFixed(2)}/min
-                </span>
-              </div>
-            )}
             {/* Socket connection indicator */}
             <div style={{ 
               fontSize: '10px', 
@@ -272,17 +130,6 @@ const UserDashboard = ({ socket }) => {
               <div className="stat-value">{userData?.score || 0}</div>
               <div className="stat-label">Score</div>
             </div>
-            {miningStats.totalMiningRate > 0 && (
-              <div className="stat-item">
-                <div className="stat-value">
-                  <div className="flex items-center gap-1">
-                    <HardHat size={16} className="text-yellow-500" />
-                    <span>{miningStats.totalMiningRate}/h</span>
-                  </div>
-                </div>
-                <div className="stat-label">Mining Rate</div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -313,16 +160,11 @@ const UserDashboard = ({ socket }) => {
             <span className="nav-text">Spin</span>
           </div>
           <div 
-            className={`nav-item ${activeTab === 'map' ? 'active' : ''}`} 
+            className={`nav-item ${activeTab === 'map' ? 'active' : ''}`}
             onClick={() => setActiveTab('map')}
           >
-            <Map size={20} />
-            <span>Map</span>
-            {miningStats.estimatedNextHour > 0 && (
-              <div className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                <Zap size={10} fill="white" />
-              </div>
-            )}
+            <Map className="nav-icon" />
+            <span className="nav-text">Map</span>
           </div>
           <div 
             className={`nav-item ${activeTab === 'program' ? 'active' : ''}`}

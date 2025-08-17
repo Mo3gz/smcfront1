@@ -17,13 +17,6 @@ api.interceptors.request.use(
   (config) => {
     // Add mobile-specific headers
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
-    
-    // Add Authorization header if token exists
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    
     return config;
   },
   (error) => {
