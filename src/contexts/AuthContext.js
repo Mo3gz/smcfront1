@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      await axios.post(getApiUrl('/api/logout'), {}, createAxiosConfig());
+      await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGOUT), {}, createAxiosConfig());
     } catch (error) {
       // Ignore errors
     } finally {
@@ -111,38 +111,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check admin status
-  const checkAdminStatus = async () => {
-    try {
-      const config = createAxiosConfig();
-      let response;
-      try {
-        response = await axios.get(getApiUrl('/api/admin/check'), config);
-      } catch (error) {
-        // If 401 and we have a token in localStorage, try with token in header
-        if (error.response?.status === 401) {
-          const token = localStorage.getItem('authToken');
-          if (token) {
-            const tokenConfig = {
-              ...config,
-              headers: {
-                ...config.headers,
-                'x-auth-token': token
-              }
-            };
-            response = await axios.get(getApiUrl('/api/admin/check'), tokenConfig);
-          } else {
-            throw error;
-          }
-        } else {
-          throw error;
-        }
-      }
-      return { success: true, user: response.data.user };
-    } catch (error) {
-      console.error('Admin check failed:', error.response?.status, error.response?.data);
-      return { success: false, error: error.response?.data?.error || 'Admin check failed' };
+  // Check admin status (simplified - check user role)
+  const checkAdminStatus = () => {
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
     }
+    return { 
+      success: user.role === 'admin', 
+      user,
+      error: user.role !== 'admin' ? 'User is not an admin' : null
+    };
   };
 
   const value = {

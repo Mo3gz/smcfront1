@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Zap, Shield, Heart } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Inventory = ({ socket }) => {
@@ -14,27 +14,27 @@ const Inventory = ({ socket }) => {
   const [description, setDescription] = useState('');
   const [teams, setTeams] = useState([]);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+
 
   const fetchInventory = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/inventory`, { withCredentials: true });
+      const response = await api.get('/api/inventory');
       setInventory(response.data);
     } catch (error) {
       console.error('Error fetching inventory:', error);
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   const fetchTeams = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
+      const response = await api.get('/api/auth/scoreboard');
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   useEffect(() => {
     fetchInventory();
@@ -64,11 +64,11 @@ const Inventory = ({ socket }) => {
     if (!selectedCard) return;
 
     try {
-      await axios.post(`${API_BASE_URL}/api/cards/use`, {
-        cardId: selectedCard.id,
-        selectedTeam,
+      await api.post('/api/inventory/use', {
+        itemId: selectedCard.id,
+        targetUserId: selectedTeam,
         description
-      }, { withCredentials: true });
+      });
 
       toast.success(`Used ${selectedCard.name}!`);
       setShowModal(false);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../utils/api';
 import Confetti from 'react-confetti';
 
 // Move these above all hooks and state
@@ -12,7 +12,7 @@ const spinTypes = [
   { id: 'random', name: 'Random Spin', cost: 25, icon: RotateCcw, color: '#667eea' }
 ];
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+
 
 const Spin = ({ socket, userData, setUserData }) => {
   const [spinType, setSpinType] = useState('luck');
@@ -39,7 +39,7 @@ const Spin = ({ socket, userData, setUserData }) => {
       return;
     }
     setCheckingPromo(true);
-    axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
+    api.post('/api/promocode/validate', { code: promoCode })
       .then(res => {
         if (res.data.valid) {
           setDiscount(res.data.discount);
@@ -83,10 +83,10 @@ const Spin = ({ socket, userData, setUserData }) => {
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/spin`, {
+      const response = await api.post('/api/inventory/spin', {
         spinType,
         promoCode: promoCode || undefined
-      }, { withCredentials: true });
+      });
 
       // Simulate spin animation
       setTimeout(() => {

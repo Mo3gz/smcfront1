@@ -12,6 +12,13 @@ api.interceptors.request.use(
   (config) => {
     // Add mobile-specific headers
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
+    
+    // Add authentication token if available
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     return config;
   },
   (error) => {

@@ -11,7 +11,7 @@ export const API_CONFIG = {
     AUTH: {
       LOGIN: '/api/auth/login',
       LOGOUT: '/api/auth/logout',
-      USER: '/api/user',
+      USER: '/api/auth/me',
       REGISTER: '/api/auth/register'
     },
     COUNTRIES: '/api/countries',
