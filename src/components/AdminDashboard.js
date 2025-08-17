@@ -25,7 +25,7 @@ const AdminDashboard = ({ socket }) => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
       // Use the correct endpoint
-      const response = await axios.get(`${API_BASE_URL}/api/admin/teams/with-cards`, { withCredentials: true });
+      const response = await axios.get(`${API_BASE_URL}/api/admin/teams-cards`, { withCredentials: true });
       setTeamsWithCards(response.data);
     } catch (error) {
       console.error('Error fetching teams and cards:', error);
@@ -35,7 +35,7 @@ const AdminDashboard = ({ socket }) => {
   const fetchTeams = useCallback(async () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-      const response = await axios.get(`${API_BASE_URL}/api/teams`);
+      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -45,7 +45,7 @@ const AdminDashboard = ({ socket }) => {
   const fetchNotifications = useCallback(async () => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-      const response = await axios.get(`${API_BASE_URL}/api/admin/notifications/all`, { withCredentials: true });
+      const response = await axios.get(`${API_BASE_URL}/api/admin/notifications`, { withCredentials: true });
       setNotifications(response.data);
     } catch (error) {
       console.error('Error fetching notifications:', error.response?.status, error.response?.data);
@@ -315,7 +315,7 @@ const PromoCodes = ({ teams }) => {
     
     try {
       const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-      await axios.post(`${API_BASE_URL}/api/admin/promocodes/create`, {
+      await axios.post(`${API_BASE_URL}/api/admin/promocodes`, {
         code,
         teamId,
         discount

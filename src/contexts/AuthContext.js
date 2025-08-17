@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
       const config = createAxiosConfig();
       let response;
       try {
-        response = await axios.get(`${API_BASE_URL}/api/auth/me`, config);
+        response = await axios.get(`${API_BASE_URL}/api/user`, config);
       } catch (error) {
         // If 401 and we have a token in localStorage, try with token in header
         if (error.response?.status === 401) {
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
                 'x-auth-token': token
               }
             };
-            response = await axios.get(`${API_BASE_URL}/api/auth/me`, tokenConfig);
+            response = await axios.get(`${API_BASE_URL}/api/user`, tokenConfig);
           } else {
             throw error;
           }
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/api/auth/logout`, {}, createAxiosConfig());
+      await axios.post(`${API_BASE_URL}/api/logout`, {}, createAxiosConfig());
     } catch (error) {
       // Ignore errors
     } finally {
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
       const config = createAxiosConfig();
       let response;
       try {
-        response = await axios.get(`${API_BASE_URL}/api/admin/check-admin`, config);
+        response = await axios.get(`${API_BASE_URL}/api/admin/check`, config);
       } catch (error) {
         // If 401 and we have a token in localStorage, try with token in header
         if (error.response?.status === 401) {
