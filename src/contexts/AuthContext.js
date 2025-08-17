@@ -74,25 +74,37 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const config = createAxiosConfig();
-      const response = await axios.post(`${API_BASE_URL}/api/login`, 
-        { username, password }, 
+      // Remove any existing token to ensure we get a fresh one
+      localStorage.removeItem('token');
+      
+      const response = await axios.post(
+        `${API_BASE_URL}/api/login`,
+        { username, password },
         config
       );
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
+      
+      const { user, token } = response.data;
+      
+      if (!token) {
+        throw new Error('No token received from server');
       }
+      
+      // Store user data and token
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
+      
+      // Update axios default headers with the new token
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      setUser(user);
       return { success: true };
     } catch (error) {
-      let errorMessage = 'Login failed. Please try again.';
-      if (error.response?.status === 401) {
-        errorMessage = 'Invalid username or password. Please try again.';
-      } else if (error.response?.status === 0 || error.code === 'ERR_NETWORK') {
-        errorMessage = 'Network connection issue. Please check your internet connection.';
-      } else if (error.response?.status >= 500) {
-        errorMessage = 'Server error. Please try again later.';
-      }
+      console.error('Login error:', error);
+      // Clear any partial auth data on error
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+      
       return { 
         success: false, 
         error: errorMessage
