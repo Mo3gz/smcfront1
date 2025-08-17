@@ -14,7 +14,8 @@ const MapView = ({ userData, setUserData, socket }) => {
   const [miningStats, setMiningStats] = useState({ 
     totalMiningRate: 0, 
     estimatedNextMinute: 0,
-    totalMined: 0
+    totalMined: 0,
+    pendingCoins: 0
   });
   const [collecting, setCollecting] = useState(false);
 
@@ -99,7 +100,8 @@ const MapView = ({ userData, setUserData, socket }) => {
       setMiningStats({
         totalMiningRate: miningRes.data?.totalMiningRate || 0,
         estimatedNextMinute: miningRes.data?.estimatedNextMinute || 0,
-        totalMined: miningRes.data?.totalMined || 0
+        totalMined: miningRes.data?.totalMined || 0,
+        pendingCoins: miningRes.data?.totalMined || 0
       });
     } catch (error) {
       console.error('Error fetching data:', {
