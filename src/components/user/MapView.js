@@ -145,23 +145,35 @@ const MapView = ({ userData, setUserData, socket }) => {
     if (!country) return;
     setConfirmModal({ open: false, country: null });
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
-        countryId: country.id
-      }, { withCredentials: true });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/countries/buy`,
+        { countryId: country.id },
+        { 
+          headers: { 
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true 
+        }
+      );
+      
       setCountries(prev =>
         prev.map(c =>
           c.id === country.id
-            ? { ...c, owner: userData?.id || null }
+            ? { ...c, owner: userData?.id || null, lastMined: new Date().toISOString() }
             : c
         )
       );
+      
       setUserData(prev => ({
         ...prev,
         coins: response.data.user.coins,
         score: response.data.user.score
       }));
+      
       toast.success(`Successfully bought ${country.name}!`);
     } catch (error) {
+      console.error('Buy country error:', error);
       toast.error(error.response?.data?.error || 'Failed to buy country');
     }
   };
@@ -191,8 +203,10 @@ const MapView = ({ userData, setUserData, socket }) => {
         {},
         { 
           headers: { 
-            'Authorization': `Bearer ${localStorage.getItem('token')}` 
-          } 
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
         }
       );
       
@@ -219,411 +233,154 @@ const MapView = ({ userData, setUserData, socket }) => {
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="spinner"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
-const handleBuyCountry = (country) => {
-if (country.owner) {
-  toast.error('This country is already owned!');
-  return;
-}
-if (!userData) {
-  toast.error('User data not available. Please refresh the page.');
-  return;
-}
-if (userData.coins < country.cost) {
-  toast.error('Insufficient coins!');
-  return;
-}
-setConfirmModal({ open: true, country });
-};
-
-const confirmBuyCountry = async () => {
-const country = confirmModal.country;
-if (!country) return;
-setConfirmModal({ open: false, country: null });
-try {
-  const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
-    countryId: country.id
-  }, { withCredentials: true });
-  setCountries(prev =>
-    prev.map(c =>
-      c.id === country.id
-        ? { ...c, owner: userData?.id || null }
-        : c
-    )
-  );
-  setUserData(prev => ({
-    ...prev,
-    coins: response.data.user.coins,
-    score: response.data.user.score
-  }));
-  toast.success(`Successfully bought ${country.name}!`);
-} catch (error) {
-  toast.error(error.response?.data?.error || 'Failed to buy country');
-}
-};
-
-const getCountryColor = (country) => {
-if (userData && country.owner === userData.id) {
-  return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
-}
-if (country.owner) {
-  return 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)';
-}
-return 'rgba(255, 255, 255, 0.9)';
-};
-
-const getCountryTextColor = (country) => {
-if (country.owner) {
-  return 'white';
-}
-return '#333';
-};
-
-const handleCollectMining = async () => {
-try {
-  setCollecting(true);
-  const response = await axios.post(
-    `${API_BASE_URL}/api/mining/collect`,
-    {},
-    { 
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}` 
-      } 
-    }
-  );
-  
-  if (response.data.success) {
-    toast.success(`Collected ${response.data.coinsCollected} coins!`);
-    setUserData(prev => ({
-      ...prev,
-      coins: response.data.newBalance
-    }));
-    fetchCountries(); // Refresh data
-  }
-} catch (error) {
-  console.error('Error collecting coins:', error);
-  toast.error(error.response?.data?.error || 'Failed to collect coins');
-} finally {
-  setCollecting(false);
-}
-};
-
-const getTimeSinceLastMined = (lastMined) => {
-if (!lastMined) return 'Never';
-return formatDistanceToNow(new Date(lastMined), { addSuffix: true });
-};
-
-if (loading) {
-return (
-  <div className="loading">
-    <div className="spinner"></div>
-  </div>
-);
-}
-
-return (
-  <div className="flex justify-between items-center mb-6">
-    <h2 className="text-2xl font-bold">World Map</h2>
-    <div className="flex items-center gap-4">
-      <div className="flex flex-col items-end gap-2">
-        <button
-          onClick={handleCollectMining}
-          disabled={collecting || miningStats.totalMined <= 0}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-            collecting || miningStats.totalMined <= 0
-              ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500'
-              : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-          }`}
-          title={miningStats.totalMiningRate <= 0 ? "No active mining" : `Mining at ${miningStats.totalMiningRate.toFixed(2)} coins/min`}
-        >
-          {collecting ? (
-            'Collecting...'
-          ) : (
-            <>
-              <Coins size={16} />
-              {miningStats.totalMined > 0
-                ? `Collect ${Math.floor(miningStats.totalMined)} coins`
-                : miningStats.totalMiningRate > 0
-                ? 'Mining in progress...'
-                : 'Nothing to collect'}
-            </>
-          )}
-        </button>
-        {miningStats.totalMiningRate > 0 && (
-          <div className="text-xs text-gray-600 dark:text-gray-400">
-            Earning ~{miningStats.totalMiningRate.toFixed(2)} coins/min
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-  <div className="header">
-    <p>Conquer countries to boost your score!</p>
-    {lastUpdate && (
-      <div style={{ 
-        fontSize: '12px', 
-        color: '#2196F3', 
-        marginTop: '4px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        justifyContent: 'center'
-      }}>
-        <div style={{ 
-          width: '8px', 
-          height: '8px', 
-          background: '#2196F3', 
-          borderRadius: '50%',
-          animation: 'pulse 2s infinite'
-        }}></div>
-        Last updated: {lastUpdate.toLocaleTimeString()}
-      </div>
-    )}
-  </div>
-
-  <div className="card">
-    <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-around', 
-        background: 'rgba(102, 126, 234, 0.1)', 
-        padding: '16px', 
-        borderRadius: '12px' 
-      }}>
-        <div>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: '#667eea' }}>
-            {userData?.coins || 0}
-          </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>Your Coins</div>
-        </div>
-        <div>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: '#667eea' }}>
-            {countries.filter(c => c.owner === userData?.id).length}
-          </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>Countries Owned</div>
-        </div>
-      </div>
-    </div>
-
-    <div className="map-grid">
-      {countries.map((country) => (
-        <div
-          key={country.id}
-          className="country-item"
-          style={{
-            background: getCountryColor(country),
-            color: getCountryTextColor(country),
-            cursor: country.owner ? 'default' : 'pointer'
-          }}
-          onClick={() => !country.owner && handleBuyCountry(country)}
-        >
-          <div className="country-name">{country.name}</div>
-          <div className="country-cost">
-            {country.owner ? (
-              <span>+{country.score} score</span>
-            ) : (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <Coins size={14} style={{ marginRight: '4px' }} />
-                    {country.cost} coins
-                  </div>
-                  {country.miningRate > 0 && (
-                    <div className="mining-rate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '12px' }}>
-                      <HardHat size={12} />
-                      <span>+{country.miningRate}/h</span>
-                    </div>
-                  )}
-                </div>
-              </>
+  return (
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">World Map</h2>
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end gap-2">
+            <button
+              onClick={handleCollectMining}
+              disabled={collecting || miningStats.totalMined <= 0}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                collecting || miningStats.totalMined <= 0
+                  ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500'
+                  : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+              }`}
+              title={miningStats.totalMiningRate <= 0 ? "No active mining" : `Mining at ${miningStats.totalMiningRate.toFixed(2)} coins/min`}
+            >
+              {collecting ? (
+                'Collecting...'
+              ) : (
+                <>
+                  <Coins size={16} />
+                  {miningStats.totalMined > 0
+                    ? `Collect ${Math.floor(miningStats.totalMined)} coins`
+                    : miningStats.totalMiningRate > 0
+                    ? 'Mining in progress...'
+                    : 'Nothing to collect'}
+                </>
+              )}
+            </button>
+            {miningStats.totalMiningRate > 0 && (
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                Earning ~{miningStats.totalMiningRate.toFixed(2)} coins/min
+              </div>
             )}
-            fontSize: '12px', 
-            color: '#2196F3', 
-            marginTop: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            justifyContent: 'center'
-          }}>
-            <div style={{ 
-              width: '8px', 
-              height: '8px', 
-              background: '#2196F3', 
-              borderRadius: '50%',
-              animation: 'pulse 2s infinite'
-            }}></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Conquer countries to boost your score!</h3>
+        {lastUpdate && (
+          <div className="flex items-center justify-center text-sm text-blue-500 dark:text-blue-400 mb-4">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></div>
             Last updated: {lastUpdate.toLocaleTimeString()}
           </div>
         )}
-      </div>
 
-      <div className="card">
-        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-around', 
-            background: 'rgba(102, 126, 234, 0.1)', 
-            padding: '16px', 
-            borderRadius: '12px' 
-          }}>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#667eea' }}>
-                {userData?.coins || 0}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Your Coins</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#667eea' }}>
-                {countries.filter(c => c.owner === userData?.id).length}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Countries Owned</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="map-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {countries.map((country) => (
             <div
               key={country.id}
-              className="country-item"
+              className={`rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-200 ${
+                !country.owner ? 'hover:shadow-md cursor-pointer' : 'cursor-default'
+              }`}
               style={{
                 background: getCountryColor(country),
                 color: getCountryTextColor(country),
-                cursor: country.owner ? 'default' : 'pointer'
               }}
               onClick={() => !country.owner && handleBuyCountry(country)}
             >
-              <div className="country-name">{country.name}</div>
-              <div className="country-cost">
-                {country.owner ? (
-                  <span>+{country.score} score</span>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Coins size={14} style={{ marginRight: '4px' }} />
-                        {country.cost} coins
-                      </div>
-                      {country.miningRate > 0 && (
-                        <div className="mining-rate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '12px' }}>
-                          <HardHat size={12} />
-                          <span>+{country.miningRate}/h</span>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-              {country.owner === userData?.id && country.miningRate > 0 && (
-                <div className="country-mining-info">
-                  <div className="mining-rate">
-                    <HardHat size={12} className="icon" />
-                    <span>{country.miningRate} coins/h</span>
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-lg">{country.name}</h3>
+                  {country.owner && (
+                    <span className="text-xs bg-black bg-opacity-20 px-2 py-1 rounded-full">
+                      {country.owner === userData?.id ? 'Yours' : 'Owned'}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Cost:</span>
+                    <span className="font-medium">
+                      {country.cost} <Coins size={12} className="inline" />
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Mining Rate:</span>
+                    <span className="font-medium">{country.miningRate}/min</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Score:</span>
+                    <span className="font-medium">{country.score || 0}</span>
                   </div>
                   {country.lastMined && (
-                    <div className="mining-rate mt-1">
-                      <Clock size={12} className="icon" />
-                      <span>{getTimeSinceLastMined(country.lastMined)}</span>
-                    </div>
-                  )}
-                  {country.totalMined > 0 && (
-                    <div className="mining-rate mt-1">
-                      <Coins size={12} className="icon" />
-                      <span>Total: {country.totalMined} coins</span>
+                    <div className="text-xs text-opacity-80 flex items-center mt-1">
+                      <Clock size={12} className="mr-1" />
+                      {getTimeSinceLastMined(country.lastMined)}
                     </div>
                   )}
                 </div>
-              )}
-              {country.owner === userData?.id && (
-                <div style={{ 
-                  fontSize: '10px', 
-                  color: 'rgba(255, 255, 255, 0.8)', 
-                  marginTop: '4px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px'
-                }}>
-                  Yours
-                </div>
-              )}
-              {country.owner && country.owner !== userData?.id && (
-                <div style={{ 
-                  fontSize: '10px', 
-                  color: 'rgba(255, 255, 255, 0.8)', 
-                  marginTop: '4px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px'
-                }}>
-                  Owned
-                </div>
-              )}
+              </div>
             </div>
           ))}
         </div>
 
-        <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(102, 126, 234, 0.1)', borderRadius: '12px' }}>
-          <h4 style={{ color: '#667eea', marginBottom: '12px' }}>How it works</h4>
-          <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
-            <p><strong>Buy Countries:</strong> Spend coins to own countries and gain their score points</p>
-            <p><strong>Score Boost:</strong> Each country gives you bonus points for the scoreboard</p>
-            <p><strong>Exclusive:</strong> Once owned, a country cannot be bought by other teams</p>
-            <p><strong>Strategy:</strong> Choose wisely - expensive countries give more points!</p>
-          </div>
-        </div>
+        <button
+          onClick={fetchCountries}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+        >
+          Refresh
+        </button>
       </div>
+
       {/* Confirmation Modal */}
       {confirmModal.open && confirmModal.country && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.5)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '32px',
-            minWidth: '320px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ marginBottom: 16 }}>Confirm Purchase</h3>
-            <p style={{ marginBottom: 24 }}>
-              Are you sure you want to buy <b>{confirmModal.country.name}</b> for <b>{confirmModal.country.cost} coins</b>?
-            </p>
-            <button
-              className="btn"
-              style={{ marginRight: 16, background: '#667eea', color: 'white', padding: '8px 24px', borderRadius: '8px', border: 'none', fontWeight: 600 }}
-              onClick={confirmBuyCountry}
-            >
-              Yes, Buy
-            </button>
-            <button
-              className="btn"
-              style={{ background: '#eee', color: '#333', padding: '8px 24px', borderRadius: '8px', border: 'none', fontWeight: 600 }}
-              onClick={() => setConfirmModal({ open: false, country: null })}
-            >
-              Cancel
-            </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+              Confirm Purchase
+            </h3>
+            <div className="space-y-4 text-gray-700 dark:text-gray-300">
+              <p>Buy <span className="font-semibold">{confirmModal.country.name}</span> for {confirmModal.country.cost} coins?</p>
+              <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                <div className="flex justify-between">
+                  <span>Mining Rate:</span>
+                  <span className="font-medium">{confirmModal.country.miningRate} coins/min</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Score Bonus:</span>
+                  <span className="font-medium">+{confirmModal.country.score || 0} points</span>
+                </div>
+              </div>
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={() => setConfirmModal({ open: false, country: null })}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmBuyCountry}
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                >
+                  Confirm Purchase
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
-      {/* Footer for developer credit */}
-      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
-        <p style={{ margin: 0 }}>
-          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
-        </p>
-      </div>
     </div>
   );
 };
