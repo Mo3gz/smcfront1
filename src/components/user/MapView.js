@@ -124,6 +124,10 @@ const MapView = ({ userData, setUserData, socket }) => {
       toast.error('This country is already owned!');
       return;
     }
+    if (!userData) {
+      toast.error('User data not available. Please refresh the page.');
+      return;
+    }
     if (userData.coins < country.cost) {
       toast.error('Insufficient coins!');
       return;
@@ -142,7 +146,7 @@ const MapView = ({ userData, setUserData, socket }) => {
       setCountries(prev =>
         prev.map(c =>
           c.id === country.id
-            ? { ...c, owner: userData.id }
+            ? { ...c, owner: userData?.id || null }
             : c
         )
       );
@@ -158,7 +162,7 @@ const MapView = ({ userData, setUserData, socket }) => {
   };
 
   const getCountryColor = (country) => {
-    if (country.owner === userData.id) {
+    if (userData && country.owner === userData.id) {
       return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
     }
     if (country.owner) {
