@@ -6,12 +6,14 @@ import {
   Package, 
   RotateCcw, 
   Map, 
-  LogOut
+  LogOut,
+  HardHat
 } from 'lucide-react';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
+import MiningDashboard from './mining/MiningDashboard';
 import Notifications from './Notifications';
 import Logo from '../assets/Logo.png';
 import ProgramOfTheDay from './ProgramOfTheDay';
@@ -19,7 +21,7 @@ import CalendarIcon from '../assets/CalendarIcon';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('scoreboard');
+  const [activeTab, setActiveTab] = useState('mining');
   const [userData, setUserData] = useState(user);
   const [socketConnected, setSocketConnected] = useState(false);
 
@@ -68,6 +70,8 @@ const UserDashboard = ({ socket }) => {
         return <Spin socket={socket} userData={userData} setUserData={setUserData} />;
       case 'map':
         return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
+      case 'mining':
+        return <MiningDashboard />;
       case 'program':
         return <ProgramOfTheDay />;
       default:
@@ -139,6 +143,13 @@ const UserDashboard = ({ socket }) => {
       <nav className="navbar">
         <div className="nav-content">
           <div 
+            className={`nav-item ${activeTab === 'mining' ? 'active' : ''}`}
+            onClick={() => setActiveTab('mining')}
+          >
+            <HardHat className="nav-icon" />
+            <span className="nav-text">Mining</span>
+          </div>
+          <div 
             className={`nav-item ${activeTab === 'scoreboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('scoreboard')}
           >
@@ -165,13 +176,6 @@ const UserDashboard = ({ socket }) => {
           >
             <Map className="nav-icon" />
             <span className="nav-text">Map</span>
-          </div>
-          <div 
-            className={`nav-item ${activeTab === 'program' ? 'active' : ''}`}
-            onClick={() => setActiveTab('program')}
-          >
-            <span className="nav-icon"><CalendarIcon width={24} height={24} /></span>
-            <span className="nav-text">Program</span>
           </div>
         </div>
       </nav>

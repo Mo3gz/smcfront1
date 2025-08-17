@@ -12,6 +12,17 @@ const api = axios.create({
   }
 });
 
+// Mining API endpoints
+const mining = {
+  // Get mining stats for all user's countries
+  getMiningStats: () => api.get('/api/mining/stats'),
+  
+  // Mine coins from a specific country
+  mineCountry: (countryId) => api.post(`/api/mining/mine/${countryId}`)
+};
+
+api.mining = mining;
+
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
