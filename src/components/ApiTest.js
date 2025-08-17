@@ -1,93 +1,134 @@
-import React, { useState, useEffect } from 'react';
-import { checkApiHealth } from '../utils/api';
-import { API_CONFIG } from '../config/api';
+import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { checkApiHealth, refreshAuthToken, hasValidToken, getCurrentToken } from '../utils/api';
 
 const ApiTest = () => {
+  const { user, forceTokenRefresh, hasValidToken: contextHasToken } = useAuth();
   const [healthStatus, setHealthStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [refreshStatus, setRefreshStatus] = useState(null);
+  const [testResults, setTestResults] = useState({});
 
-  const testApiConnection = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await checkApiHealth();
-      setHealthStatus(result);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const testApiHealth = async () => {
+    const result = await checkApiHealth();
+    setHealthStatus(result);
   };
 
-  useEffect(() => {
-    // Test connection on component mount
-    testApiConnection();
-  }, []);
+  const testTokenRefresh = async () => {
+    setRefreshStatus('Refreshing...');
+    const result = await refreshAuthToken();
+    setRefreshStatus(result);
+  };
+
+  const testAuthContext = async () => {
+    const results = {
+      user: !!user,
+      username: user?.username,
+      hasToken: contextHasToken(),
+      localStorageToken: !!localStorage.getItem('authToken'),
+      sessionStorageToken: !!sessionStorage.getItem('authToken'),
+      cookies: document.cookie.includes('auth_token')
+    };
+    setTestResults(results);
+  };
+
+  const testBackendEndpoints = async () => {
+    const endpoints = [
+      '/api/public-test',
+      '/api/cors-test',
+      '/api/netlify-test',
+      '/api/cors-debug',
+      '/api/auth-test'
+    ];
+
+    const results = {};
+    
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(`https://smcback-production-6d12.up.railway.app${endpoint}`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          results[endpoint] = { success: true, data };
+        } else {
+          results[endpoint] = { success: false, status: response.status, statusText: response.statusText };
+        }
+      } catch (error) {
+        results[endpoint] = { success: false, error: error.message };
+      }
+    }
+    
+    setTestResults(prev => ({ ...prev, endpoints: results }));
+  };
 
   return (
-    <div style={{ 
-      padding: '20px', 
-      border: '1px solid #ccc', 
-      borderRadius: '8px', 
-      margin: '20px',
-      backgroundColor: '#f9f9f9'
-    }}>
-      <h3>🔌 API Connection Test</h3>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2>🔧 API & Authentication Test Panel</h2>
       
-      <div style={{ marginBottom: '15px' }}>
-        <strong>Backend URL:</strong> {API_CONFIG.BASE_URL}
+      <div style={{ marginBottom: '20px' }}>
+        <h3>👤 Current User Status</h3>
+        <p><strong>User:</strong> {user ? `${user.username} (${user.role})` : 'Not logged in'}</p>
+        <p><strong>Has Token:</strong> {contextHasToken() ? '✅ Yes' : '❌ No'}</p>
+        <p><strong>Local Storage Token:</strong> {localStorage.getItem('authToken') ? '✅ Yes' : '❌ No'}</p>
+        <p><strong>Session Storage Token:</strong> {sessionStorage.getItem('authToken') ? '✅ Yes' : '❌ No'}</p>
+        <p><strong>Cookies:</strong> {document.cookie.includes('auth_token') ? '✅ Yes' : '❌ No'}</p>
       </div>
-      
-      <button 
-        onClick={testApiConnection}
-        disabled={loading}
-        style={{
-          padding: '10px 20px',
-          backgroundColor: loading ? '#ccc' : '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: loading ? 'not-allowed' : 'pointer'
-        }}
-      >
-        {loading ? 'Testing...' : 'Test Connection'}
-      </button>
+
+      <div style={{ marginBottom: '20px' }}>
+        <h3>🧪 Test Functions</h3>
+        <button onClick={testApiHealth} style={{ margin: '5px', padding: '10px' }}>
+          Test API Health
+        </button>
+        <button onClick={testTokenRefresh} style={{ margin: '5px', padding: '10px' }}>
+          Refresh Auth Token
+        </button>
+        <button onClick={testAuthContext} style={{ margin: '5px', padding: '10px' }}>
+          Test Auth Context
+        </button>
+        <button onClick={testBackendEndpoints} style={{ margin: '5px', padding: '10px' }}>
+          Test Backend Endpoints
+        </button>
+        <button onClick={forceTokenRefresh} style={{ margin: '5px', padding: '10px' }}>
+          Force Token Refresh (Context)
+        </button>
+      </div>
 
       {healthStatus && (
-        <div style={{ marginTop: '15px' }}>
-          <h4>Status: {healthStatus.status === 'success' ? '✅ Connected' : '❌ Failed'}</h4>
-          {healthStatus.status === 'success' ? (
-            <pre style={{ backgroundColor: '#e8f5e8', padding: '10px', borderRadius: '5px' }}>
-              {JSON.stringify(healthStatus.data, null, 2)}
-            </pre>
-          ) : (
-            <div style={{ color: 'red' }}>
-              <p><strong>Error:</strong> {healthStatus.error}</p>
-              {healthStatus.details && (
-                <p><strong>Details:</strong> {JSON.stringify(healthStatus.details)}</p>
-              )}
-            </div>
-          )}
+        <div style={{ marginBottom: '20px' }}>
+          <h3>🏥 API Health Status</h3>
+          <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
+            {JSON.stringify(healthStatus, null, 2)}
+          </pre>
         </div>
       )}
 
-      {error && (
-        <div style={{ marginTop: '15px', color: 'red' }}>
-          <strong>Exception:</strong> {error}
+      {refreshStatus && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3>🔄 Token Refresh Status</h3>
+          <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
+            {JSON.stringify(refreshStatus, null, 2)}
+          </pre>
         </div>
       )}
 
-      <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
-        <h4>🔍 Troubleshooting Tips:</h4>
-        <ul>
-          <li>Check if the backend server is running</li>
-          <li>Verify the backend URL is correct</li>
-          <li>Check CORS configuration on the backend</li>
-          <li>Ensure network connectivity</li>
-          <li>Check browser console for detailed errors</li>
-        </ul>
+      {Object.keys(testResults).length > 0 && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3>📊 Test Results</h3>
+          <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
+            {JSON.stringify(testResults, null, 2)}
+          </pre>
+        </div>
+      )}
+
+      <div style={{ marginBottom: '20px' }}>
+        <h3>🔍 Manual Token Check</h3>
+        <p><strong>Current Token:</strong> {getCurrentToken() ? getCurrentToken().substring(0, 30) + '...' : 'No token'}</p>
+        <p><strong>Token Valid:</strong> {hasValidToken() ? '✅ Yes' : '❌ No'}</p>
       </div>
     </div>
   );

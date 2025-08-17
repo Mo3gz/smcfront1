@@ -45,10 +45,16 @@ export const AuthProvider = ({ children }) => {
         response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), config);
         console.log('✅ Authentication successful with cookies');
         
-        // If we have a stored token, keep it. If not, try to extract from response headers
-        if (!storedToken && response.headers['x-auth-token']) {
-          localStorage.setItem('authToken', response.headers['x-auth-token']);
-          console.log('🔑 Stored token from response headers');
+        // IMPORTANT: Extract token from response headers and store it
+        const tokenFromHeaders = response.headers['x-auth-token'];
+        if (tokenFromHeaders) {
+          localStorage.setItem('authToken', tokenFromHeaders);
+          console.log('🔑 Stored token from response headers:', tokenFromHeaders.substring(0, 20) + '...');
+        } else if (storedToken) {
+          // Keep existing token if no new one in headers
+          console.log('🔑 Using existing stored token');
+        } else {
+          console.warn('⚠️ No token found in headers or localStorage');
         }
         
       } catch (error) {
@@ -73,7 +79,11 @@ export const AuthProvider = ({ children }) => {
       
       setUser(response.data);
       localStorage.setItem('user', JSON.stringify(response.data));
+      
+      // Final check: ensure we have a token
+      const finalToken = localStorage.getItem('authToken');
       console.log('👤 User set:', response.data.username, response.data.role);
+      console.log('🔑 Final auth token status:', !!finalToken, finalToken ? 'Length: ' + finalToken.length : 'No token');
       
     } catch (error) {
       console.error('❌ Authentication check failed:', error.response?.data || error.message);
@@ -101,17 +111,38 @@ export const AuthProvider = ({ children }) => {
   // Refresh auth token (helper function)
   const refreshAuthToken = async () => {
     try {
+      console.log('🔄 Manually refreshing auth token...');
       const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), createAxiosConfig());
       if (response.headers['x-auth-token']) {
         localStorage.setItem('authToken', response.headers['x-auth-token']);
-        console.log('🔑 Auth token refreshed from headers');
+        console.log('✅ Auth token refreshed from headers');
         return true;
+      } else {
+        console.warn('⚠️ No token found in response headers during refresh');
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('❌ Failed to refresh auth token:', error);
       return false;
     }
+  };
+
+  // Check if we have a valid token
+  const hasValidToken = () => {
+    const token = localStorage.getItem('authToken');
+    return !!token && token.length > 10; // Basic validation
+  };
+
+  // Force token refresh and retry
+  const forceTokenRefresh = async () => {
+    console.log('🔄 Force refreshing auth token...');
+    const success = await refreshAuthToken();
+    if (success) {
+      console.log('✅ Token refresh successful, you can now retry your request');
+    } else {
+      console.error('❌ Token refresh failed');
+    }
+    return success;
   };
 
   // Initial auth check
@@ -185,7 +216,9 @@ export const AuthProvider = ({ children }) => {
     checkAdminStatus,
     getAuthToken,
     setAuthToken,
-    refreshAuthToken
+    refreshAuthToken,
+    hasValidToken,
+    forceTokenRefresh
   };
 
   return (

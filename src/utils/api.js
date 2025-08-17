@@ -34,6 +34,12 @@ api.interceptors.request.use(
         sessionStorage: !!sessionStorage.getItem('authToken'),
         cookies: !!document.cookie.includes('auth_token')
       });
+      
+      // Try to refresh token automatically if this is an authenticated endpoint
+      if (config.url.includes('/api/') && !config.url.includes('/auth/login') && !config.url.includes('/auth/register')) {
+        console.log('🔄 Attempting automatic token refresh for:', config.url);
+        // We'll handle this in the response interceptor
+      }
     }
     
     return config;
@@ -119,6 +125,40 @@ export const checkApiHealth = async () => {
       details: error.response?.data || error.code
     };
   }
+};
+
+// Function to manually refresh auth token
+export const refreshAuthToken = async () => {
+  try {
+    console.log('🔄 Manually refreshing auth token...');
+    const response = await axios.get('/api/auth/me', {
+      baseURL: API_CONFIG.BASE_URL,
+      withCredentials: true
+    });
+    
+    if (response.headers['x-auth-token']) {
+      localStorage.setItem('authToken', response.headers['x-auth-token']);
+      console.log('✅ Auth token refreshed and stored');
+      return { success: true, token: response.headers['x-auth-token'] };
+    } else {
+      console.warn('⚠️ No token found in response headers');
+      return { success: false, error: 'No token in response' };
+    }
+  } catch (error) {
+    console.error('❌ Failed to refresh auth token:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Function to check if we have a valid token
+export const hasValidToken = () => {
+  const token = localStorage.getItem('authToken');
+  return !!token && token.length > 10;
+};
+
+// Function to get current token
+export const getCurrentToken = () => {
+  return localStorage.getItem('authToken');
 };
 
 export default api; 
