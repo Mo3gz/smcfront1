@@ -41,7 +41,7 @@ const UserDashboard = ({ socket }) => {
         if (!token) return;
         
         const response = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/users/me`,
+          `${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/user`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -52,11 +52,31 @@ const UserDashboard = ({ socket }) => {
         );
         
         if (response.data) {
+          console.log('User data received:', response.data);
           setUserData(response.data);
+        } else {
+          console.error('No user data in response:', response);
+          throw new Error('No user data received from server');
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        toast.error('Failed to load user data');
+        console.error('Error fetching user data:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          url: error.config?.url
+        });
+        
+        if (error.response?.status === 401) {
+          // Handle unauthorized (token might be invalid/expired)
+          toast.error('Session expired. Please log in again.');
+          logout();
+        } else if (error.response?.status === 404) {
+          // Handle not found
+          toast.error('User endpoint not found. Please contact support.');
+        } else {
+          // Handle other errors
+          toast.error(`Failed to load user data: ${error.message}`);
+        }
       } finally {
         setLoading(false);
       }
