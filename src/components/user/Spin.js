@@ -39,7 +39,7 @@ const Spin = ({ socket, userData, setUserData }) => {
       return;
     }
     setCheckingPromo(true);
-    axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
+    axios.post(`${API_BASE_URL}/api/promocodes/validate`, { code: promoCode }, { withCredentials: true })
       .then(res => {
         if (res.data.valid) {
           setDiscount(res.data.discount);
@@ -83,7 +83,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/spin`, {
+      const response = await axios.post(`${API_BASE_URL}/api/spin/execute`, {
         spinType,
         promoCode: promoCode || undefined
       }, { withCredentials: true });

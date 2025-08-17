@@ -14,7 +14,7 @@ const Scoreboard = ({ socket }) => {
 
   const fetchScoreboard = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/teams/leaderboard`);
+      const response = await axios.get(`${API_BASE_URL}/api/scoreboard/all`);
       setScoreboard(response.data);
     } catch (error) {
       console.error('Error fetching scoreboard:', error);

@@ -32,7 +32,7 @@ const Notifications = () => {
       console.log('🔔 Fetching notifications for user:', user?.id);
       
       const config = createMobileAxiosConfig();
-      const response = await axios.get(`${API_BASE_URL}/api/notifications/my`, config);
+      const response = await axios.get(`${API_BASE_URL}/api/notifications/user`, config);
       
       console.log('🔔 Notifications response:', response.data);
       setNotifications(response.data);
