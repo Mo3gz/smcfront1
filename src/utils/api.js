@@ -1,15 +1,10 @@
 import axios from 'axios';
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+import { API_CONFIG, getApiUrl } from '../config/api';
 
 // Create axios instance with mobile-friendly configuration
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-  timeout: 15000, // 15 second timeout for mobile networks
-  headers: {
-    'Content-Type': 'application/json',
-  }
+  baseURL: API_CONFIG.BASE_URL,
+  ...API_CONFIG.REQUEST_CONFIG
 });
 
 // Request interceptor
@@ -55,5 +50,21 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Health check function to test API connectivity
+export const checkApiHealth = async () => {
+  try {
+    const response = await api.get('/health');
+    console.log('✅ API Health Check:', response.data);
+    return { status: 'success', data: response.data };
+  } catch (error) {
+    console.error('❌ API Health Check Failed:', error);
+    return { 
+      status: 'error', 
+      error: error.message || 'API connection failed',
+      details: error.response?.data || error.code
+    };
+  }
+};
 
 export default api; 

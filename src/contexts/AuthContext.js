@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { API_CONFIG, getApiUrl } from '../config/api';
 
 const AuthContext = createContext();
 
@@ -15,15 +16,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-  
   // Simple axios configuration
   const createAxiosConfig = () => ({
-    withCredentials: true,
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json',
-    }
+    ...API_CONFIG.REQUEST_CONFIG,
+    timeout: 10000
   });
 
   // Check if user is authenticated
@@ -33,7 +29,7 @@ export const AuthProvider = ({ children }) => {
       const config = createAxiosConfig();
       let response;
       try {
-        response = await axios.get(`${API_BASE_URL}/api/user`, config);
+        response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), config);
       } catch (error) {
         // If 401 and we have a token in localStorage, try with token in header
         if (error.response?.status === 401) {
@@ -46,7 +42,7 @@ export const AuthProvider = ({ children }) => {
                 'x-auth-token': token
               }
             };
-            response = await axios.get(`${API_BASE_URL}/api/user`, tokenConfig);
+            response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), tokenConfig);
           } else {
             throw error;
           }
@@ -74,7 +70,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const config = createAxiosConfig();
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, 
+      const response = await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), 
         { username, password }, 
         config
       );

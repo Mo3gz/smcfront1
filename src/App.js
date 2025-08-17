@@ -6,10 +6,13 @@ import Login from './components/Login';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
+import ApiTest from './components/ApiTest';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
-const socket = io('smcback-production-6d12.up.railway.app', {
+import { getSocketUrl } from './config/api';
+
+const socket = io(getSocketUrl(), {
   withCredentials: true,
   timeout: 20000, // 20 second timeout for mobile
   transports: ['websocket', 'polling'] // Fallback for mobile browsers
@@ -113,6 +116,9 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+
+          {/* API Test route for debugging */}
+          <Route path="/api-test" element={<ApiTest />} />
 
           {/* Catch-all: redirect to / */}
           <Route path="*" element={<Navigate to="/" replace />} />
