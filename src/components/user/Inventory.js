@@ -63,12 +63,24 @@ const Inventory = ({ socket }) => {
   const handleUseCard = async () => {
     if (!selectedCard) return;
 
+    // Validate that target is selected for cards that need it
+    if ((selectedCard.type === 'attack' || selectedCard.type === 'alliance') && !selectedTeam) {
+      toast.error('Please select a target team');
+      return;
+    }
+
     try {
-      await api.post('/api/inventory/use', {
+      const requestData = {
         itemId: selectedCard.id,
-        targetUserId: selectedTeam,
         description
-      });
+      };
+
+      // Only include targetUserId for cards that need it
+      if (selectedCard.type === 'attack' || selectedCard.type === 'alliance') {
+        requestData.targetUserId = selectedTeam;
+      }
+
+      await api.post('/api/inventory/use', requestData);
 
       toast.success(`Used ${selectedCard.name}!`);
       setShowModal(false);
@@ -77,6 +89,7 @@ const Inventory = ({ socket }) => {
       setDescription('');
       fetchInventory(); // Refresh inventory
     } catch (error) {
+      console.error('Card usage error:', error);
       toast.error(error.response?.data?.error || 'Failed to use card');
     }
   };
@@ -181,7 +194,7 @@ const Inventory = ({ socket }) => {
             {(selectedCard.type === 'attack' || selectedCard.type === 'alliance') && (
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
-                  Select Team
+                  Select Target Team
                 </label>
                 <select
                   className="input"
@@ -189,10 +202,12 @@ const Inventory = ({ socket }) => {
                   onChange={(e) => setSelectedTeam(e.target.value)}
                   required
                 >
-                  <option value="">Choose a team...</option>
-                  {teams.filter(team => team.id !== (user && user.id)).map((team) => (
+                  <option value="">Choose a target team...</option>
+                  {teams
+                    .filter(team => team.id !== (user && user.id)) // Exclude current user
+                    .map((team) => (
                     <option key={team.id} value={team.id}>
-                      {team.teamName}
+                      {team.teamName} {team.role === 'admin' ? '(Admin)' : ''}
                     </option>
                   ))}
                 </select>
@@ -217,7 +232,7 @@ const Inventory = ({ socket }) => {
               <button
                 className="btn"
                 onClick={handleUseCard}
-                disabled={!selectedTeam && (selectedCard.type === 'attack' || selectedCard.type === 'alliance')}
+                disabled={(selectedCard.type === 'attack' || selectedCard.type === 'alliance') && !selectedTeam}
                 style={{ flex: 1 }}
               >
                 Use Card

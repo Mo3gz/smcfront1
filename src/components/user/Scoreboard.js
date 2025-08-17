@@ -33,14 +33,14 @@ const Scoreboard = ({ socket }) => {
       socket.on('scoreboard-update', (updatedUsers) => {
         console.log('Scoreboard updated via socket:', updatedUsers);
         
-        // Filter only user teams and sort by score
+        // Include all users (including admins) and sort by score
         const updatedScoreboard = updatedUsers
-          .filter(user => user.role === 'user')
           .map(user => ({
             id: user.id || user._id,
-            teamName: user.teamName,
+            teamName: user.teamName || user.username,
             score: user.score,
-            coins: user.coins
+            coins: user.coins,
+            role: user.role || 'user'
           }))
           .sort((a, b) => b.score - a.score);
         
@@ -221,7 +221,7 @@ const Scoreboard = ({ socket }) => {
               </div>
               <div className="scoreboard-info">
                 <div className="scoreboard-name">
-                  {team.teamName}
+                  {team.teamName} {team.role === 'admin' ? '👑' : ''}
                   {getChangeIcon(team)}
                 </div>
                 <div className="scoreboard-stats">
