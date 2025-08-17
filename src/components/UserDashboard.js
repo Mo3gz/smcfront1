@@ -7,7 +7,8 @@ import {
   RotateCcw, 
   Map, 
   LogOut,
-  HardHat
+  HardHat,
+  Zap
 } from 'lucide-react';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
