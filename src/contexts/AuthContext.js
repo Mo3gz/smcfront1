@@ -26,33 +26,50 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = useCallback(async () => {
     try {
       console.log('🔍 Checking authentication...');
+      
+      // First try with stored user data
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('authToken');
+      
+      console.log('📦 Stored auth data:', { 
+        hasUser: !!storedUser, 
+        hasToken: !!storedToken,
+        token: storedToken ? storedToken.substring(0, 20) + '...' : null
+      });
+      
       const config = createAxiosConfig();
       let response;
+      
       try {
+        // Try with cookies first (backend priority)
         response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), config);
+        console.log('✅ Authentication successful with cookies');
       } catch (error) {
+        console.log('❌ Cookie auth failed, trying token:', error.response?.status);
+        
         // If 401 and we have a token in localStorage, try with token in header
-        if (error.response?.status === 401) {
-          const token = localStorage.getItem('authToken');
-          if (token) {
-            const tokenConfig = {
-              ...config,
-              headers: {
-                ...config.headers,
-                'x-auth-token': token
-              }
-            };
-            response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), tokenConfig);
-          } else {
-            throw error;
-          }
+        if (error.response?.status === 401 && storedToken) {
+          const tokenConfig = {
+            ...config,
+            headers: {
+              ...config.headers,
+              'Authorization': `Bearer ${storedToken}`,
+              'x-auth-token': storedToken
+            }
+          };
+          response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), tokenConfig);
+          console.log('✅ Authentication successful with token');
         } else {
           throw error;
         }
       }
+      
       setUser(response.data);
       localStorage.setItem('user', JSON.stringify(response.data));
+      console.log('👤 User set:', response.data.username, response.data.role);
+      
     } catch (error) {
+      console.error('❌ Authentication check failed:', error.response?.data || error.message);
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('authToken');
