@@ -7,11 +7,8 @@ import {
   RotateCcw, 
   Map, 
   LogOut,
-  HardHat,
-  Clock,
-  Zap
+  HardHat
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
 import Spin from './user/Spin';
