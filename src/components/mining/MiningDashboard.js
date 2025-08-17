@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
-import { FaCoins, FaClock, FaInfoCircle } from 'react-icons/fa';
-import { GiMining } from 'react-icons/gi';
+import { FaCoins, FaClock, FaInfoCircle, FaHardHat } from 'react-icons/fa';
 import api from '../../utils/api';
 
 const MiningDashboard = () => {

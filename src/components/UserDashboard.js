@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { 
-  Trophy, 
-  Package, 
-  RotateCcw, 
-  Map, 
-  LogOut,
-  HardHat
-} from 'lucide-react';
+import { Trophy, Package, RotateCcw, Map } from 'lucide-react';
+import { FaHardHat } from 'react-icons/fa';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
 import Spin from './user/Spin';
@@ -146,7 +140,7 @@ const UserDashboard = ({ socket }) => {
             className={`nav-item ${activeTab === 'mining' ? 'active' : ''}`}
             onClick={() => setActiveTab('mining')}
           >
-            <HardHat className="nav-icon" />
+            <FaHardHat className="nav-icon" />
             <span className="nav-text">Mining</span>
           </div>
           <div 
