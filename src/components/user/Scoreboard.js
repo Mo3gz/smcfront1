@@ -33,8 +33,9 @@ const Scoreboard = ({ socket }) => {
       socket.on('scoreboard-update', (updatedUsers) => {
         console.log('Scoreboard updated via socket:', updatedUsers);
         
-        // Include all users (including admins) and sort by score
+        // Include only non-admin users and sort by score
         const updatedScoreboard = updatedUsers
+          .filter(user => user.role !== 'admin') // Exclude admins
           .map(user => ({
             id: user.id || user._id,
             teamName: user.teamName || user.username,
@@ -221,7 +222,7 @@ const Scoreboard = ({ socket }) => {
               </div>
               <div className="scoreboard-info">
                 <div className="scoreboard-name">
-                  {team.teamName} {team.role === 'admin' ? '👑' : ''}
+                  {team.teamName}
                   {getChangeIcon(team)}
                 </div>
                 <div className="scoreboard-stats">

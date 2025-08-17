@@ -217,10 +217,10 @@ const Inventory = ({ socket }) => {
                 >
                   <option value="">Choose a target team...</option>
                   {teams
-                    .filter(team => team.id !== (user && user.id)) // Exclude current user
+                    .filter(team => team.id !== (user && user.id) && team.role !== 'admin') // Exclude current user and admins
                     .map((team) => (
                     <option key={team.id} value={team.id}>
-                      {team.teamName} {team.role === 'admin' ? '(Admin)' : ''}
+                      {team.teamName}
                     </option>
                   ))}
                 </select>
