@@ -44,6 +44,13 @@ export const AuthProvider = ({ children }) => {
         // Try with cookies first (backend priority)
         response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), config);
         console.log('✅ Authentication successful with cookies');
+        
+        // If we have a stored token, keep it. If not, try to extract from response headers
+        if (!storedToken && response.headers['x-auth-token']) {
+          localStorage.setItem('authToken', response.headers['x-auth-token']);
+          console.log('🔑 Stored token from response headers');
+        }
+        
       } catch (error) {
         console.log('❌ Cookie auth failed, trying token:', error.response?.status);
         
@@ -77,6 +84,35 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  // Get current auth token (helper function)
+  const getAuthToken = () => {
+    return localStorage.getItem('authToken');
+  };
+
+  // Set auth token manually (helper function)
+  const setAuthToken = (token) => {
+    if (token) {
+      localStorage.setItem('authToken', token);
+      console.log('🔑 Auth token set manually');
+    }
+  };
+
+  // Refresh auth token (helper function)
+  const refreshAuthToken = async () => {
+    try {
+      const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.USER), createAxiosConfig());
+      if (response.headers['x-auth-token']) {
+        localStorage.setItem('authToken', response.headers['x-auth-token']);
+        console.log('🔑 Auth token refreshed from headers');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('❌ Failed to refresh auth token:', error);
+      return false;
+    }
+  };
 
   // Initial auth check
   useEffect(() => {
@@ -146,7 +182,10 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     checkAuth,
-    checkAdminStatus
+    checkAdminStatus,
+    getAuthToken,
+    setAuthToken,
+    refreshAuthToken
   };
 
   return (

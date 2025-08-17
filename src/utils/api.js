@@ -14,13 +14,26 @@ api.interceptors.request.use(
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
     
     // Add authentication token if available
-    const token = localStorage.getItem('authToken');
+    // Try multiple sources for the token
+    let token = localStorage.getItem('authToken');
+    
+    // If no token in localStorage, try to get from sessionStorage or other sources
+    if (!token) {
+      token = sessionStorage.getItem('authToken');
+    }
+    
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
       config.headers['x-auth-token'] = token; // Backup header for iOS compatibility
       console.log('🔑 Adding auth token to request:', config.url, 'token exists:', !!token);
     } else {
       console.warn('⚠️ No auth token found for request:', config.url);
+      // Log more details for debugging
+      console.log('🔍 Token sources checked:', {
+        localStorage: !!localStorage.getItem('authToken'),
+        sessionStorage: !!sessionStorage.getItem('authToken'),
+        cookies: !!document.cookie.includes('auth_token')
+      });
     }
     
     return config;
@@ -33,7 +46,7 @@ api.interceptors.request.use(
 // Response interceptor for better error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     // Handle mobile-specific errors
     if (error.code === 'ECONNABORTED') {
       console.error('Request timeout - mobile network issue');
@@ -45,7 +58,36 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired or invalid
       console.error('❌ Authentication failed (401):', error.response.data);
-      // Clear auth data
+      
+      // Try to refresh the token if we have a user but no token
+      if (!localStorage.getItem('authToken') && localStorage.getItem('user')) {
+        console.log('🔄 Attempting to refresh auth token...');
+        try {
+          // Make a request to get the current user (which should include the token in headers)
+          const refreshResponse = await axios.get('/api/auth/me', {
+            baseURL: API_CONFIG.BASE_URL,
+            withCredentials: true
+          });
+          
+          if (refreshResponse.headers['x-auth-token']) {
+            localStorage.setItem('authToken', refreshResponse.headers['x-auth-token']);
+            console.log('✅ Auth token refreshed, retrying original request...');
+            
+            // Retry the original request with the new token
+            const originalConfig = error.config;
+            const token = localStorage.getItem('authToken');
+            if (token) {
+              originalConfig.headers['Authorization'] = `Bearer ${token}`;
+              originalConfig.headers['x-auth-token'] = token;
+              return axios(originalConfig);
+            }
+          }
+        } catch (refreshError) {
+          console.error('❌ Failed to refresh token:', refreshError);
+        }
+      }
+      
+      // Clear auth data if refresh failed
       localStorage.removeItem('user');
       localStorage.removeItem('authToken');
       // You can trigger a redirect to login here
