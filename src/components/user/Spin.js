@@ -114,9 +114,9 @@ const Spin = ({ socket, userData, setUserData }) => {
         } else if (response.data.card.name === 'Everything Against Me') {
           setUserData(prev => ({
             ...prev,
-            coins: (prev.coins || 0) - 75
+            coins: (prev.coins || 0) + 75
           }));
-          toast.success('You received Everything Against Me! -75 coins instantly!', {
+          toast.success('You received Everything Against Me! +75 coins instantly!', {
             duration: 4000,
             position: 'top-center',
             style: {
