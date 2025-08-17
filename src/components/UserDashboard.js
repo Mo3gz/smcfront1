@@ -25,12 +25,45 @@ const UserDashboard = ({ socket }) => {
   const [activeTab, setActiveTab] = useState('scoreboard');
   const [userData, setUserData] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [miningStats, setMiningStats] = useState({
     totalMiningRate: 0,
     estimatedNextHour: 0,
     lastCollected: null,
     countries: []
   });
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/users/me`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            withCredentials: true
+          }
+        );
+        
+        if (response.data) {
+          setUserData(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast.error('Failed to load user data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
 
   // Auto-collect coins on component mount and when mining rate changes
   useEffect(() => {
@@ -124,6 +157,22 @@ const UserDashboard = ({ socket }) => {
   };
 
   const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      );
+    }
+
+    if (!userData) {
+      return (
+        <div className="text-center py-10">
+          <p className="text-red-500">Failed to load user data. Please refresh the page.</p>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'scoreboard':
         return <Scoreboard socket={socket} />;
@@ -132,7 +181,9 @@ const UserDashboard = ({ socket }) => {
       case 'spin':
         return <Spin socket={socket} userData={userData} setUserData={setUserData} />;
       case 'map':
-        return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
+        return userData ? (
+          <MapView userData={userData} setUserData={setUserData} socket={socket} />
+        ) : null;
       case 'program':
         return <ProgramOfTheDay />;
       default:
