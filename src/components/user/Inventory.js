@@ -80,7 +80,14 @@ const Inventory = ({ socket }) => {
         requestData.targetUserId = selectedTeam;
       }
 
-      await api.post('/api/inventory/use', requestData);
+      console.log('🎮 Sending card use request:', {
+        card: selectedCard,
+        requestData,
+        user: user
+      });
+
+      const response = await api.post('/api/inventory/use', requestData);
+      console.log('✅ Card use response:', response.data);
 
       toast.success(`Used ${selectedCard.name}!`);
       setShowModal(false);
@@ -89,7 +96,13 @@ const Inventory = ({ socket }) => {
       setDescription('');
       fetchInventory(); // Refresh inventory
     } catch (error) {
-      console.error('Card usage error:', error);
+      console.error('❌ Card usage error:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        selectedCard,
+        selectedTeam
+      });
       toast.error(error.response?.data?.error || 'Failed to use card');
     }
   };
