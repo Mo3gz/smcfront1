@@ -31,7 +31,6 @@ const UserDashboard = ({ socket }) => {
     lastCollected: null,
     countries: []
   });
-  const [miningRate, setMiningRate] = useState(0);
 
   // Auto-collect coins on component mount and when mining rate changes
   useEffect(() => {
