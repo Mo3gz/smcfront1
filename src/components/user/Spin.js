@@ -168,7 +168,7 @@ const Spin = ({ socket, userData, setUserData }) => {
   };
 
   return (
-    <div>
+    <div className="spin-container">
       <div className="header">
         <h1>🎰 Spin & Win</h1>
         <p>Try your luck to get powerful cards!</p>
@@ -315,6 +315,11 @@ const Spin = ({ socket, userData, setUserData }) => {
             <p><strong>Random Spin:</strong> Get any type of card (cheaper!)</p>
           </div>
         </div>
+      </div>
+      <div style={{ textAlign: 'center', padding: '20px 16px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: 'auto' }}>
+        <p style={{ margin: 0 }}>
+          Developed by <strong style={{ color: 'white' }}>Ayman</strong>
+        </p>
       </div>
     </div>
   );
