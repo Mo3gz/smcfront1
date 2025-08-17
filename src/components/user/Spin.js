@@ -39,7 +39,7 @@ const Spin = ({ socket, userData, setUserData }) => {
       return;
     }
     setCheckingPromo(true);
-    api.post('/api/promocode/validate', { code: promoCode })
+    api.post('/api/inventory/promocode/validate', { code: promoCode })
       .then(res => {
         if (res.data.valid) {
           setDiscount(res.data.discount);
