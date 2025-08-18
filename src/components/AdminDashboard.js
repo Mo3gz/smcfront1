@@ -1745,21 +1745,28 @@ const GameManagement = () => {
   const fetchGameSettings = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching game settings from:', `${API_BASE_URL}/api/admin/games`);
+      
       const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
+      console.log('✅ Game settings response:', response.data);
       
       if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
         setGameSettings(response.data);
+        console.log('✅ Game settings set successfully:', response.data);
       } else {
+        console.warn('⚠️ Empty or invalid game settings response, using fallback');
         // Fallback to default game settings
         const fallbackSettings = {
           1: true, 2: true, 3: true, 4: true, 5: true, 6: true,
           7: true, 8: true, 9: true, 10: true, 11: true, 12: true
         };
         setGameSettings(fallbackSettings);
-        toast.warning('Using fallback game settings. Please refresh the page.');
+        toast.error('Using fallback game settings. Please refresh the page.');
       }
     } catch (error) {
-      console.error('Error fetching game settings:', error);
+      console.error('❌ Error fetching game settings:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
       
       // Set fallback settings on error
       const fallbackSettings = {
