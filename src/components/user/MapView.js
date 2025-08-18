@@ -11,6 +11,29 @@ const MapView = ({ userData, setUserData, socket }) => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ open: false, country: null });
 
+  const fetchCountries = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/countries`);
+      setCountries(response.data);
+      
+      // Recalculate mining rate based on owned countries
+      if (userData?.id) {
+        const ownedCountries = response.data.filter(c => c.owner === userData.id);
+        const calculatedMiningRate = ownedCountries.reduce((sum, c) => sum + (c.miningRate || 0), 0);
+        
+        // Update user data with calculated mining rate
+        setUserData(prev => ({
+          ...prev,
+          miningRate: calculatedMiningRate
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     fetchCountries();
   }, [fetchCountries]);
@@ -75,29 +98,6 @@ const MapView = ({ userData, setUserData, socket }) => {
       };
     }
   }, [socket, userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const fetchCountries = useCallback(async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/countries`);
-      setCountries(response.data);
-      
-      // Recalculate mining rate based on owned countries
-      if (userData?.id) {
-        const ownedCountries = response.data.filter(c => c.owner === userData.id);
-        const calculatedMiningRate = ownedCountries.reduce((sum, c) => sum + (c.miningRate || 0), 0);
-        
-        // Update user data with calculated mining rate
-        setUserData(prev => ({
-          ...prev,
-          miningRate: calculatedMiningRate
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching countries:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBuyCountry = (country) => {
     if (country.owner) {
