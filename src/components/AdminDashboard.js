@@ -2046,14 +2046,20 @@ const GameManagement = () => {
 
   const handleToggleGame = async (gameId, currentStatus) => {
     try {
+      // Get current game data
+      const currentGame = gameSettings[gameId];
+      const currentEnabled = typeof currentGame === 'object' ? currentGame.enabled : currentGame;
+      const currentName = typeof currentGame === 'object' ? currentGame.name : `Game ${gameId}`;
+      
       // Optimistically update the UI first
       const newSettings = { ...gameSettings };
-      newSettings[gameId] = !currentStatus;
+      newSettings[gameId] = { enabled: !currentEnabled, name: currentName };
       setGameSettings(newSettings);
       
       const response = await axios.post(`${API_BASE_URL}/api/admin/games/toggle`, {
         gameId: parseInt(gameId),
-        enabled: !currentStatus
+        enabled: !currentEnabled,
+        gameName: currentName
       }, { withCredentials: true });
       
       // Update with the actual response from server
@@ -2061,14 +2067,12 @@ const GameManagement = () => {
         setGameSettings(response.data.gameSettings);
       }
       
-      toast.success(`Game ${gameId} ${!currentStatus ? 'enabled' : 'disabled'}`);
+      toast.success(`${currentName} ${!currentEnabled ? 'enabled' : 'disabled'}`);
     } catch (error) {
       console.error('Error toggling game:', error);
       
       // Revert the optimistic update on error
-      const revertedSettings = { ...gameSettings };
-      revertedSettings[gameId] = currentStatus;
-      setGameSettings(revertedSettings);
+      fetchGameSettings();
       
       toast.error(`Failed to toggle game: ${error.response?.data?.error || error.message}`);
     }

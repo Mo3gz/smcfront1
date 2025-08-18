@@ -302,27 +302,9 @@ const MapView = ({ userData, setUserData, socket }) => {
           <div className="mining-stats">
             <div className="mining-stat-item">
               <div className="mining-stat-value">
-                {userData?.coins || 0}
-              </div>
-              <div className="mining-stat-label">Your Coins</div>
-            </div>
-            <div className="mining-stat-item">
-              <div className="mining-stat-value">
                 {countries.filter(c => c.owner === userData?.id).length}
               </div>
               <div className="mining-stat-label">Countries Owned</div>
-            </div>
-            <div className="mining-stat-item">
-              <div className="mining-stat-value">
-                {userData?.miningRate || 0}
-              </div>
-              <div className="mining-stat-label">Mining Rate (coins/hr)</div>
-            </div>
-            <div className="mining-stat-item">
-              <div className="mining-stat-value">
-                {userData?.totalMined || 0}
-              </div>
-              <div className="mining-stat-label">Total Mined</div>
             </div>
           </div>
         </div>
