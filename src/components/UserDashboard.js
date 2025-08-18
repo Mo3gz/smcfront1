@@ -230,26 +230,7 @@ const UserDashboard = ({ socket }) => {
             </div>
           </div>
           
-          {/* Collect Coins Button */}
-          <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            <button 
-              className="mining-button"
-              onClick={handleCollectCoins}
-              disabled={!userData?.miningRate || userData?.miningRate === 0}
-            >
-              ⛏️ Collect Coins
-            </button>
-            {userData?.lastMined && (
-              <div className="last-collected">
-                Last collected: {new Date(userData.lastMined).toLocaleString()}
-              </div>
-            )}
-            {getNextCollectionTime() && (
-              <div className="next-collection-time">
-                {getNextCollectionTime()}
-              </div>
-            )}
-          </div>
+          
         </div>
 
         {renderContent()}

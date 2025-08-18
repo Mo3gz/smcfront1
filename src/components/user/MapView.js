@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Coins } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
@@ -46,6 +46,11 @@ const MapView = ({ userData, setUserData, socket }) => {
         setCountries(updatedCountries);
         setLastUpdate(new Date());
         
+        // Recalculate mining rate after countries update
+        setTimeout(() => {
+          recalculateMiningRate();
+        }, 100);
+        
         // Show a subtle notification for live updates
         toast.success('Map updated!', {
           duration: 2000,
@@ -75,6 +80,18 @@ const MapView = ({ userData, setUserData, socket }) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/countries`);
       setCountries(response.data);
+      
+      // Recalculate mining rate based on owned countries
+      if (userData?.id) {
+        const ownedCountries = response.data.filter(c => c.owner === userData.id);
+        const calculatedMiningRate = ownedCountries.reduce((sum, c) => sum + (c.miningRate || 0), 0);
+        
+        // Update user data with calculated mining rate
+        setUserData(prev => ({
+          ...prev,
+          miningRate: calculatedMiningRate
+        }));
+      }
     } catch (error) {
       console.error('Error fetching countries:', error);
     } finally {
@@ -102,6 +119,8 @@ const MapView = ({ userData, setUserData, socket }) => {
       const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
         countryId: country.id
       }, { withCredentials: true });
+      
+      // Update countries list
       setCountries(prev =>
         prev.map(c =>
           c.id === country.id
@@ -109,11 +128,15 @@ const MapView = ({ userData, setUserData, socket }) => {
             : c
         )
       );
+      
+      // Update user data with new coins, score, and mining rate
       setUserData(prev => ({
         ...prev,
         coins: response.data.user.coins,
-        score: response.data.user.score
+        score: response.data.user.score,
+        miningRate: response.data.user.miningRate
       }));
+      
       toast.success(`Successfully bought ${country.name}!`);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to buy country');
@@ -179,6 +202,24 @@ const MapView = ({ userData, setUserData, socket }) => {
     }
     return '#333';
   };
+
+  // Function to recalculate mining rate based on owned countries
+  const recalculateMiningRate = useCallback(() => {
+    if (userData?.id && countries.length > 0) {
+      const ownedCountries = countries.filter(c => c.owner === userData.id);
+      const calculatedMiningRate = ownedCountries.reduce((sum, c) => sum + (c.miningRate || 0), 0);
+      
+      setUserData(prev => ({
+        ...prev,
+        miningRate: calculatedMiningRate
+      }));
+    }
+  }, [userData?.id, countries]);
+
+  // Recalculate mining rate when countries change
+  useEffect(() => {
+    recalculateMiningRate();
+  }, [countries, recalculateMiningRate]);
 
   if (loading) {
     return (
