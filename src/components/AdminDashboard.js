@@ -23,6 +23,7 @@ const AdminDashboard = ({ socket }) => {
   const [adminVerified, setAdminVerified] = useState(false);
 
 
+
   const fetchTeams = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/admin/teams`, { withCredentials: true });
@@ -63,6 +64,10 @@ const AdminDashboard = ({ socket }) => {
       verifyAdminAccess();
     }
   }, [user, verifyAdminAccess]);
+
+  useEffect(() => {
+    fetchTeams();
+  }, [fetchTeams]);
 
   useEffect(() => {
     if (socket && adminVerified) {
@@ -119,7 +124,7 @@ const AdminDashboard = ({ socket }) => {
       case 'statistics':
         return <StatisticsView />;
       default:
-        return <PromoCodes />;
+        return <PromoCodes teams={teams} />;
     }
   };
 
@@ -193,26 +198,26 @@ const AdminDashboard = ({ socket }) => {
             <Settings className="nav-icon" />
             <span className="nav-text">Notifications</span>
           </div>
-          <div 
-            className={`nav-item ${activeTab === 'scoreboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('scoreboard')}
-          >
-            <Trophy className="nav-icon" />
-            <span className="nav-text">Scoreboard</span>
-          </div>
-          
-          <div 
-            className={`nav-item ${activeTab === 'teams' ? 'active' : ''}`}
-            onClick={() => setActiveTab('teams')}
-          >
-            <Users className="nav-icon" />
-            <span className="nav-text">Teams</span>
-          </div>
-          
-          <div 
-            className={`nav-item ${activeTab === 'countries' ? 'active' : ''}`}
-            onClick={() => setActiveTab('countries')}
-          >
+                      <div 
+              className={`nav-item ${activeTab === 'scoreboard' ? 'active' : ''}`}
+              onClick={() => setActiveTab('scoreboard')}
+            >
+              <Trophy className="nav-icon" />
+              <span className="nav-text">Scoreboard</span>
+            </div>
+            
+            <div 
+              className={`nav-item ${activeTab === 'teams' ? 'active' : ''}`}
+              onClick={() => setActiveTab('teams')}
+            >
+              <Users className="nav-icon" />
+              <span className="nav-text">Teams</span>
+            </div>
+            
+            <div 
+              className={`nav-item ${activeTab === 'countries' ? 'active' : ''}`}
+              onClick={() => setActiveTab('countries')}
+            >
             <Map className="nav-icon" />
             <span className="nav-text">Countries</span>
           </div>
@@ -311,8 +316,7 @@ const PromoCodes = ({ teams }) => {
             required
           >
             <option value="">Select a team</option>
-            <option value="all">All Teams</option>
-            {teams && teams.map(team => (
+            {teams.map(team => (
               <option key={team.id} value={team.id}>
                 {team.teamName}
               </option>
@@ -387,7 +391,7 @@ const CardManagement = ({ teams }) => {
             required
           >
             <option value="">Select a team</option>
-            {teams && teams.map(team => (
+            {teams.map(team => (
               <option key={team.id} value={team.id}>
                 {team.teamName}
               </option>
@@ -668,7 +672,7 @@ const AdminScoreboard = ({ teams }) => {
             </tr>
           </thead>
           <tbody>
-            {teams && teams.map((team, index) => (
+            {teams.map((team, index) => (
               <tr key={team.id} style={{ borderBottom: '1px solid #eee' }}>
                 <td style={{ padding: '12px' }}>#{index + 1}</td>
                 <td style={{ padding: '12px', fontWeight: '600' }}>{team.teamName}</td>
@@ -714,13 +718,16 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     }
   };
 
-  const handleUpdateAllTeams = async () => {
+  const handleUpdateAllTeams = async (settings = null) => {
     try {
-      console.log('🔄 Sending all teams settings update:', allTeamsSettings);
-      const response = await axios.put(`${API_BASE_URL}/api/admin/teams/settings/all`, allTeamsSettings, { withCredentials: true });
+      const settingsToUpdate = settings || allTeamsSettings;
+      console.log('🔄 Sending all teams settings update:', settingsToUpdate);
+      const response = await axios.put(`${API_BASE_URL}/api/admin/teams/settings/all`, settingsToUpdate, { withCredentials: true });
       console.log('✅ All teams settings update response:', response.data);
       toast.success(`Settings updated for all teams!`);
-      setShowAllTeamsModal(false);
+      if (!settings) {
+        setShowAllTeamsModal(false);
+      }
       fetchTeams();
     } catch (error) {
       console.error('❌ Update all teams settings error:', error);
@@ -743,12 +750,63 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h3>Team Management</h3>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowAllTeamsModal(true)}
-        >
-          Manage All Teams
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            className="btn btn-warning"
+            onClick={() => handleUpdateAllTeams({ resetSpinCounts: true })}
+          >
+            Reset All Spin Counts
+          </button>
+          <button 
+            className="btn btn-primary"
+            onClick={() => setShowAllTeamsModal(true)}
+          >
+            Manage All Teams
+          </button>
+        </div>
+      </div>
+
+      {/* Global Quick Actions */}
+      <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+        <h5 style={{ marginBottom: '12px' }}>Global Quick Actions</h5>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+          <button 
+            className="btn btn-success"
+            onClick={() => handleUpdateAllTeams({ scoreboardVisible: true })}
+          >
+            Show All in Scoreboard
+          </button>
+          <button 
+            className="btn btn-danger"
+            onClick={() => handleUpdateAllTeams({ scoreboardVisible: false })}
+          >
+            Hide All from Scoreboard
+          </button>
+          <button 
+            className="btn btn-info"
+            onClick={() => handleUpdateAllTeams({ 
+              spinLimitations: {
+                regular: { enabled: true, limit: 1 },
+                lucky: { enabled: true, limit: 1 },
+                special: { enabled: true, limit: 1 }
+              }
+            })}
+          >
+            Enable All Spin Limits (1 each)
+          </button>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => handleUpdateAllTeams({ 
+              spinLimitations: {
+                regular: { enabled: false, limit: 1 },
+                lucky: { enabled: false, limit: 1 },
+                special: { enabled: false, limit: 1 }
+              }
+            })}
+          >
+            Disable All Spin Limits
+          </button>
+        </div>
       </div>
 
       {!teams || teams.length === 0 ? (
@@ -756,99 +814,165 @@ const TeamManagement = ({ teams, fetchTeams }) => {
           {!teams ? 'Loading teams...' : 'No teams found.'}
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '16px' }}>
-          {teams.map(team => (
-            <div key={team.id} className="card" style={{ padding: '16px', border: '1px solid #eee' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <div>
-                  <h4 style={{ margin: 0 }}>{team.teamName}</h4>
-                  <div style={{ fontSize: '14px', color: '#666' }}>
-                    Score: {team.score} | Coins: {team.coins}
-                  </div>
-                </div>
-                <button 
-                  className="btn btn-secondary"
-                  onClick={() => setSelectedTeam(selectedTeam?.id === team.id ? null : team)}
-                >
-                  {selectedTeam?.id === team.id ? 'Hide Settings' : 'Manage Settings'}
-                </button>
-              </div>
-
-              {selectedTeam?.id === team.id && (
-                <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                  <h5>Team Settings</h5>
-                  
-                  {/* Scoreboard Visibility */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Team</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Score</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Coins</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Scoreboard</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Regular Spins</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Lucky Spins</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Special Spins</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {teams.map((team, index) => (
+                <tr key={team.id} style={{ borderBottom: '1px solid #eee', backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                  <td style={{ padding: '12px', fontWeight: '600' }}>{team.teamName}</td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>{team.score}</td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>{team.coins}</td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={team.settings?.scoreboardVisible !== false}
+                      onChange={(e) => handleUpdateTeamSettings(team.id, {
+                        scoreboardVisible: e.target.checked
+                      })}
+                    />
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                       <input
                         type="checkbox"
-                        checked={team.settings?.scoreboardVisible !== false}
-                        onChange={(e) => handleUpdateTeamSettings(team.id, {
-                          scoreboardVisible: e.target.checked
-                        })}
+                        checked={team.settings?.spinLimitations?.regular?.enabled || false}
+                        onChange={(e) => {
+                          const updatedLimitations = {
+                            ...team.settings?.spinLimitations,
+                            regular: { 
+                              ...team.settings?.spinLimitations?.regular,
+                              enabled: e.target.checked 
+                            }
+                          };
+                          handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                        }}
                       />
-                      Show in Scoreboard
-                    </label>
-                  </div>
-
-                  {/* Spin Limitations */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <h6>Spin Limitations</h6>
-                    {Object.entries(team.settings?.spinLimitations || {}).map(([type, limitation]) => (
-                      <div key={type} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #ddd', borderRadius: '6px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <input
-                            type="checkbox"
-                            checked={limitation.enabled}
-                            onChange={(e) => {
-                              const updatedLimitations = {
-                                ...team.settings?.spinLimitations,
-                                [type]: { ...limitation, enabled: e.target.checked }
-                              };
-                              handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
-                            }}
-                          />
-                          <strong>{getSpinTypeLabel(type)}</strong>
-                        </div>
-                        {limitation.enabled && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <label>Limit:</label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={limitation.limit}
-                              onChange={(e) => {
-                                const updatedLimitations = {
-                                  ...team.settings?.spinLimitations,
-                                  [type]: { ...limitation, limit: parseInt(e.target.value) || 1 }
-                                };
-                                handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
-                              }}
-                              style={{ width: '80px', padding: '4px 8px' }}
-                            />
-                            <span style={{ fontSize: '14px', color: '#666' }}>
-                              (Current: {team.settings?.spinCounts?.[type] || 0})
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Reset Spin Counts */}
-                  <div style={{ marginTop: '16px' }}>
+                      {team.settings?.spinLimitations?.regular?.enabled && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={team.settings?.spinLimitations?.regular?.limit || 1}
+                          onChange={(e) => {
+                            const updatedLimitations = {
+                              ...team.settings?.spinLimitations,
+                              regular: { 
+                                ...team.settings?.spinLimitations?.regular,
+                                limit: parseInt(e.target.value) || 1 
+                              }
+                            };
+                            handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                          }}
+                          style={{ width: '50px', padding: '2px 4px', fontSize: '12px' }}
+                        />
+                      )}
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        {team.settings?.spinCounts?.regular || 0}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <input
+                        type="checkbox"
+                        checked={team.settings?.spinLimitations?.lucky?.enabled || false}
+                        onChange={(e) => {
+                          const updatedLimitations = {
+                            ...team.settings?.spinLimitations,
+                            lucky: { 
+                              ...team.settings?.spinLimitations?.lucky,
+                              enabled: e.target.checked 
+                            }
+                          };
+                          handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                        }}
+                      />
+                      {team.settings?.spinLimitations?.lucky?.enabled && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={team.settings?.spinLimitations?.lucky?.limit || 1}
+                          onChange={(e) => {
+                            const updatedLimitations = {
+                              ...team.settings?.spinLimitations,
+                              lucky: { 
+                                ...team.settings?.spinLimitations?.lucky,
+                                limit: parseInt(e.target.value) || 1 
+                              }
+                            };
+                            handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                          }}
+                          style={{ width: '50px', padding: '2px 4px', fontSize: '12px' }}
+                        />
+                      )}
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        {team.settings?.spinCounts?.lucky || 0}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <input
+                        type="checkbox"
+                        checked={team.settings?.spinLimitations?.special?.enabled || false}
+                        onChange={(e) => {
+                          const updatedLimitations = {
+                            ...team.settings?.spinLimitations,
+                            special: { 
+                              ...team.settings?.spinLimitations?.special,
+                              enabled: e.target.checked 
+                            }
+                          };
+                          handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                        }}
+                      />
+                      {team.settings?.spinLimitations?.special?.enabled && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={team.settings?.spinLimitations?.special?.limit || 1}
+                          onChange={(e) => {
+                            const updatedLimitations = {
+                              ...team.settings?.spinLimitations,
+                              special: { 
+                                ...team.settings?.spinLimitations?.special,
+                                limit: parseInt(e.target.value) || 1 
+                              }
+                            };
+                            handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                          }}
+                          style={{ width: '50px', padding: '2px 4px', fontSize: '12px' }}
+                        />
+                      )}
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        {team.settings?.spinCounts?.special || 0}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
                     <button 
                       className="btn btn-warning"
+                      style={{ fontSize: '12px', padding: '4px 8px' }}
                       onClick={() => handleUpdateTeamSettings(team.id, { resetSpinCounts: true })}
                     >
-                      Reset Spin Counts
+                      Reset
                     </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -1375,7 +1499,7 @@ const CountryManagement = ({ teams }) => {
                   onChange={(e) => setNewOwnerId(e.target.value)}
                 >
                   <option value="">Remove Owner</option>
-                  {teams && teams.map(team => (
+                  {teams.map(team => (
                     <option key={team.id} value={team.id}>
                       {team.teamName}
                     </option>
@@ -1623,7 +1747,7 @@ const CountryManagement = ({ teams }) => {
             <div style={{ marginBottom: '24px' }}>
               <h4 style={{ marginBottom: '12px' }}>Select User</h4>
               <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '4px' }}>
-                {teams && teams.map(team => (
+                {teams.map(team => (
                   <div
                     key={team.id}
                     onClick={() => setSelectedUser(team)}
@@ -1745,28 +1869,21 @@ const GameManagement = () => {
   const fetchGameSettings = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching game settings from:', `${API_BASE_URL}/api/admin/games`);
-      
       const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
-      console.log('✅ Game settings response:', response.data);
       
       if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
         setGameSettings(response.data);
-        console.log('✅ Game settings set successfully:', response.data);
       } else {
-        console.warn('⚠️ Empty or invalid game settings response, using fallback');
         // Fallback to default game settings
         const fallbackSettings = {
           1: true, 2: true, 3: true, 4: true, 5: true, 6: true,
           7: true, 8: true, 9: true, 10: true, 11: true, 12: true
         };
         setGameSettings(fallbackSettings);
-        toast.error('Using fallback game settings. Please refresh the page.');
+        toast.warning('Using fallback game settings. Please refresh the page.');
       }
     } catch (error) {
-      console.error('❌ Error fetching game settings:', error);
-      console.error('❌ Error response:', error.response?.data);
-      console.error('❌ Error status:', error.response?.status);
+      console.error('Error fetching game settings:', error);
       
       // Set fallback settings on error
       const fallbackSettings = {
