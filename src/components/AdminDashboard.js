@@ -1171,11 +1171,35 @@ const GameManagement = () => {
   const fetchGameSettings = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('🎮 Fetching game settings from:', `${API_BASE_URL}/api/admin/games`);
       const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
-      setGameSettings(response.data);
+      console.log('🎮 Game settings response:', response.data);
+      
+      // Ensure we have valid game settings
+      if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
+        setGameSettings(response.data);
+      } else {
+        console.warn('🎮 Empty or invalid game settings received, using fallback');
+        // Fallback to default game settings
+        const fallbackSettings = {
+          1: true, 2: true, 3: true, 4: true, 5: true, 6: true,
+          7: true, 8: true, 9: true, 10: true, 11: true, 12: true
+        };
+        setGameSettings(fallbackSettings);
+        toast.warning('Using fallback game settings. Please refresh the page.');
+      }
     } catch (error) {
       console.error('Error fetching game settings:', error);
-      toast.error('Failed to fetch game settings');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      toast.error(`Failed to fetch game settings: ${error.response?.data?.error || error.message}`);
+      
+      // Set fallback settings on error
+      const fallbackSettings = {
+        1: true, 2: true, 3: true, 4: true, 5: true, 6: true,
+        7: true, 8: true, 9: true, 10: true, 11: true, 12: true
+      };
+      setGameSettings(fallbackSettings);
     } finally {
       setLoading(false);
     }
@@ -1187,16 +1211,19 @@ const GameManagement = () => {
 
   const handleToggleGame = async (gameId, currentStatus) => {
     try {
-      await axios.post(`${API_BASE_URL}/api/admin/games/toggle`, {
+      console.log('🎮 Toggling game:', gameId, 'from', currentStatus, 'to', !currentStatus);
+      const response = await axios.post(`${API_BASE_URL}/api/admin/games/toggle`, {
         gameId: parseInt(gameId),
         enabled: !currentStatus
       }, { withCredentials: true });
       
+      console.log('🎮 Toggle response:', response.data);
       toast.success(`Game ${gameId} ${!currentStatus ? 'enabled' : 'disabled'}`);
       fetchGameSettings(); // Refresh the settings
     } catch (error) {
       console.error('Error toggling game:', error);
-      toast.error('Failed to toggle game');
+      console.error('Error response:', error.response?.data);
+      toast.error(`Failed to toggle game: ${error.response?.data?.error || error.message}`);
     }
   };
 
@@ -1208,16 +1235,19 @@ const GameManagement = () => {
 
     try {
       setAddingGame(true);
+      console.log('🎮 Adding new game:', newGameName.trim());
       const response = await axios.post(`${API_BASE_URL}/api/admin/games/add`, {
         gameName: newGameName.trim()
       }, { withCredentials: true });
       
+      console.log('🎮 Add game response:', response.data);
       toast.success(response.data.message || 'Game added successfully');
       setNewGameName('');
       setShowAddModal(false);
       fetchGameSettings(); // Refresh the settings
     } catch (error) {
       console.error('Error adding game:', error);
+      console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.error || 'Failed to add game');
     } finally {
       setAddingGame(false);
@@ -1237,14 +1267,17 @@ const GameManagement = () => {
     }
 
     try {
+      console.log('🎮 Deleting game:', gameId);
       const response = await axios.delete(`${API_BASE_URL}/api/admin/games/${gameId}`, { 
         withCredentials: true 
       });
       
+      console.log('🎮 Delete game response:', response.data);
       toast.success(response.data.message || 'Game deleted successfully');
       fetchGameSettings(); // Refresh the settings
     } catch (error) {
       console.error('Error deleting game:', error);
+      console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.error || 'Failed to delete game');
     }
   };
@@ -1269,19 +1302,71 @@ const GameManagement = () => {
             Control which games are available for card selections. Disabled games will not appear in card usage options.
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="btn"
-          style={{
-            backgroundColor: '#28a745',
-            color: 'white',
-            padding: '12px 24px',
-            fontSize: '14px',
-            fontWeight: '600'
-          }}
-        >
-          + Add Game
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🧪 Testing admin access...');
+                const response = await axios.get(`${API_BASE_URL}/api/admin/check`, { withCredentials: true });
+                console.log('🧪 Admin check response:', response.data);
+                toast.success('Admin access confirmed!');
+              } catch (error) {
+                console.error('🧪 Admin check failed:', error);
+                toast.error(`Admin check failed: ${error.response?.data?.error || error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#007bff',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Admin
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="btn"
+            style={{
+              backgroundColor: '#28a745',
+              color: 'white',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            + Add Game
+          </button>
+          <button
+            onClick={async () => {
+              if (window.confirm('Reset all games to default settings? This will enable games 1-12.')) {
+                try {
+                  console.log('🔄 Resetting game settings to defaults...');
+                  const response = await axios.post(`${API_BASE_URL}/api/admin/games/reset`, {}, { withCredentials: true });
+                  console.log('🔄 Reset response:', response.data);
+                  toast.success(response.data.message || 'Game settings reset to defaults');
+                  fetchGameSettings(); // Refresh the settings
+                } catch (error) {
+                  console.error('Error resetting game settings:', error);
+                  console.error('Error response:', error.response?.data);
+                  toast.error(`Failed to reset game settings: ${error.response?.data?.error || error.message}`);
+                }
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#ffc107',
+              color: 'black',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Reset Defaults
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
@@ -1374,6 +1459,21 @@ const GameManagement = () => {
         <p style={{ fontSize: '14px', color: '#666' }}>
           <strong>Active Games:</strong> {Object.values(gameSettings).filter(Boolean).length} / {Object.keys(gameSettings).length}
         </p>
+        <details style={{ marginTop: '16px', textAlign: 'left' }}>
+          <summary style={{ cursor: 'pointer', color: '#007bff', fontSize: '14px' }}>
+            Debug: Current Game Settings
+          </summary>
+          <pre style={{ 
+            backgroundColor: '#f8f9fa', 
+            padding: '12px', 
+            borderRadius: '4px', 
+            fontSize: '12px', 
+            overflow: 'auto',
+            marginTop: '8px'
+          }}>
+            {JSON.stringify(gameSettings, null, 2)}
+          </pre>
+        </details>
       </div>
 
       {/* Add Game Modal */}
