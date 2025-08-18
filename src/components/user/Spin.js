@@ -76,24 +76,54 @@ const Spin = ({ socket, userData, setUserData }) => {
         }
       });
 
-      socket.on('spin-counts-reset', (data) => {
-        if (data.userId === userData?.id) {
-          toast.success(data.message);
-          // Refresh user data to get updated spin counts
-                     setUserData(prev => ({
-             ...prev,
-             teamSettings: {
-               ...prev.teamSettings,
-               spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
-             }
-           }));
-        }
-      });
+             socket.on('spin-counts-reset', (data) => {
+         if (data.userId === userData?.id) {
+           toast.success(data.message);
+           // Refresh user data to get updated spin counts
+                      setUserData(prev => ({
+              ...prev,
+              teamSettings: {
+                ...prev.teamSettings,
+                spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
+              }
+            }));
+         }
+       });
 
-      return () => {
-        socket.off('user-update');
-        socket.off('spin-counts-reset');
-      };
+       // Listen for team settings updates from admin
+       socket.on('user-team-settings-updated', (data) => {
+         if (data.userId === userData?.id) {
+           console.log('🔄 Team settings updated via socket:', data.teamSettings);
+           // Update user data with new team settings
+           setUserData(prev => ({
+             ...prev,
+             teamSettings: data.teamSettings
+           }));
+           
+           // Show notification about the update
+           const enabledSpins = Object.entries(data.teamSettings.spinLimitations || {})
+             .filter(([type, lim]) => lim.enabled && lim.limit > 0)
+             .map(([type]) => type);
+           
+           if (enabledSpins.length > 0) {
+             toast.success(`Spin settings updated! Enabled: ${enabledSpins.join(', ')}`, {
+               duration: 3000,
+               position: 'top-center'
+             });
+           } else {
+             toast.info('All spin limitations have been disabled', {
+               duration: 3000,
+               position: 'top-center'
+             });
+           }
+         }
+       });
+
+             return () => {
+         socket.off('user-update');
+         socket.off('spin-counts-reset');
+         socket.off('user-team-settings-updated');
+       };
     }
   }, [socket, userData?.id, setUserData]);
 

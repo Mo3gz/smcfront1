@@ -78,10 +78,12 @@ const AdminDashboard = ({ socket }) => {
       
       // Listen for team settings updates
       socket.on('team-settings-updated', () => {
+        console.log('🔄 Team settings updated, refreshing teams list');
         fetchTeams();
       });
       
       socket.on('all-teams-settings-updated', () => {
+        console.log('🔄 All teams settings updated, refreshing teams list');
         fetchTeams();
       });
       
