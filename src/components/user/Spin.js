@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { RotateCcw, Gift, Zap, Shield, Heart, Target, Users, Gamepad2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { RotateCcw, Gift, Zap, Shield, Heart } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL } from '../../utils/api';
 import Confetti from 'react-confetti';
 
@@ -17,18 +16,10 @@ const spinTypes = [
 ];
 
 const Spin = ({ socket, userData, setUserData }) => {
-  const { user } = useAuth();
   const [spinning, setSpinning] = useState(false);
   const [spinResult, setSpinResult] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [spinType, setSpinType] = useState('lucky');
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [showCardModal, setShowCardModal] = useState(false);
-  const [teams, setTeams] = useState([]);
-  const [availableGames, setAvailableGames] = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState('');
-  const [selectedGame, setSelectedGame] = useState('');
-  const [description, setDescription] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [promoValid, setPromoValid] = useState(null); // null: not checked, true: valid, false: invalid

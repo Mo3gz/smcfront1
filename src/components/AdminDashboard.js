@@ -917,7 +917,7 @@ const CountryManagement = ({ teams }) => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   useEffect(() => {
     fetchCountries();
@@ -1179,7 +1179,7 @@ const GameManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   useEffect(() => {
     fetchGameSettings();
@@ -1470,7 +1470,7 @@ const StatisticsView = () => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   useEffect(() => {
     fetchStats();
