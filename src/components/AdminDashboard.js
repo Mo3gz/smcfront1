@@ -1174,7 +1174,17 @@ const GameManagement = () => {
       console.log('🎮 Fetching game settings from:', `${API_BASE_URL}/api/admin/games`);
       console.log('🎮 API_BASE_URL:', API_BASE_URL);
       
-      // First, test admin access
+      // First, test if server is accessible
+      try {
+        const healthCheck = await axios.get(`${API_BASE_URL}/api/health`);
+        console.log('🎮 Server health check:', healthCheck.data);
+      } catch (healthError) {
+        console.error('🎮 Server health check failed:', healthError);
+        toast.error('Server is not accessible. Please check if backend is running.');
+        throw healthError;
+      }
+      
+      // Then test admin access
       try {
         const adminTest = await axios.get(`${API_BASE_URL}/api/admin/check`, { withCredentials: true });
         console.log('🎮 Admin test successful:', adminTest.data);
@@ -1184,6 +1194,7 @@ const GameManagement = () => {
         throw adminError;
       }
       
+      // Finally fetch game settings
       const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
       console.log('🎮 Game settings response:', response.data);
       
@@ -1217,6 +1228,8 @@ const GameManagement = () => {
         toast.error('Authentication failed. Please log in again.');
       } else if (error.response?.status === 403) {
         toast.error('Admin access required. You do not have permission to access this feature.');
+      } else if (error.response?.status === 404) {
+        toast.error('API endpoint not found. Please check if backend is running correctly.');
       } else {
         toast.error(`Failed to fetch game settings: ${error.response?.data?.error || error.message}`);
       }
@@ -1232,17 +1245,34 @@ const GameManagement = () => {
   const handleToggleGame = async (gameId, currentStatus) => {
     try {
       console.log('🎮 Toggling game:', gameId, 'from', currentStatus, 'to', !currentStatus);
+      
+      // Optimistically update the UI first
+      const newSettings = { ...gameSettings };
+      newSettings[gameId] = !currentStatus;
+      setGameSettings(newSettings);
+      
       const response = await axios.post(`${API_BASE_URL}/api/admin/games/toggle`, {
         gameId: parseInt(gameId),
         enabled: !currentStatus
       }, { withCredentials: true });
       
       console.log('🎮 Toggle response:', response.data);
+      
+      // Update with the actual response from server
+      if (response.data && response.data.gameSettings) {
+        setGameSettings(response.data.gameSettings);
+      }
+      
       toast.success(`Game ${gameId} ${!currentStatus ? 'enabled' : 'disabled'}`);
-      fetchGameSettings(); // Refresh the settings
     } catch (error) {
       console.error('Error toggling game:', error);
       console.error('Error response:', error.response?.data);
+      
+      // Revert the optimistic update on error
+      const revertedSettings = { ...gameSettings };
+      revertedSettings[gameId] = currentStatus;
+      setGameSettings(revertedSettings);
+      
       toast.error(`Failed to toggle game: ${error.response?.data?.error || error.message}`);
     }
   };
@@ -1391,6 +1421,29 @@ const GameManagement = () => {
             }}
           >
             Test Public
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🔍 Testing routes endpoint...');
+                const response = await axios.get(`${API_BASE_URL}/api/debug/routes`);
+                console.log('🔍 Routes test:', response.data);
+                toast.success(`Found ${response.data.routes.length} API routes`);
+              } catch (error) {
+                console.error('🔍 Routes test failed:', error);
+                toast.error(`Routes test failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#fd7e14',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Routes
           </button>
           <button
             onClick={() => setShowAddModal(true)}
