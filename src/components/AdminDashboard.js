@@ -1402,6 +1402,52 @@ const GameManagement = () => {
           <button
             onClick={async () => {
               try {
+                console.log('🧪 Testing admin test endpoint...');
+                const response = await axios.get(`${API_BASE_URL}/api/admin-test`);
+                console.log('🧪 Admin test response:', response.data);
+                toast.success('Admin test endpoint works!');
+              } catch (error) {
+                console.error('🧪 Admin test failed:', error);
+                toast.error(`Admin test failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#20c997',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Admin
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🏠 Testing root endpoint...');
+                const response = await axios.get(`${API_BASE_URL}/`);
+                console.log('🏠 Root response:', response.data);
+                toast.success('Root endpoint works!');
+              } catch (error) {
+                console.error('🏠 Root test failed:', error);
+                toast.error(`Root test failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#dc3545',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Root
+          </button>
+          <button
+            onClick={async () => {
+              try {
                 console.log('🔧 Testing public admin endpoint...');
                 const response = await axios.get(`${API_BASE_URL}/api/admin/test-public`);
                 console.log('🔧 Public admin test:', response.data);
