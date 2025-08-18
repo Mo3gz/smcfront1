@@ -151,7 +151,8 @@ const MapView = ({ userData, setUserData, socket }) => {
       setUserData(prev => ({
         ...prev,
         coins: response.data.newCoins,
-        totalMined: response.data.totalMined
+        totalMined: response.data.totalMined,
+        lastMined: new Date().toISOString() // Update lastMined for display
       }));
       
       // Update countries list to reflect new lastMined timestamps
