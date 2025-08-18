@@ -85,67 +85,6 @@ const UserDashboard = ({ socket }) => {
     toast.success('Logged out successfully');
   };
 
-  const handleCollectCoins = async () => {
-    if (!userData?.miningRate || userData?.miningRate === 0) {
-      toast.error('You need to own countries to mine coins!');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/mining/collect`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to collect coins');
-      }
-
-      const data = await response.json();
-      
-      // Update user data with new values
-      setUserData(prev => ({ 
-        ...prev, 
-        coins: data.newCoins, 
-        lastMined: data.lastMined,
-        totalMined: data.totalMined
-      }));
-      
-      toast.success(`Successfully mined ${data.earned} coins!`);
-    } catch (error) {
-      toast.error(error.message || 'Failed to collect coins');
-    }
-  };
-
-  // Calculate next collection time
-  const getNextCollectionTime = () => {
-    if (!userData?.lastMined || !userData?.miningRate) return null;
-    
-    const lastMined = new Date(userData.lastMined);
-    const now = new Date();
-    const elapsedMinutes = Math.floor((now - lastMined) / (1000 * 60));
-    
-    // Calculate minutes until next collection
-    // miningRate is per hour, so we need 60 minutes to earn 1 coin
-    const minutesPerCoin = 60 / userData.miningRate;
-    const minutesUntilNext = Math.max(0, minutesPerCoin - elapsedMinutes);
-    
-    if (minutesUntilNext === 0) return 'Ready to collect!';
-    
-    const hours = Math.floor(minutesUntilNext / 60);
-    const minutes = minutesUntilNext % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m until next collection`;
-    } else {
-      return `${minutes}m until next collection`;
-    }
-  };
-
   const renderContent = () => {
     switch (activeTab) {
       case 'scoreboard':
@@ -229,8 +168,6 @@ const UserDashboard = ({ socket }) => {
               <div className="mining-stat-label">Total Mined</div>
             </div>
           </div>
-          
-          
         </div>
 
         {renderContent()}

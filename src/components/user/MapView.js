@@ -13,7 +13,7 @@ const MapView = ({ userData, setUserData, socket }) => {
 
   useEffect(() => {
     fetchCountries();
-  }, []);
+  }, [fetchCountries]);
 
   // Fetch mining information
   useEffect(() => {
@@ -76,7 +76,7 @@ const MapView = ({ userData, setUserData, socket }) => {
     }
   }, [socket, userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchCountries = async () => {
+  const fetchCountries = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/countries`);
       setCountries(response.data);
@@ -97,7 +97,7 @@ const MapView = ({ userData, setUserData, socket }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBuyCountry = (country) => {
     if (country.owner) {
@@ -214,12 +214,12 @@ const MapView = ({ userData, setUserData, socket }) => {
         miningRate: calculatedMiningRate
       }));
     }
-  }, [userData?.id, countries]);
+  }, [userData?.id, countries]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Recalculate mining rate when countries change
   useEffect(() => {
     recalculateMiningRate();
-  }, [countries, recalculateMiningRate]);
+  }, [countries, recalculateMiningRate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
