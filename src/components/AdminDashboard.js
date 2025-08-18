@@ -103,17 +103,17 @@ const AdminDashboard = ({ socket }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'promocodes':
-        return <PromoCodes />;
+        return <PromoCodes teams={teams} />;
       case 'cards':
-        return <CardManagement />;
+        return <CardManagement teams={teams} />;
       case 'notifications':
         return <AdminNotifications notifications={notifications} />;
       case 'scoreboard':
-        return <AdminScoreboard />;
+        return <AdminScoreboard teams={teams} />;
       case 'teams':
         return <TeamManagement teams={teams} fetchTeams={fetchTeams} />;
       case 'countries':
-        return <CountryManagement />;
+        return <CountryManagement teams={teams} />;
       case 'games':
         return <GameManagement />;
       case 'statistics':
@@ -311,7 +311,8 @@ const PromoCodes = ({ teams }) => {
             required
           >
             <option value="">Select a team</option>
-            {teams.map(team => (
+            <option value="all">All Teams</option>
+            {teams && teams.map(team => (
               <option key={team.id} value={team.id}>
                 {team.teamName}
               </option>
@@ -386,7 +387,7 @@ const CardManagement = ({ teams }) => {
             required
           >
             <option value="">Select a team</option>
-            {teams.map(team => (
+            {teams && teams.map(team => (
               <option key={team.id} value={team.id}>
                 {team.teamName}
               </option>
@@ -667,7 +668,7 @@ const AdminScoreboard = ({ teams }) => {
             </tr>
           </thead>
           <tbody>
-            {teams.map((team, index) => (
+            {teams && teams.map((team, index) => (
               <tr key={team.id} style={{ borderBottom: '1px solid #eee' }}>
                 <td style={{ padding: '12px' }}>#{index + 1}</td>
                 <td style={{ padding: '12px', fontWeight: '600' }}>{team.teamName}</td>
@@ -742,9 +743,9 @@ const TeamManagement = ({ teams, fetchTeams }) => {
         </button>
       </div>
 
-      {teams.length === 0 ? (
+      {!teams || teams.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-          No teams found.
+          {!teams ? 'Loading teams...' : 'No teams found.'}
         </div>
       ) : (
         <div style={{ display: 'grid', gap: '16px' }}>
@@ -1366,7 +1367,7 @@ const CountryManagement = ({ teams }) => {
                   onChange={(e) => setNewOwnerId(e.target.value)}
                 >
                   <option value="">Remove Owner</option>
-                  {teams.map(team => (
+                  {teams && teams.map(team => (
                     <option key={team.id} value={team.id}>
                       {team.teamName}
                     </option>
@@ -1614,7 +1615,7 @@ const CountryManagement = ({ teams }) => {
             <div style={{ marginBottom: '24px' }}>
               <h4 style={{ marginBottom: '12px' }}>Select User</h4>
               <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '4px' }}>
-                {teams.map(team => (
+                {teams && teams.map(team => (
                   <div
                     key={team.id}
                     onClick={() => setSelectedUser(team)}
