@@ -1434,6 +1434,29 @@ const GameManagement = () => {
           <button
             onClick={async () => {
               try {
+                console.log('🧪 Testing admin test simple endpoint...');
+                const response = await axios.get(`${API_BASE_URL}/api/admin-test-simple`);
+                console.log('🧪 Admin test simple response:', response.data);
+                toast.success('Admin test simple endpoint works!');
+              } catch (error) {
+                console.error('🧪 Admin test simple failed:', error);
+                toast.error(`Admin test simple failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#6f42c1',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Admin Simple
+          </button>
+          <button
+            onClick={async () => {
+              try {
                 console.log('🏠 Testing root endpoint...');
                 const response = await axios.get(`${API_BASE_URL}/`);
                 console.log('🏠 Root response:', response.data);
@@ -1490,6 +1513,15 @@ const GameManagement = () => {
                 
                 console.log('🔍 Admin routes:', adminRoutes);
                 console.log('🔍 Games routes:', gamesRoutes);
+                
+                // Check for specific routes
+                const gamesRoute = adminRoutes.find(route => route.path === '/api/admin/games');
+                const gamesTestRoute = adminRoutes.find(route => route.path === '/api/admin/games-test');
+                const gamesAltRoute = adminRoutes.find(route => route.path === '/api/admin/games-alt');
+                
+                console.log('🔍 /api/admin/games route exists:', !!gamesRoute);
+                console.log('🔍 /api/admin/games-test route exists:', !!gamesTestRoute);
+                console.log('🔍 /api/admin/games-alt route exists:', !!gamesAltRoute);
                 
                 toast.success(`Found ${response.data.routes.length} API routes (${adminRoutes.length} admin, ${gamesRoutes.length} games)`);
               } catch (error) {
@@ -1757,6 +1789,8 @@ const GameManagement = () => {
             <p><strong>Current Hostname:</strong> {window.location.hostname}</p>
             <p><strong>Environment:</strong> {process.env.NODE_ENV}</p>
             <p><strong>With Credentials:</strong> true</p>
+            <p><strong>User Agent:</strong> {navigator.userAgent}</p>
+            <p><strong>Platform:</strong> {navigator.platform}</p>
           </div>
         </details>
       </div>
