@@ -44,7 +44,14 @@ const Inventory = ({ socket }) => {
       console.log('🎮 Received available games:', response.data);
       console.log('🎮 Available games type:', typeof response.data);
       console.log('🎮 Available games length:', Array.isArray(response.data) ? response.data.length : 'Not an array');
-      setAvailableGames(response.data);
+      
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setAvailableGames(response.data);
+      } else {
+        console.warn('🎮 No available games returned from API, using fallback');
+        // Set a default fallback to prevent empty dropdown
+        setAvailableGames(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
+      }
     } catch (error) {
       console.error('Error fetching available games:', error);
       console.error('Error details:', error.response?.data);
@@ -72,15 +79,19 @@ const Inventory = ({ socket }) => {
         fetchAvailableGames(); // Refresh available games when admin toggles
         
         // Show notification about game changes
-        const enabledGames = Object.keys(newGameSettings).filter(gameId => newGameSettings[gameId]);
-        toast.info(`Game settings updated. ${enabledGames.length} games now available.`, {
-          duration: 3000,
-          position: 'top-center',
-          style: {
-            background: '#667eea',
-            color: 'white'
-          }
-        });
+        if (newGameSettings && typeof newGameSettings === 'object') {
+          const enabledGames = Object.keys(newGameSettings).filter(gameId => newGameSettings[gameId]);
+          toast.info(`Game settings updated. ${enabledGames.length} games now available.`, {
+            duration: 3000,
+            position: 'top-center',
+            style: {
+              background: '#667eea',
+              color: 'white'
+            }
+          });
+        } else {
+          console.warn('Invalid game settings data received:', newGameSettings);
+        }
       });
 
       return () => {
