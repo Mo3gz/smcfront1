@@ -128,7 +128,10 @@ const UserDashboard = ({ socket }) => {
     const lastMined = new Date(userData.lastMined);
     const now = new Date();
     const elapsedMinutes = Math.floor((now - lastMined) / (1000 * 60));
-    const minutesPerCoin = 60 / (userData.miningRate / 60);
+    
+    // Calculate minutes until next collection
+    // miningRate is per hour, so we need 60 minutes to earn 1 coin
+    const minutesPerCoin = 60 / userData.miningRate;
     const minutesUntilNext = Math.max(0, minutesPerCoin - elapsedMinutes);
     
     if (minutesUntilNext === 0) return 'Ready to collect!';
@@ -217,7 +220,7 @@ const UserDashboard = ({ socket }) => {
             </div>
             <div className="mining-stat-item">
               <div className="mining-stat-value">
-                {userData?.miningRate ? Math.floor(userData.miningRate / 60) : 0}
+                {userData?.miningRate || 0}
               </div>
               <div className="mining-stat-label">Mining Rate (coins/hr)</div>
             </div>

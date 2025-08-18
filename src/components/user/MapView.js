@@ -145,7 +145,10 @@ const MapView = ({ userData, setUserData, socket }) => {
     const lastMined = new Date(userData.lastMined);
     const now = new Date();
     const elapsedMinutes = Math.floor((now - lastMined) / (1000 * 60));
-    const minutesPerCoin = 60 / (userData.miningRate / 60);
+    
+    // Calculate minutes until next collection
+    // miningRate is per hour, so we need 60 minutes to earn 1 coin
+    const minutesPerCoin = 60 / userData.miningRate;
     const minutesUntilNext = Math.max(0, minutesPerCoin - elapsedMinutes);
     
     if (minutesUntilNext === 0) return 'Ready to collect!';
@@ -229,7 +232,7 @@ const MapView = ({ userData, setUserData, socket }) => {
             </div>
             <div className="mining-stat-item">
               <div className="mining-stat-value">
-                {userData?.miningRate ? Math.floor(userData.miningRate / 60) : 0}
+                {userData?.miningRate || 0}
               </div>
               <div className="mining-stat-label">Mining Rate (coins/hr)</div>
             </div>
@@ -314,12 +317,12 @@ const MapView = ({ userData, setUserData, socket }) => {
               )}
               {/* Display mining rate for all countries */}
               <div className="mining-rate-display">
-                ⛏️ {country.miningRate ? Math.floor(country.miningRate / 60) : 0}/hr
+                ⛏️ {country.miningRate || 0}/hr
               </div>
               {/* Show mining rate more prominently for owned countries */}
               {country.owner === userData?.id && (
                 <div className="mining-rate-owned">
-                  +{country.miningRate ? Math.floor(country.miningRate / 60) : 0} coins/hr
+                  +{country.miningRate || 0} coins/hr
                 </div>
               )}
             </div>
