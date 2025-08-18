@@ -1171,47 +1171,11 @@ const GameManagement = () => {
   const fetchGameSettings = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🎮 Fetching game settings from:', `${API_BASE_URL}/api/admin/games`);
-      console.log('🎮 API_BASE_URL:', API_BASE_URL);
-      
-      // First, test if server is accessible
-      try {
-        const healthCheck = await axios.get(`${API_BASE_URL}/api/health`);
-        console.log('🎮 Server health check:', healthCheck.data);
-      } catch (healthError) {
-        console.error('🎮 Server health check failed:', healthError);
-        toast.error('Server is not accessible. Please check if backend is running.');
-        throw healthError;
-      }
-      
-      // Then test admin access
-      try {
-        const adminTest = await axios.get(`${API_BASE_URL}/api/admin/check`, { withCredentials: true });
-        console.log('🎮 Admin test successful:', adminTest.data);
-      } catch (adminError) {
-        console.error('🎮 Admin test failed:', adminError.response?.data);
-        toast.error(`Admin access failed: ${adminError.response?.data?.error || adminError.message}`);
-        throw adminError;
-      }
-      
-      // Test the games endpoint without auth first
-      try {
-        const gamesTest = await axios.get(`${API_BASE_URL}/api/admin/games-test`);
-        console.log('🎮 Games test (no auth) successful:', gamesTest.data);
-      } catch (gamesTestError) {
-        console.error('🎮 Games test (no auth) failed:', gamesTestError.response?.data);
-        console.error('🎮 Games test (no auth) status:', gamesTestError.response?.status);
-      }
-      
-      // Finally fetch game settings
       const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
-      console.log('🎮 Game settings response:', response.data);
       
-      // Ensure we have valid game settings
       if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
         setGameSettings(response.data);
       } else {
-        console.warn('🎮 Empty or invalid game settings received, using fallback');
         // Fallback to default game settings
         const fallbackSettings = {
           1: true, 2: true, 3: true, 4: true, 5: true, 6: true,
@@ -1222,9 +1186,6 @@ const GameManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching game settings:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error message:', error.message);
       
       // Set fallback settings on error
       const fallbackSettings = {
@@ -1237,8 +1198,6 @@ const GameManagement = () => {
         toast.error('Authentication failed. Please log in again.');
       } else if (error.response?.status === 403) {
         toast.error('Admin access required. You do not have permission to access this feature.');
-      } else if (error.response?.status === 404) {
-        toast.error('API endpoint not found. Please check if backend is running correctly.');
       } else {
         toast.error(`Failed to fetch game settings: ${error.response?.data?.error || error.message}`);
       }
@@ -1253,8 +1212,6 @@ const GameManagement = () => {
 
   const handleToggleGame = async (gameId, currentStatus) => {
     try {
-      console.log('🎮 Toggling game:', gameId, 'from', currentStatus, 'to', !currentStatus);
-      
       // Optimistically update the UI first
       const newSettings = { ...gameSettings };
       newSettings[gameId] = !currentStatus;
@@ -1265,8 +1222,6 @@ const GameManagement = () => {
         enabled: !currentStatus
       }, { withCredentials: true });
       
-      console.log('🎮 Toggle response:', response.data);
-      
       // Update with the actual response from server
       if (response.data && response.data.gameSettings) {
         setGameSettings(response.data.gameSettings);
@@ -1275,7 +1230,6 @@ const GameManagement = () => {
       toast.success(`Game ${gameId} ${!currentStatus ? 'enabled' : 'disabled'}`);
     } catch (error) {
       console.error('Error toggling game:', error);
-      console.error('Error response:', error.response?.data);
       
       // Revert the optimistic update on error
       const revertedSettings = { ...gameSettings };
@@ -1294,19 +1248,16 @@ const GameManagement = () => {
 
     try {
       setAddingGame(true);
-      console.log('🎮 Adding new game:', newGameName.trim());
       const response = await axios.post(`${API_BASE_URL}/api/admin/games/add`, {
         gameName: newGameName.trim()
       }, { withCredentials: true });
       
-      console.log('🎮 Add game response:', response.data);
       toast.success(response.data.message || 'Game added successfully');
       setNewGameName('');
       setShowAddModal(false);
       fetchGameSettings(); // Refresh the settings
     } catch (error) {
       console.error('Error adding game:', error);
-      console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.error || 'Failed to add game');
     } finally {
       setAddingGame(false);
@@ -1326,17 +1277,14 @@ const GameManagement = () => {
     }
 
     try {
-      console.log('🎮 Deleting game:', gameId);
       const response = await axios.delete(`${API_BASE_URL}/api/admin/games/${gameId}`, { 
         withCredentials: true 
       });
       
-      console.log('🎮 Delete game response:', response.data);
       toast.success(response.data.message || 'Game deleted successfully');
       fetchGameSettings(); // Refresh the settings
     } catch (error) {
       console.error('Error deleting game:', error);
-      console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.error || 'Failed to delete game');
     }
   };
@@ -1363,253 +1311,6 @@ const GameManagement = () => {
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
-            onClick={async () => {
-              try {
-                console.log('🧪 Testing admin access...');
-                const response = await axios.get(`${API_BASE_URL}/api/admin/check`, { withCredentials: true });
-                console.log('🧪 Admin check response:', response.data);
-                toast.success('Admin access confirmed!');
-              } catch (error) {
-                console.error('🧪 Admin check failed:', error);
-                toast.error(`Admin check failed: ${error.response?.data?.error || error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#007bff',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Admin
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🔧 Testing backend connection...');
-                const response = await axios.get(`${API_BASE_URL}/api/health`, { withCredentials: true });
-                console.log('🔧 Backend health check:', response.data);
-                toast.success('Backend is running!');
-              } catch (error) {
-                console.error('🔧 Backend health check failed:', error);
-                toast.error(`Backend connection failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#6c757d',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Backend
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🧪 Testing admin test endpoint...');
-                const response = await axios.get(`${API_BASE_URL}/api/admin-test`);
-                console.log('🧪 Admin test response:', response.data);
-                toast.success('Admin test endpoint works!');
-              } catch (error) {
-                console.error('🧪 Admin test failed:', error);
-                toast.error(`Admin test failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#20c997',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Admin
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🧪 Testing admin test simple endpoint...');
-                const response = await axios.get(`${API_BASE_URL}/api/admin-test-simple`);
-                console.log('🧪 Admin test simple response:', response.data);
-                toast.success('Admin test simple endpoint works!');
-              } catch (error) {
-                console.error('🧪 Admin test simple failed:', error);
-                toast.error(`Admin test simple failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#6f42c1',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Admin Simple
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🏠 Testing root endpoint...');
-                const response = await axios.get(`${API_BASE_URL}/`);
-                console.log('🏠 Root response:', response.data);
-                toast.success('Root endpoint works!');
-              } catch (error) {
-                console.error('🏠 Root test failed:', error);
-                toast.error(`Root test failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#dc3545',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Root
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🔧 Testing public admin endpoint...');
-                const response = await axios.get(`${API_BASE_URL}/api/admin/test-public`);
-                console.log('🔧 Public admin test:', response.data);
-                toast.success('Public admin endpoint works!');
-              } catch (error) {
-                console.error('🔧 Public admin test failed:', error);
-                toast.error(`Public admin test failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#28a745',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Public
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🔍 Testing routes endpoint...');
-                const response = await axios.get(`${API_BASE_URL}/api/debug/routes`);
-                console.log('🔍 Routes test:', response.data);
-                
-                // Show detailed route information
-                const adminRoutes = response.data.routes.filter(route => route.path.includes('/admin'));
-                const gamesRoutes = response.data.routes.filter(route => route.path.includes('/games'));
-                
-                console.log('🔍 Admin routes:', adminRoutes);
-                console.log('🔍 Games routes:', gamesRoutes);
-                
-                // Check for specific routes
-                const gamesRoute = adminRoutes.find(route => route.path === '/api/admin/games');
-                const gamesTestRoute = adminRoutes.find(route => route.path === '/api/admin/games-test');
-                const gamesAltRoute = adminRoutes.find(route => route.path === '/api/admin/games-alt');
-                
-                console.log('🔍 /api/admin/games route exists:', !!gamesRoute);
-                console.log('🔍 /api/admin/games-test route exists:', !!gamesTestRoute);
-                console.log('🔍 /api/admin/games-alt route exists:', !!gamesAltRoute);
-                
-                toast.success(`Found ${response.data.routes.length} API routes (${adminRoutes.length} admin, ${gamesRoutes.length} games)`);
-              } catch (error) {
-                console.error('🔍 Routes test failed:', error);
-                toast.error(`Routes test failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#fd7e14',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Routes
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🎮 Testing games endpoint without auth...');
-                const response = await axios.get(`${API_BASE_URL}/api/admin/games-test`);
-                console.log('🎮 Games test response:', response.data);
-                toast.success('Games endpoint works without auth!');
-              } catch (error) {
-                console.error('🎮 Games test failed:', error);
-                toast.error(`Games test failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#e83e8c',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Games
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🎮 Testing games alt endpoint...');
-                const response = await axios.get(`${API_BASE_URL}/api/admin/games-alt`);
-                console.log('🎮 Games alt response:', response.data);
-                toast.success('Games alt endpoint works!');
-              } catch (error) {
-                console.error('🎮 Games alt failed:', error);
-                toast.error(`Games alt failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#fd7e14',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Games Alt
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                console.log('🎮 Testing simple admin route...');
-                const response = await axios.get(`${API_BASE_URL}/api/admin/test-simple-route`);
-                console.log('🎮 Simple admin route response:', response.data);
-                toast.success('Simple admin route works!');
-              } catch (error) {
-                console.error('🎮 Simple admin route failed:', error);
-                toast.error(`Simple admin route failed: ${error.message}`);
-              }
-            }}
-            className="btn"
-            style={{
-              backgroundColor: '#6f42c1',
-              color: 'white',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Test Simple
-          </button>
-          <button
             onClick={() => setShowAddModal(true)}
             className="btn"
             style={{
@@ -1626,14 +1327,11 @@ const GameManagement = () => {
             onClick={async () => {
               if (window.confirm('Reset all games to default settings? This will enable games 1-12.')) {
                 try {
-                  console.log('🔄 Resetting game settings to defaults...');
                   const response = await axios.post(`${API_BASE_URL}/api/admin/games/reset`, {}, { withCredentials: true });
-                  console.log('🔄 Reset response:', response.data);
                   toast.success(response.data.message || 'Game settings reset to defaults');
                   fetchGameSettings(); // Refresh the settings
                 } catch (error) {
                   console.error('Error resetting game settings:', error);
-                  console.error('Error response:', error.response?.data);
                   toast.error(`Failed to reset game settings: ${error.response?.data?.error || error.message}`);
                 }
               }
