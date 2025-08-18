@@ -30,6 +30,10 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [mcqQuestion, setMcqQuestion] = useState(null);
   const [mcqTimer, setMcqTimer] = useState(null);
   const [speedBuyTimer, setSpeedBuyTimer] = useState(null);
+  
+  // Spin limitation states
+  const [spinLimitations, setSpinLimitations] = useState({});
+  const [spinCounts, setSpinCounts] = useState({ regular: 0, lucky: 0, special: 0 });
 
   useEffect(() => {
     // Update final cost when spinType or discount changes
@@ -72,11 +76,67 @@ const Spin = ({ socket, userData, setUserData }) => {
         }
       });
 
+      socket.on('spin-counts-reset', (data) => {
+        if (data.userId === userData?.id) {
+          toast.success(data.message);
+          // Refresh user data to get updated spin counts
+          setUserData(prev => ({
+            ...prev,
+            teamSettings: {
+              ...prev.teamSettings,
+              spinCounts: { regular: 0, lucky: 0, special: 0 }
+            }
+          }));
+        }
+      });
+
       return () => {
         socket.off('user-update');
+        socket.off('spin-counts-reset');
       };
     }
   }, [socket, userData?.id, setUserData]);
+
+  // Update spin limitations and counts when userData changes
+  useEffect(() => {
+    if (userData?.teamSettings) {
+      setSpinLimitations(userData.teamSettings.spinLimitations || {});
+      setSpinCounts(userData.teamSettings.spinCounts || { regular: 0, lucky: 0, special: 0 });
+    }
+  }, [userData?.teamSettings]);
+
+  // Function to check if a spin type is disabled
+  const isSpinDisabled = (spinId) => {
+    const spinCategory = spinId === 'lucky' ? 'lucky' : 
+                        (spinId === 'gamehelper' || spinId === 'challenge' || spinId === 'hightier' || spinId === 'lowtier') ? 'special' : 'regular';
+    
+    const limitation = spinLimitations[spinCategory];
+    if (!limitation || !limitation.enabled) {
+      return false; // No limitation, so not disabled
+    }
+    
+    return spinCounts[spinCategory] >= limitation.limit;
+  };
+
+  // Function to get spin status message
+  const getSpinStatusMessage = (spinId) => {
+    const spinCategory = spinId === 'lucky' ? 'lucky' : 
+                        (spinId === 'gamehelper' || spinId === 'challenge' || spinId === 'hightier' || spinId === 'lowtier') ? 'special' : 'regular';
+    
+    const limitation = spinLimitations[spinCategory];
+    if (!limitation || !limitation.enabled) {
+      return null; // No limitation
+    }
+    
+    const current = spinCounts[spinCategory] || 0;
+    const limit = limitation.limit;
+    
+    if (current >= limit) {
+      return `Limit reached (${current}/${limit})`;
+    }
+    
+    return `Available (${current}/${limit})`;
+  };
 
   const handleSpin = async () => {
     if (spinning) return;
@@ -299,32 +359,64 @@ const Spin = ({ socket, userData, setUserData }) => {
         <div style={{ marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '16px', color: '#333' }}>Choose Spin Type</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            {spinTypes.map((spin) => (
-              <div
-                key={spin.id}
-                className={`card-item ${spinType === spin.id ? 'active' : ''}`}
-                style={{
-                  background: spinType === spin.id ? spin.color : 'rgba(255, 255, 255, 0.9)',
-                  color: spinType === spin.id ? 'white' : '#333',
-                  cursor: 'pointer',
-                  padding: '16px',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                  border: spinType === spin.id ? '2px solid' + spin.color : '2px solid transparent'
-                }}
-                onClick={() => setSpinType(spin.id)}
-              >
-                <div style={{ marginBottom: '8px' }}>
-                  {getSpinIcon(spin.id)}
+            {spinTypes.map((spin) => {
+              const isDisabled = isSpinDisabled(spin.id);
+              const statusMessage = getSpinStatusMessage(spin.id);
+              
+              return (
+                <div
+                  key={spin.id}
+                  className={`card-item ${spinType === spin.id ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
+                  style={{
+                    background: isDisabled ? '#f5f5f5' : (spinType === spin.id ? spin.color : 'rgba(255, 255, 255, 0.9)'),
+                    color: isDisabled ? '#999' : (spinType === spin.id ? 'white' : '#333'),
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    border: spinType === spin.id ? '2px solid' + spin.color : '2px solid transparent',
+                    opacity: isDisabled ? 0.6 : 1,
+                    position: 'relative'
+                  }}
+                  onClick={() => !isDisabled && setSpinType(spin.id)}
+                >
+                  {isDisabled && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      background: '#ff4757',
+                      color: 'white',
+                      fontSize: '10px',
+                      padding: '2px 6px',
+                      borderRadius: '10px',
+                      fontWeight: 'bold'
+                    }}>
+                      OFFLINE
+                    </div>
+                  )}
+                  <div style={{ marginBottom: '8px' }}>
+                    {getSpinIcon(spin.id)}
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
+                    {spin.name}
+                  </div>
+                  <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>
+                    {spin.cost} coins
+                  </div>
+                  {statusMessage && (
+                    <div style={{ 
+                      fontSize: '10px', 
+                      opacity: 0.8,
+                      color: isDisabled ? '#ff4757' : '#666',
+                      fontWeight: 'bold'
+                    }}>
+                      {statusMessage}
+                    </div>
+                  )}
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
-                  {spin.name}
-                </div>
-                <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                  {spin.cost} coins
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -357,13 +449,54 @@ const Spin = ({ socket, userData, setUserData }) => {
           Price after discount: {finalCost === 0 ? 'Free!' : `${finalCost} coins`}
         </div>
 
+        {/* Spin Status Overview */}
+        {(Object.keys(spinLimitations).some(key => spinLimitations[key]?.enabled)) && (
+          <div style={{ 
+            marginBottom: '24px', 
+            padding: '16px', 
+            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+            borderRadius: '12px',
+            border: '1px solid #dee2e6'
+          }}>
+            <h4 style={{ marginBottom: '12px', color: '#495057', fontSize: '16px' }}>🎯 Spin Status</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              {['regular', 'lucky', 'special'].map(category => {
+                const limitation = spinLimitations[category];
+                const count = spinCounts[category] || 0;
+                const isDisabled = limitation?.enabled && count >= limitation.limit;
+                
+                if (!limitation?.enabled) return null;
+                
+                return (
+                  <div key={category} style={{
+                    padding: '8px 12px',
+                    background: isDisabled ? '#ff4757' : '#4ecdc4',
+                    color: 'white',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    <div style={{ textTransform: 'capitalize', marginBottom: '2px' }}>
+                      {category} Spins
+                    </div>
+                    <div>
+                      {count}/{limitation.limit}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Spin Wheel */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           
           <button
             className="btn"
             onClick={handleSpin}
-            disabled={spinning || (promoCode && promoValid === false)}
+            disabled={spinning || (promoCode && promoValid === false) || isSpinDisabled(spinType)}
             style={{ 
               marginTop: '20px',
               display: 'flex',
@@ -372,7 +505,10 @@ const Spin = ({ socket, userData, setUserData }) => {
               gap: '8px',
               width: '200px',
               margin: '20px auto 0',
-              background: finalCost === 0 ? '#4ecdc4' : undefined
+              background: isSpinDisabled(spinType) ? '#f5f5f5' : (finalCost === 0 ? '#4ecdc4' : undefined),
+              color: isSpinDisabled(spinType) ? '#999' : undefined,
+              cursor: isSpinDisabled(spinType) ? 'not-allowed' : 'pointer',
+              opacity: isSpinDisabled(spinType) ? 0.6 : 1
             }}
           >
             {spinning ? (
@@ -383,7 +519,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             ) : (
               <>
                 <RotateCcw size={20} />
-                {finalCost === 0 ? 'Spin for Free!' : 'Spin Now!'}
+                {isSpinDisabled(spinType) ? 'Spin Disabled' : (finalCost === 0 ? 'Spin for Free!' : 'Spin Now!')}
               </>
             )}
           </button>
