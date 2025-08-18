@@ -1194,6 +1194,15 @@ const GameManagement = () => {
         throw adminError;
       }
       
+      // Test the games endpoint without auth first
+      try {
+        const gamesTest = await axios.get(`${API_BASE_URL}/api/admin/games-test`);
+        console.log('🎮 Games test (no auth) successful:', gamesTest.data);
+      } catch (gamesTestError) {
+        console.error('🎮 Games test (no auth) failed:', gamesTestError.response?.data);
+        console.error('🎮 Games test (no auth) status:', gamesTestError.response?.status);
+      }
+      
       // Finally fetch game settings
       const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
       console.log('🎮 Game settings response:', response.data);
@@ -1521,6 +1530,29 @@ const GameManagement = () => {
             }}
           >
             Test Games
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🎮 Testing games alt endpoint...');
+                const response = await axios.get(`${API_BASE_URL}/api/admin/games-alt`);
+                console.log('🎮 Games alt response:', response.data);
+                toast.success('Games alt endpoint works!');
+              } catch (error) {
+                console.error('🎮 Games alt failed:', error);
+                toast.error(`Games alt failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#fd7e14',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Games Alt
           </button>
           <button
             onClick={async () => {
