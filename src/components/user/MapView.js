@@ -10,6 +10,19 @@ const MapView = ({ userData, setUserData, socket }) => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ open: false, country: null });
 
+  const recalculateMiningRate = useCallback((currentCountries = countries) => {
+    if (userData?.id) {
+      const ownedCountries = currentCountries.filter(c => c.owner === userData.id);
+      const calculatedMiningRate = ownedCountries.reduce((sum, c) => sum + (c.miningRate || 0), 0);
+      
+      // Update user data with calculated mining rate
+      setUserData(prev => ({
+        ...prev,
+        miningRate: calculatedMiningRate
+      }));
+    }
+  }, [userData?.id, setUserData]);
+
   const fetchCountries = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/countries`);
@@ -70,18 +83,20 @@ const MapView = ({ userData, setUserData, socket }) => {
         
         // Recalculate mining rate after countries update
         setTimeout(() => {
-          recalculateMiningRate();
+          recalculateMiningRate(updatedCountries);
         }, 100);
         
-        // Show a subtle notification for live updates
-        toast.success('Map updated!', {
-          duration: 2000,
-          icon: '🗺️',
-          style: {
-            background: '#2196F3',
-            color: 'white',
-          },
-        });
+        // Show a subtle notification for live updates (only for non-purchase updates)
+        if (updatedCountries.length > countries.length || updatedCountries.some(c => c.owner !== countries.find(oc => oc.id === c.id)?.owner)) {
+          toast.success('Map updated!', {
+            duration: 2000,
+            icon: '🗺️',
+            style: {
+              background: '#2196F3',
+              color: 'white',
+            },
+          });
+        }
       });
 
       // Listen for country visibility updates
@@ -129,15 +144,6 @@ const MapView = ({ userData, setUserData, socket }) => {
         countryId: country.id
       }, { withCredentials: true });
       
-      // Update countries list
-      setCountries(prev =>
-        prev.map(c =>
-          c.id === country.id
-            ? { ...c, owner: userData.id }
-            : c
-        )
-      );
-      
       // Update user data with new coins, score, and mining rate
       setUserData(prev => ({
         ...prev,
@@ -146,9 +152,22 @@ const MapView = ({ userData, setUserData, socket }) => {
         miningRate: response.data.user.miningRate
       }));
       
-      toast.success(`Successfully bought ${country.name}!`);
+      // Small delay to ensure socket updates are processed
+      setTimeout(() => {
+        toast.success(`Successfully bought ${country.name}!`);
+      }, 100);
+      
+      // The countries list will be updated via socket.io 'countries-update' event
+      // No need to manually update it here
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to buy country');
+      console.error('Buy country error:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to buy country';
+      toast.error(errorMessage);
+      
+      // If it's a 500 error, suggest refreshing
+      if (error.response?.status === 500) {
+        toast.error('Server error occurred. Please refresh the page and try again.');
+      }
     }
   };
 
@@ -230,8 +249,8 @@ const MapView = ({ userData, setUserData, socket }) => {
     return '#333';
   };
 
-  // Function to recalculate mining rate based on owned countries
-  const recalculateMiningRate = useCallback(() => {
+  // Recalculate mining rate when countries change
+  useEffect(() => {
     if (userData?.id && countries.length > 0) {
       const ownedCountries = countries.filter(c => c.owner === userData.id);
       const calculatedMiningRate = ownedCountries.reduce((sum, c) => sum + (c.miningRate || 0), 0);
@@ -241,12 +260,7 @@ const MapView = ({ userData, setUserData, socket }) => {
         miningRate: calculatedMiningRate
       }));
     }
-  }, [userData?.id, countries]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Recalculate mining rate when countries change
-  useEffect(() => {
-    recalculateMiningRate();
-  }, [countries, recalculateMiningRate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [countries, userData?.id, setUserData]);
 
   if (loading) {
     return (
