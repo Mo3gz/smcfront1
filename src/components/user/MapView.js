@@ -151,11 +151,28 @@ const MapView = ({ userData, setUserData, socket }) => {
       setUserData(prev => ({
         ...prev,
         coins: response.data.newCoins,
-        lastMined: response.data.lastMined,
         totalMined: response.data.totalMined
       }));
       
-      toast.success(`Successfully mined ${response.data.earned} coins!`);
+      // Update countries list to reflect new lastMined timestamps
+      if (response.data.countriesWithEarnings) {
+        setCountries(prev =>
+          prev.map(country => {
+            const earningCountry = response.data.countriesWithEarnings.find(c => c.countryId === country.id);
+            if (earningCountry) {
+              return { ...country, lastMined: new Date().toISOString() };
+            }
+            return country;
+          })
+        );
+      }
+      
+      // Show detailed breakdown in toast
+      const breakdown = response.data.countriesWithEarnings?.map(c => 
+        `${c.countryName}: ${c.earned} coins`
+      ).join(', ');
+      
+      toast.success(`Successfully mined ${response.data.earned} coins! ${breakdown ? `(${breakdown})` : ''}`);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to collect coins');
     }
