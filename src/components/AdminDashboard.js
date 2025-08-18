@@ -691,7 +691,6 @@ const AdminScoreboard = ({ teams }) => {
 
 // Team Management Component
 const TeamManagement = ({ teams, fetchTeams }) => {
-  const [selectedTeam, setSelectedTeam] = useState(null);
   const [showAllTeamsModal, setShowAllTeamsModal] = useState(false);
   const [allTeamsSettings, setAllTeamsSettings] = useState({
     scoreboardVisible: true,
