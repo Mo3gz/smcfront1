@@ -113,7 +113,7 @@ const Scoreboard = ({ socket }) => {
         socket.off('user-team-settings-updated');
       };
     }
-  }, [socket, previousScoreboard, scoreboard]);
+  }, [socket, previousScoreboard, scoreboard, fetchScoreboard]);
 
   // Function to detect changes in scoreboard
   const detectScoreboardChanges = (oldScoreboard, newScoreboard) => {
