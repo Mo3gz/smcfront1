@@ -1151,7 +1151,7 @@ const CountryManagement = ({ teams }) => {
             + Add Country
           </button>
           <button
-            onClick={() => setShowUserModal(true)}
+            onClick={() => handleUserManagement(null)}
             className="btn"
             style={{
               backgroundColor: '#007bff',
@@ -1596,7 +1596,7 @@ const CountryManagement = ({ teams }) => {
               </div>
             </div>
 
-            {selectedUser && (
+            {selectedUser ? (
               <div>
                 <h4 style={{ marginBottom: '16px' }}>Manage: {selectedUser.teamName}</h4>
                 
@@ -1659,6 +1659,10 @@ const CountryManagement = ({ teams }) => {
                     </button>
                   </div>
                 </form>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                <p>Please select a user from the list above to manage their resources.</p>
               </div>
             )}
 
