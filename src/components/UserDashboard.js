@@ -53,9 +53,94 @@ const UserDashboard = ({ socket }) => {
     }
   }, [socket, user.id]);
 
+  // Fetch mining information
+  useEffect(() => {
+    const fetchMiningInfo = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/mining/info`, {
+          credentials: 'include',
+        });
+        
+        if (response.ok) {
+          const miningData = await response.json();
+          setUserData(prev => ({
+            ...prev,
+            miningRate: miningData.miningRate,
+            totalMined: miningData.totalMined,
+            lastMined: miningData.lastMined
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching mining info:', error);
+      }
+    };
+
+    if (user.id) {
+      fetchMiningInfo();
+    }
+  }, [user.id]);
+
   const handleLogout = async () => {
     await logout();
     toast.success('Logged out successfully');
+  };
+
+  const handleCollectCoins = async () => {
+    if (!userData?.miningRate || userData?.miningRate === 0) {
+      toast.error('You need to own countries to mine coins!');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/mining/collect`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to collect coins');
+      }
+
+      const data = await response.json();
+      
+      // Update user data with new values
+      setUserData(prev => ({ 
+        ...prev, 
+        coins: data.newCoins, 
+        lastMined: data.lastMined,
+        totalMined: data.totalMined
+      }));
+      
+      toast.success(`Successfully mined ${data.earned} coins!`);
+    } catch (error) {
+      toast.error(error.message || 'Failed to collect coins');
+    }
+  };
+
+  // Calculate next collection time
+  const getNextCollectionTime = () => {
+    if (!userData?.lastMined || !userData?.miningRate) return null;
+    
+    const lastMined = new Date(userData.lastMined);
+    const now = new Date();
+    const elapsedMinutes = Math.floor((now - lastMined) / (1000 * 60));
+    const minutesPerCoin = 60 / (userData.miningRate / 60);
+    const minutesUntilNext = Math.max(0, minutesPerCoin - elapsedMinutes);
+    
+    if (minutesUntilNext === 0) return 'Ready to collect!';
+    
+    const hours = Math.floor(minutesUntilNext / 60);
+    const minutes = minutesUntilNext % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m until next collection`;
+    } else {
+      return `${minutes}m until next collection`;
+    }
   };
 
   const renderContent = () => {
@@ -121,15 +206,46 @@ const UserDashboard = ({ socket }) => {
 
       <div className="page-content">
         <div className="user-info">
-          <div className="user-stats">
-            <div className="stat-item">
-              <div className="stat-value">{userData?.coins || 0}</div>
-              <div className="stat-label">Coins</div>
+          <div className="mining-stats">
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">{userData?.coins || 0}</div>
+              <div className="mining-stat-label">Coins</div>
             </div>
-            <div className="stat-item">
-              <div className="stat-value">{userData?.score || 0}</div>
-              <div className="stat-label">Score</div>
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">{userData?.score || 0}</div>
+              <div className="mining-stat-label">Score</div>
             </div>
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">
+                {userData?.miningRate ? Math.floor(userData.miningRate / 60) : 0}
+              </div>
+              <div className="mining-stat-label">Mining Rate (coins/hr)</div>
+            </div>
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">{userData?.totalMined || 0}</div>
+              <div className="mining-stat-label">Total Mined</div>
+            </div>
+          </div>
+          
+          {/* Collect Coins Button */}
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <button 
+              className="mining-button"
+              onClick={handleCollectCoins}
+              disabled={!userData?.miningRate || userData?.miningRate === 0}
+            >
+              ⛏️ Collect Coins
+            </button>
+            {userData?.lastMined && (
+              <div className="last-collected">
+                Last collected: {new Date(userData.lastMined).toLocaleString()}
+              </div>
+            )}
+            {getNextCollectionTime() && (
+              <div className="next-collection-time">
+                {getNextCollectionTime()}
+              </div>
+            )}
           </div>
         </div>
 

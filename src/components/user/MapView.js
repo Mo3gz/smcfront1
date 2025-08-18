@@ -15,6 +15,29 @@ const MapView = ({ userData, setUserData, socket }) => {
     fetchCountries();
   }, []);
 
+  // Fetch mining information
+  useEffect(() => {
+    const fetchMiningInfo = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/mining/info`, { withCredentials: true });
+        if (response.data) {
+          setUserData(prev => ({
+            ...prev,
+            miningRate: response.data.miningRate,
+            totalMined: response.data.totalMined,
+            lastMined: response.data.lastMined
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching mining info:', error);
+      }
+    };
+
+    if (userData?.id) {
+      fetchMiningInfo();
+    }
+  }, [userData?.id]);
+
   // Listen for real-time country updates
   useEffect(() => {
     if (socket) {
@@ -34,8 +57,16 @@ const MapView = ({ userData, setUserData, socket }) => {
         });
       });
 
+      // Listen for mining updates
+      socket.on('user-update', (updatedUser) => {
+        if (updatedUser.id === userData?.id) {
+          setUserData(prev => ({ ...prev, ...updatedUser }));
+        }
+      });
+
       return () => {
         socket.off('countries-update');
+        socket.off('user-update');
       };
     }
   }, [socket]);
@@ -86,6 +117,46 @@ const MapView = ({ userData, setUserData, socket }) => {
       toast.success(`Successfully bought ${country.name}!`);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to buy country');
+    }
+  };
+
+  const handleCollectCoins = async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/mining/collect`, {}, { withCredentials: true });
+      
+      // Update user data with new values
+      setUserData(prev => ({
+        ...prev,
+        coins: response.data.newCoins,
+        lastMined: response.data.lastMined,
+        totalMined: response.data.totalMined
+      }));
+      
+      toast.success(`Successfully mined ${response.data.earned} coins!`);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to collect coins');
+    }
+  };
+
+  // Calculate next collection time
+  const getNextCollectionTime = () => {
+    if (!userData?.lastMined || !userData?.miningRate) return null;
+    
+    const lastMined = new Date(userData.lastMined);
+    const now = new Date();
+    const elapsedMinutes = Math.floor((now - lastMined) / (1000 * 60));
+    const minutesPerCoin = 60 / (userData.miningRate / 60);
+    const minutesUntilNext = Math.max(0, minutesPerCoin - elapsedMinutes);
+    
+    if (minutesUntilNext === 0) return 'Ready to collect!';
+    
+    const hours = Math.floor(minutesUntilNext / 60);
+    const minutes = minutesUntilNext % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m until next collection`;
+    } else {
+      return `${minutes}m until next collection`;
     }
   };
 
@@ -143,26 +214,53 @@ const MapView = ({ userData, setUserData, socket }) => {
 
       <div className="card">
         <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-around', 
-            background: 'rgba(102, 126, 234, 0.1)', 
-            padding: '16px', 
-            borderRadius: '12px' 
-          }}>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#667eea' }}>
+          <div className="mining-stats">
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">
                 {userData?.coins || 0}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Your Coins</div>
+              <div className="mining-stat-label">Your Coins</div>
             </div>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#667eea' }}>
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">
                 {countries.filter(c => c.owner === userData?.id).length}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>Countries Owned</div>
+              <div className="mining-stat-label">Countries Owned</div>
+            </div>
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">
+                {userData?.miningRate ? Math.floor(userData.miningRate / 60) : 0}
+              </div>
+              <div className="mining-stat-label">Mining Rate (coins/hr)</div>
+            </div>
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">
+                {userData?.totalMined || 0}
+              </div>
+              <div className="mining-stat-label">Total Mined</div>
             </div>
           </div>
+        </div>
+
+        {/* Collect Coins Button */}
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <button 
+            className="mining-button"
+            onClick={handleCollectCoins}
+            disabled={countries.filter(c => c.owner === userData?.id).length === 0}
+          >
+            ⛏️ Collect Coins
+          </button>
+          {userData?.lastMined && (
+            <div className="last-collected">
+              Last collected: {new Date(userData.lastMined).toLocaleString()}
+            </div>
+          )}
+          {getNextCollectionTime() && (
+            <div className="next-collection-time">
+              {getNextCollectionTime()}
+            </div>
+          )}
         </div>
 
         <div className="map-grid">
@@ -212,6 +310,16 @@ const MapView = ({ userData, setUserData, socket }) => {
                   letterSpacing: '1px'
                 }}>
                   Owned
+                </div>
+              )}
+              {/* Display mining rate for all countries */}
+              <div className="mining-rate-display">
+                ⛏️ {country.miningRate ? Math.floor(country.miningRate / 60) : 0}/hr
+              </div>
+              {/* Show mining rate more prominently for owned countries */}
+              {country.owner === userData?.id && (
+                <div className="mining-rate-owned">
+                  +{country.miningRate ? Math.floor(country.miningRate / 60) : 0} coins/hr
                 </div>
               )}
             </div>
