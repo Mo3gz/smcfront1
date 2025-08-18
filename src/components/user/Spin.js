@@ -79,7 +79,22 @@ const Spin = ({ socket, userData, setUserData }) => {
       socket.on('spin-counts-reset', (data) => {
         if (data.userId === userData?.id) {
           console.log('🔄 Spin counts reset event received:', data);
-          toast.success(data.message);
+          
+          // Show a more prominent notification
+          toast.success(data.message, {
+            duration: 5000,
+            position: 'top-center',
+            style: {
+              background: '#4CAF50',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              padding: '16px',
+              borderRadius: '8px'
+            },
+            icon: '🎉'
+          });
+          
           // Refresh user data to get updated spin counts
           setUserData(prev => {
             const updatedUserData = {
