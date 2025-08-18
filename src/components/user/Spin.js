@@ -6,16 +6,18 @@ import Confetti from 'react-confetti';
 
 // Move these above all hooks and state
 const spinTypes = [
-  { id: 'luck', name: 'Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
-  { id: 'attack', name: 'Attack Spin', cost: 50, icon: Zap, color: '#ff6b6b' },
-  { id: 'alliance', name: 'Alliance Spin', cost: 50, icon: Heart, color: '#4ecdc4' },
-  { id: 'random', name: 'Random Spin', cost: 25, icon: RotateCcw, color: '#667eea' }
+  { id: 'lucky', name: '🎡 Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
+  { id: 'gamehelper', name: '🛠 Game Helper', cost: 75, icon: Zap, color: '#ff6b6b' },
+  { id: 'challenge', name: '⚔ Challenge', cost: 100, icon: Heart, color: '#4ecdc4' },
+  { id: 'hightier', name: '🔥 High Tier', cost: 150, icon: Gift, color: '#ff9ff3' },
+  { id: 'lowtier', name: '🥉 Low Tier', cost: 25, icon: RotateCcw, color: '#74b9ff' },
+  { id: 'random', name: '🎲 Random', cost: 30, icon: RotateCcw, color: '#667eea' }
 ];
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
 const Spin = ({ socket, userData, setUserData }) => {
-  const [spinType, setSpinType] = useState('luck');
+  const [spinType, setSpinType] = useState('lucky');
   const [promoCode, setPromoCode] = useState('');
   const [spinning, setSpinning] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -24,6 +26,12 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [promoValid, setPromoValid] = useState(null); // null: not checked, true: valid, false: invalid
   const [checkingPromo, setCheckingPromo] = useState(false);
   const [finalCost, setFinalCost] = useState(spinTypes.find(s => s.id === spinType).cost);
+  
+  // New states for special functionality
+  const [mcqQuestion, setMcqQuestion] = useState(null);
+  const [mcqAnswer, setMcqAnswer] = useState(null);
+  const [mcqTimer, setMcqTimer] = useState(null);
+  const [speedBuyTimer, setSpeedBuyTimer] = useState(null);
 
   useEffect(() => {
     // Update final cost when spinType or discount changes
@@ -81,6 +89,8 @@ const Spin = ({ socket, userData, setUserData }) => {
 
     setSpinning(true);
     setResult(null);
+    setMcqQuestion(null);
+    setSpeedBuyTimer(null);
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/spin`, {
@@ -90,69 +100,106 @@ const Spin = ({ socket, userData, setUserData }) => {
 
       // Simulate spin animation
       setTimeout(() => {
-        // Special instant-action cards
-        if (response.data.card.name === "i`amphoteric") {
-          setUserData(prev => ({
-            ...prev,
-            coins: (prev.coins || 0) + 150
-          }));
-          toast.success('You received i`amphoteric! +150 coins instantly!', {
-            duration: 4000,
-            position: 'top-center',
-            style: {
-              background: '#4CAF50',
-              color: 'white',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }
-          });
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 3000);
-          setPromoCode('');
-          setSpinning(false);
-          return;
-        } else if (response.data.card.name === 'Everything Against Me') {
-          setUserData(prev => ({
-            ...prev,
-            coins: (prev.coins || 0) - 75
-          }));
-          toast.success('You received Everything Against Me! -75 coins instantly!', {
-            duration: 4000,
-            position: 'top-center',
-            style: {
-              background: '#4CAF50',
-              color: 'white',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }
-          });
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 3000);
-          setPromoCode('');
-          setSpinning(false);
-          return;
-        }
-        // Default: normal card
-        setResult(response.data.card);
-        setShowConfetti(true);
+        const { card, remainingCoins, actionType, additionalData } = response.data;
+        
+        // Update user coins
         setUserData(prev => ({
           ...prev,
-          coins: response.data.remainingCoins
+          coins: remainingCoins
         }));
+
+        // Handle different action types
+        switch(actionType) {
+          case 'instant':
+            // Instant coin changes
+            const coinChange = card.coinChange || 0;
+            toast.success(`${card.name}! ${coinChange > 0 ? '+' : ''}${coinChange} coins instantly!`, {
+              duration: 4000,
+              position: 'top-center',
+              style: {
+                background: coinChange > 0 ? '#4CAF50' : '#f44336',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }
+            });
+            break;
+
+          case 'instant_tax':
+            // Border tax
+            toast.info(`You paid ${additionalData.taxAmount} coins in border tax for ${additionalData.ownedCountries} countries.`, {
+              duration: 4000,
+              position: 'top-center'
+            });
+            break;
+
+          case 'random_gift':
+            // Random gift to another team
+            toast.success(`You gifted 50 coins to ${additionalData.giftedTeam}!`, {
+              duration: 4000,
+              position: 'top-center',
+              style: {
+                background: '#4CAF50',
+                color: 'white'
+              }
+            });
+            break;
+
+          case 'speed_buy':
+            // Speed buy challenge
+            setSpeedBuyTimer(additionalData.duration * 60); // Convert to seconds
+            toast.success(`Speed Buy Challenge started! You have ${additionalData.duration} minutes to buy a country for +50 reward!`, {
+              duration: 6000,
+              position: 'top-center',
+              style: {
+                background: '#ff9500',
+                color: 'white'
+              }
+            });
+            break;
+
+          case 'mcq':
+            // MCQ challenge
+            setMcqQuestion(additionalData.question);
+            setMcqTimer(additionalData.timeLimit);
+            toast.success('Answer the spiritual question within 10 seconds for +15 coins!', {
+              duration: 4000,
+              position: 'top-center',
+              style: {
+                background: '#667eea',
+                color: 'white'
+              }
+            });
+            break;
+
+          case 'admin':
+            // Admin action required
+            toast.info(`${card.name} - Admin will handle this action.`, {
+              duration: 4000,
+              position: 'top-center'
+            });
+            break;
+
+          default:
+            // Regular card
+            toast.success(`🎉 Congratulations! You got ${card.name}!`, {
+              duration: 4000,
+              position: 'top-center',
+              style: {
+                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }
+            });
+        }
+
+        setResult(card);
+        setShowConfetti(true);
         setPromoCode('');
         setSpinning(false);
-        // Show congratulations message prominently
-        toast.success(`🎉 Congratulations! You got ${response.data.card.name}!`, {
-          duration: 4000,
-          position: 'top-center',
-          style: {
-            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }
-        });
         setTimeout(() => setShowConfetti(false), 3000);
+
       }, 3000);
 
     } catch (error) {
@@ -167,6 +214,65 @@ const Spin = ({ socket, userData, setUserData }) => {
     return <IconComponent size={24} />;
   };
 
+  // MCQ handling
+  const handleMcqAnswer = async (selectedAnswer) => {
+    if (!mcqQuestion) return;
+    
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/mcq/answer`, {
+        questionId: mcqQuestion.id,
+        answer: selectedAnswer
+      }, { withCredentials: true });
+
+      if (response.data.correct) {
+        toast.success(`Correct! You earned ${response.data.reward} coins!`, {
+          duration: 4000,
+          position: 'top-center',
+          style: {
+            background: '#4CAF50',
+            color: 'white'
+          }
+        });
+      } else {
+        toast.error(`Wrong answer! The correct answer was option ${response.data.correctAnswer + 1}.`, {
+          duration: 4000,
+          position: 'top-center'
+        });
+      }
+      
+      setMcqQuestion(null);
+      setMcqTimer(null);
+    } catch (error) {
+      toast.error('Failed to submit answer');
+    }
+  };
+
+  // Timer countdown effects
+  useEffect(() => {
+    if (mcqTimer > 0) {
+      const timer = setTimeout(() => {
+        setMcqTimer(mcqTimer - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (mcqTimer === 0) {
+      toast.error('Time expired for MCQ!');
+      setMcqQuestion(null);
+      setMcqTimer(null);
+    }
+  }, [mcqTimer]);
+
+  useEffect(() => {
+    if (speedBuyTimer > 0) {
+      const timer = setTimeout(() => {
+        setSpeedBuyTimer(speedBuyTimer - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (speedBuyTimer === 0) {
+      toast.error('Speed Buy challenge expired!');
+      setSpeedBuyTimer(null);
+    }
+  }, [speedBuyTimer]);
+
   return (
     <div className="spin-container">
       <div className="header">
@@ -180,7 +286,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         {/* Spin Type Selection */}
         <div style={{ marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '16px', color: '#333' }}>Choose Spin Type</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             {spinTypes.map((spin) => (
               <div
                 key={spin.id}
@@ -305,14 +411,95 @@ const Spin = ({ socket, userData, setUserData }) => {
           </div>
         )}
 
+        {/* MCQ Question */}
+        {mcqQuestion && (
+          <div style={{ 
+            marginTop: '24px', 
+            padding: '20px', 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+            borderRadius: '12px',
+            color: 'white'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h4 style={{ margin: 0 }}>🕌 Spiritual Question</h4>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.2)', 
+                padding: '4px 12px', 
+                borderRadius: '20px',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }}>
+                {mcqTimer}s
+              </div>
+            </div>
+            
+            <p style={{ fontSize: '16px', marginBottom: '16px', fontWeight: '500' }}>
+              {mcqQuestion.question}
+            </p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {mcqQuestion.options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleMcqAnswer(index)}
+                  style={{
+                    padding: '12px',
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                >
+                  {index + 1}. {option}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Speed Buy Timer */}
+        {speedBuyTimer && (
+          <div style={{ 
+            marginTop: '24px', 
+            padding: '20px', 
+            background: 'linear-gradient(135deg, #ff9500 0%, #ff5722 100%)', 
+            borderRadius: '12px',
+            color: 'white',
+            textAlign: 'center'
+          }}>
+            <h4 style={{ margin: '0 0 12px 0' }}>⚡ Speed Buy Challenge</h4>
+            <p style={{ fontSize: '16px', margin: '0 0 8px 0' }}>
+              Buy a country within {Math.floor(speedBuyTimer / 60)}:{(speedBuyTimer % 60).toString().padStart(2, '0')} 
+              for +50 coins reward!
+            </p>
+            <div style={{ 
+              fontSize: '24px', 
+              fontWeight: 'bold',
+              background: 'rgba(255,255,255,0.2)',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              display: 'inline-block'
+            }}>
+              {Math.floor(speedBuyTimer / 60)}:{(speedBuyTimer % 60).toString().padStart(2, '0')}
+            </div>
+          </div>
+        )}
+
         {/* Spin Info */}
         <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(102, 126, 234, 0.1)', borderRadius: '12px' }}>
           <h4 style={{ color: '#667eea', marginBottom: '12px' }}>Spin Information</h4>
           <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
-            <p><strong>Lucky Spin:</strong> Get random luck cards</p>
-            <p><strong>Attack Spin:</strong> Get powerful attack cards</p>
-            <p><strong>Alliance Spin:</strong> Get strategic alliance cards</p>
-            <p><strong>Random Spin:</strong> Get any type of card (cheaper!)</p>
+            <p><strong>🎡 Lucky Spin:</strong> Instant coins, gifts, and special actions</p>
+            <p><strong>🛠 Game Helper:</strong> Strategic cards requiring game/team selection</p>
+            <p><strong>⚔ Challenge:</strong> Skill-based challenges with timers</p>
+            <p><strong>🔥 High Tier:</strong> Premium rewards and powerful effects</p>
+            <p><strong>🥉 Low Tier:</strong> Basic rewards, affordable entry point</p>
+            <p><strong>🎲 Random:</strong> Get any type from Lucky, Game Helper, or Challenge</p>
           </div>
         </div>
       </div>
