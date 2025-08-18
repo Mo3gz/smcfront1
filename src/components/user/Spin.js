@@ -29,7 +29,6 @@ const Spin = ({ socket, userData, setUserData }) => {
   
   // New states for special functionality
   const [mcqQuestion, setMcqQuestion] = useState(null);
-  const [mcqAnswer, setMcqAnswer] = useState(null);
   const [mcqTimer, setMcqTimer] = useState(null);
   const [speedBuyTimer, setSpeedBuyTimer] = useState(null);
 
