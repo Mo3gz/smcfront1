@@ -2217,75 +2217,75 @@ const GameManagement = () => {
             const gameName = typeof gameData === 'object' ? gameData.name : `Game ${gameId}`;
             
             return (
-              <div 
-                key={gameId}
-                style={{
-                  padding: '16px',
-                  border: '2px solid',
+            <div 
+              key={gameId}
+              style={{
+                padding: '16px',
+                border: '2px solid',
                   borderColor: isEnabled ? '#28a745' : '#dc3545',
-                  borderRadius: '8px',
+                borderRadius: '8px',
                   backgroundColor: isEnabled ? '#f8fff9' : '#fff5f5',
-                  position: 'relative'
+                position: 'relative'
+              }}
+            >
+              {/* Delete button */}
+              <button
+                onClick={() => handleDeleteGame(gameId)}
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  background: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.8
+                }}
+                title="Delete Game"
+                onMouseEnter={(e) => e.target.style.opacity = '1'}
+                onMouseLeave={(e) => e.target.style.opacity = '0.8'}
+              >
+                ×
+              </button>
+
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ 
+                  fontWeight: '600', 
+                  fontSize: '16px', 
+                    color: isEnabled ? '#28a745' : '#dc3545',
+                  marginBottom: '4px' 
+                }}>
+                    {gameName}
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#666' 
+                }}>
+                    Status: {isEnabled ? 'Active' : 'Disabled'}
+                </div>
+              </div>
+
+              <button
+                  onClick={() => handleToggleGame(gameId, isEnabled)}
+                className="btn"
+                style={{
+                    backgroundColor: isEnabled ? '#dc3545' : '#28a745',
+                  color: 'white',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  width: '100%'
                 }}
               >
-                {/* Delete button */}
-                <button
-                  onClick={() => handleDeleteGame(gameId)}
-                  style={{
-                    position: 'absolute',
-                    top: '8px',
-                    right: '8px',
-                    background: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '24px',
-                    height: '24px',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: 0.8
-                  }}
-                  title="Delete Game"
-                  onMouseEnter={(e) => e.target.style.opacity = '1'}
-                  onMouseLeave={(e) => e.target.style.opacity = '0.8'}
-                >
-                  ×
-                </button>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ 
-                    fontWeight: '600', 
-                    fontSize: '16px', 
-                    color: isEnabled ? '#28a745' : '#dc3545',
-                    marginBottom: '4px' 
-                  }}>
-                    {gameName}
-                  </div>
-                  <div style={{ 
-                    fontSize: '14px', 
-                    color: '#666' 
-                  }}>
-                    Status: {isEnabled ? 'Active' : 'Disabled'}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleToggleGame(gameId, isEnabled)}
-                  className="btn"
-                  style={{
-                    backgroundColor: isEnabled ? '#dc3545' : '#28a745',
-                    color: 'white',
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    width: '100%'
-                  }}
-                >
                   {isEnabled ? 'Disable' : 'Enable'}
-                </button>
-              </div>
+              </button>
+            </div>
             );
           })}
       </div>
