@@ -79,6 +79,8 @@ const Login = () => {
     const loginUsername = formData?.username || username;
     const loginPassword = formData?.password || password;
 
+    console.log('🔐 Login attempt started for:', loginUsername);
+
     // Validate fields
     const usernameError = validateUsername(loginUsername);
     const passwordError = validatePassword(loginPassword);
@@ -97,11 +99,16 @@ const Login = () => {
     setErrors({});
 
     try {
+      console.log('🔐 Calling login function...');
       const result = await login(loginUsername, loginPassword);
+      console.log('🔐 Login result:', result);
       
       if (result.success) {
+        console.log('🔐 Login successful, showing toast...');
         toast.success('Login successful!');
+        console.log('🔐 Login process completed');
       } else {
+        console.log('🔐 Login failed:', result.error);
         toast.error(result.error);
         
         // Clear password field for security
@@ -112,7 +119,7 @@ const Login = () => {
         }));
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('🔐 Login error:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);

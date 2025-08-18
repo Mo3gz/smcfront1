@@ -16,6 +16,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Debug user state changes
+  useEffect(() => {
+    console.log('🔍 User state changed:', user);
+  }, [user]);
+
   // Simple axios configuration
   const createAxiosConfig = () => ({
     withCredentials: true,
@@ -31,8 +36,22 @@ export const AuthProvider = ({ children }) => {
       console.log('🔍 Checking authentication...');
       const config = createAxiosConfig();
       const response = await axios.get(`${API_BASE_URL}/api/user`, config);
-      console.log('🔍 Auth check successful:', response.data);
-      setUser(response.data);
+      console.log('🔍 Auth check response:', response.data);
+      
+      // Handle different response formats
+      let userData;
+      if (response.data.user) {
+        // Backend returns { user: {...} }
+        userData = response.data.user;
+      } else if (response.data.id || response.data.username) {
+        // Backend returns user object directly
+        userData = response.data;
+      } else {
+        throw new Error('Invalid response format from server');
+      }
+      
+      console.log('🔍 Processed user data:', userData);
+      setUser(userData);
     } catch (error) {
       let errorMessage = 'Unknown error';
       if (error.response) {
@@ -64,17 +83,40 @@ export const AuthProvider = ({ children }) => {
   // Enhanced login function with better error handling
   const login = async (username, password) => {
     try {
-      console.log('🔐 Attempting login...');
+      console.log('🔐 Attempting login for:', username);
       const config = createAxiosConfig();
       const response = await axios.post(`${API_BASE_URL}/api/login`, {
         username,
         password
       }, config);
       
-      console.log('🔐 Login successful:', response.data);
-      setUser(response.data);
-      localStorage.setItem('user', JSON.stringify(response.data));
-      return { success: true, user: response.data };
+      console.log('🔐 Login response:', response.data);
+      
+      // Handle different response formats
+      let userData;
+      if (response.data.user) {
+        // Backend returns { user: {...} }
+        userData = response.data.user;
+      } else if (response.data.id || response.data.username) {
+        // Backend returns user object directly
+        userData = response.data;
+      } else {
+        throw new Error('Invalid response format from server');
+      }
+      
+      console.log('🔐 Processed user data:', userData);
+      
+      // Set user in state and localStorage
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Add a small delay to ensure state is properly set
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify the user data is properly set
+      console.log('🔐 Current user state after login:', userData);
+      
+      return { success: true, user: userData };
     } catch (error) {
       console.error('🔐 Login failed:', error);
       let errorMessage = 'Login failed';

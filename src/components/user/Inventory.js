@@ -39,7 +39,9 @@ const Inventory = ({ socket }) => {
 
   const fetchAvailableGames = useCallback(async () => {
     try {
+      console.log('🎮 Fetching available games...');
       const response = await axios.get(`${API_BASE_URL}/api/games/available`, { withCredentials: true });
+      console.log('🎮 Received available games:', response.data);
       setAvailableGames(response.data);
     } catch (error) {
       console.error('Error fetching available games:', error);
