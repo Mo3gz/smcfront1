@@ -21,7 +21,7 @@ const MapView = ({ userData, setUserData, socket }) => {
         miningRate: calculatedMiningRate
       }));
     }
-  }, [userData?.id, setUserData]);
+  }, [userData?.id, setUserData, countries]);
 
   const fetchCountries = useCallback(async () => {
     try {
