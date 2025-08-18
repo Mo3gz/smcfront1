@@ -1,52 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { Bell, Check, X, Trash2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { createMobileAxiosConfig } from '../utils/mobileAuth';
+import { API_BASE_URL } from '../utils/api';
 
 // Add socket.io import if not already present
 import io from 'socket.io-client';
 import ReactDOM from 'react-dom';
 
-const Notifications = () => {
-  const { user } = useAuth();
+const Notifications = ({ socket }) => {
   const [notifications, setNotifications] = useState([]);
-  const [isVisible, setIsVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showAll, setShowAll] = useState(false);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-
-  // Setup socket connection (singleton)
-  const [socket] = useState(() => {
-    if (window.socket) return window.socket;
-    const s = io(API_BASE_URL, { withCredentials: true });
-    window.socket = s;
-    return s;
-  });
-
-  // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     try {
-      setLoading(true);
-      console.log('🔔 Fetching notifications for user:', user?.id);
-      
-      const config = createMobileAxiosConfig();
-      const response = await axios.get(`${API_BASE_URL}/api/notifications`, config);
-      
-      console.log('🔔 Notifications response:', response.data);
+      const response = await axios.get(`${API_BASE_URL}/api/notifications`, { withCredentials: true });
       setNotifications(response.data);
-      const unread = response.data.filter(n => !n.read).length;
-      setUnreadCount(unread);
-      console.log('🔔 Unread count:', unread);
     } catch (error) {
-      console.error('❌ Error fetching notifications:', error);
-      console.error('❌ Error details:', error.response?.data);
-      toast.error('Failed to load notifications');
+      console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL, user?.id]);
+  }, []);
 
   // Format timestamp
   const formatTime = (timestamp) => {
@@ -61,14 +38,12 @@ const Notifications = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-    }
-  }, [user, fetchNotifications]);
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   // Listen for real-time notifications and open modal
   useEffect(() => {
-    if (!socket || !user) return;
+    if (!socket) return;
     const handleNotification = (notification) => {
       setNotifications(prev => [notification, ...prev]);
       if (!isVisible) {
@@ -95,7 +70,7 @@ const Notifications = () => {
     return () => {
       socket.off('notification', handleNotification);
     };
-  }, [socket, user, fetchNotifications, isVisible]);
+  }, [socket, fetchNotifications, isVisible]);
 
   // Refresh notifications when modal is opened
   useEffect(() => {
@@ -111,10 +86,9 @@ const Notifications = () => {
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
       // Sync with backend
-      const config = createMobileAxiosConfig();
-      axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, config).catch(() => {});
+      axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, { withCredentials: true }).catch(() => {});
     }
-  }, [isVisible, notifications.length, API_BASE_URL]);
+  }, [isVisible, notifications.length]);
 
   const modal = (
     <div style={{

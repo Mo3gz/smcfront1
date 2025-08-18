@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+// Use localhost for development, production URL for production
+const API_BASE_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:8080'
+  : (process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app');
 
 // Create axios instance with mobile-friendly configuration
 const api = axios.create({
@@ -56,4 +59,5 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default api;
+export { API_BASE_URL }; 

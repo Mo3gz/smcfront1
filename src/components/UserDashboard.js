@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { 
-  Trophy, 
-  Package, 
-  RotateCcw, 
-  Map, 
-  LogOut
-} from 'lucide-react';
+import { LogOut, Trophy, Package, RotateCcw, Map, Calendar } from 'lucide-react';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
+import ProgramOfTheDay from './ProgramOfTheDay';
 import Notifications from './Notifications';
 import Logo from '../assets/Logo.png';
-import ProgramOfTheDay from './ProgramOfTheDay';
-import CalendarIcon from '../assets/CalendarIcon';
+import { API_BASE_URL } from '../utils/api';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
@@ -23,31 +17,36 @@ const UserDashboard = ({ socket }) => {
   const [userData, setUserData] = useState(user);
   const [socketConnected, setSocketConnected] = useState(false);
 
+  // Socket connection status
   useEffect(() => {
-    // Check socket connection status
     if (socket) {
+      const handleConnect = () => setSocketConnected(true);
+      const handleDisconnect = () => setSocketConnected(false);
+      
+      socket.on('connect', handleConnect);
+      socket.on('disconnect', handleDisconnect);
+      
       setSocketConnected(socket.connected);
       
-      socket.on('connect', () => {
-        console.log('Socket connected');
-        setSocketConnected(true);
-      });
-      
-      socket.on('disconnect', () => {
-        console.log('Socket disconnected');
-        setSocketConnected(false);
-      });
+      return () => {
+        socket.off('connect', handleConnect);
+        socket.off('disconnect', handleDisconnect);
+      };
+    }
+  }, [socket]);
 
-      // Listen for real-time user updates
-      socket.on('user-update', (updatedUser) => {
+  // Listen for user updates
+  useEffect(() => {
+    if (socket) {
+      const handleUserUpdate = (updatedUser) => {
         if (updatedUser.id === user.id) {
           setUserData(prev => ({ ...prev, ...updatedUser }));
         }
-      });
+      };
+
+      socket.on('user-update', handleUserUpdate);
 
       return () => {
-        socket.off('connect');
-        socket.off('disconnect');
         socket.off('user-update');
       };
     }
@@ -57,7 +56,7 @@ const UserDashboard = ({ socket }) => {
   useEffect(() => {
     const fetchMiningInfo = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app'}/api/mining/info`, {
+        const response = await fetch(`${API_BASE_URL}/api/mining/info`, {
           credentials: 'include',
         });
         
@@ -207,7 +206,7 @@ const UserDashboard = ({ socket }) => {
             className={`nav-item ${activeTab === 'program' ? 'active' : ''}`}
             onClick={() => setActiveTab('program')}
           >
-            <span className="nav-icon"><CalendarIcon width={24} height={24} /></span>
+            <Calendar className="nav-icon" />
             <span className="nav-text">Program</span>
           </div>
         </div>

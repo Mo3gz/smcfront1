@@ -3,6 +3,7 @@ import { Package, Zap, Shield, Heart } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+import { API_BASE_URL } from '../../utils/api';
 
 const Inventory = ({ socket }) => {
   const { user } = useAuth();
@@ -16,8 +17,6 @@ const Inventory = ({ socket }) => {
   const [teams, setTeams] = useState([]);
   const [availableGames, setAvailableGames] = useState([]);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-
   const fetchInventory = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/inventory`, { withCredentials: true });
@@ -27,7 +26,7 @@ const Inventory = ({ socket }) => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -36,7 +35,7 @@ const Inventory = ({ socket }) => {
     } catch (error) {
       console.error('Error fetching teams:', error);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   const fetchAvailableGames = useCallback(async () => {
     try {
@@ -45,7 +44,7 @@ const Inventory = ({ socket }) => {
     } catch (error) {
       console.error('Error fetching available games:', error);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   useEffect(() => {
     fetchInventory();

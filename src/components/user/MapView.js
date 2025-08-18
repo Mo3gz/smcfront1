@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Coins } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+import { API_BASE_URL } from '../../utils/api';
 
 const MapView = ({ userData, setUserData, socket }) => {
   const [countries, setCountries] = useState([]);

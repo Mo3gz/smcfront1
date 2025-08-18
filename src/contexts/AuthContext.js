@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../utils/api';
 
 const AuthContext = createContext();
 
@@ -15,8 +16,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-  
   // Simple axios configuration
   const createAxiosConfig = () => ({
     withCredentials: true,
@@ -31,72 +30,70 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔍 Checking authentication...');
       const config = createAxiosConfig();
-      let response;
-      try {
-        response = await axios.get(`${API_BASE_URL}/api/user`, config);
-      } catch (error) {
-        // If 401 and we have a token in localStorage, try with token in header
-        if (error.response?.status === 401) {
-          const token = localStorage.getItem('authToken');
-          if (token) {
-            const tokenConfig = {
-              ...config,
-              headers: {
-                ...config.headers,
-                'x-auth-token': token
-              }
-            };
-            response = await axios.get(`${API_BASE_URL}/api/user`, tokenConfig);
-          } else {
-            throw error;
-          }
-        } else {
-          throw error;
-        }
-      }
+      const response = await axios.get(`${API_BASE_URL}/api/user`, config);
+      console.log('🔍 Auth check successful:', response.data);
       setUser(response.data);
-      localStorage.setItem('user', JSON.stringify(response.data));
     } catch (error) {
+      let errorMessage = 'Unknown error';
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = 'Token expired or invalid. Please log in again.';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Access forbidden.';
+        } else {
+          errorMessage = error.response.data?.error || error.message;
+        }
+      } else if (error.request) {
+        errorMessage = 'No response from server.';
+      } else {
+        errorMessage = error.message;
+      }
+      console.error('🔍 Auth check failed:', errorMessage);
       setUser(null);
       localStorage.removeItem('user');
-      localStorage.removeItem('authToken');
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   // Initial auth check
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
-  // Login function
+  // Enhanced login function with better error handling
   const login = async (username, password) => {
     try {
+      console.log('🔐 Attempting login...');
       const config = createAxiosConfig();
-      const response = await axios.post(`${API_BASE_URL}/api/login`, 
-        { username, password }, 
-        config
-      );
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
-      }
-      return { success: true };
+      const response = await axios.post(`${API_BASE_URL}/api/login`, {
+        username,
+        password
+      }, config);
+      
+      console.log('🔐 Login successful:', response.data);
+      setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
+      return { success: true, user: response.data };
     } catch (error) {
-      let errorMessage = 'Login failed. Please try again.';
-      if (error.response?.status === 401) {
-        errorMessage = 'Invalid username or password. Please try again.';
-      } else if (error.response?.status === 0 || error.code === 'ERR_NETWORK') {
-        errorMessage = 'Network connection issue. Please check your internet connection.';
-      } else if (error.response?.status >= 500) {
-        errorMessage = 'Server error. Please try again later.';
+      console.error('🔐 Login failed:', error);
+      let errorMessage = 'Login failed';
+      
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = 'Invalid username or password';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Account is disabled';
+        } else {
+          errorMessage = error.response.data?.error || error.message;
+        }
+      } else if (error.request) {
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        errorMessage = error.message;
       }
-      return { 
-        success: false, 
-        error: errorMessage
-      };
+      
+      return { success: false, error: errorMessage };
     }
   };
 

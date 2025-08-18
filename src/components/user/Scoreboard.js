@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Medal, Award, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { API_BASE_URL } from '../../utils/api';
 
 const Scoreboard = ({ socket }) => {
   const [scoreboard, setScoreboard] = useState([]);
@@ -9,8 +10,6 @@ const Scoreboard = ({ socket }) => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [previousScoreboard, setPreviousScoreboard] = useState([]);
   const [highlightedTeams, setHighlightedTeams] = useState(new Set());
-
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
   const fetchScoreboard = useCallback(async () => {
     try {
@@ -21,7 +20,7 @@ const Scoreboard = ({ socket }) => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   useEffect(() => {
     fetchScoreboard();

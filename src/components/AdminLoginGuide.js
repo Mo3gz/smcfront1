@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { API_BASE_URL } from '../utils/api';
 
 const AdminLoginGuide = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [testResult, setTestResult] = useState(null);
-
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
   const testAdminLogin = async () => {
     try {

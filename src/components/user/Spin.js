@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { RotateCcw, Zap, Heart, Shield, Gift } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { RotateCcw, Gift, Zap, Shield, Heart, Target, Users, Gamepad2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
+import { API_BASE_URL } from '../../utils/api';
 import Confetti from 'react-confetti';
 
 // Move these above all hooks and state
@@ -14,14 +16,20 @@ const spinTypes = [
   { id: 'random', name: '🎲 Random', cost: 30, icon: RotateCcw, color: '#667eea' }
 ];
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-
 const Spin = ({ socket, userData, setUserData }) => {
-  const [spinType, setSpinType] = useState('lucky');
-  const [promoCode, setPromoCode] = useState('');
+  const { user } = useAuth();
   const [spinning, setSpinning] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [result, setResult] = useState(null);
+  const [spinResult, setSpinResult] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [spinType, setSpinType] = useState('lucky');
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [teams, setTeams] = useState([]);
+  const [availableGames, setAvailableGames] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState('');
+  const [selectedGame, setSelectedGame] = useState('');
+  const [description, setDescription] = useState('');
+  const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [promoValid, setPromoValid] = useState(null); // null: not checked, true: valid, false: invalid
   const [checkingPromo, setCheckingPromo] = useState(false);
@@ -87,7 +95,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     }
 
     setSpinning(true);
-    setResult(null);
+    setSpinResult(null);
     setMcqQuestion(null);
     setSpeedBuyTimer(null);
 
@@ -111,8 +119,8 @@ const Spin = ({ socket, userData, setUserData }) => {
         }));
 
         // Always show the result card first
-        setResult(card);
-        setShowConfetti(true);
+        setSpinResult(card);
+        setShowResult(true);
         setPromoCode('');
 
         // Handle different action types with appropriate messages
@@ -207,7 +215,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             });
         }
 
-        setTimeout(() => setShowConfetti(false), 3000);
+        setTimeout(() => setShowResult(false), 3000);
 
       }, 2000);
 
@@ -293,7 +301,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         <p>Try your luck to get powerful cards!</p>
       </div>
 
-      {showConfetti && <Confetti />}
+      {showResult && <Confetti />}
 
       <div className="card">
         {/* Spin Type Selection */}
@@ -391,7 +399,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         </div>
 
         {/* Result */}
-        {result && (
+        {spinResult && (
           <div className="card" style={{ 
             background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
             color: 'white',
@@ -403,10 +411,10 @@ const Spin = ({ socket, userData, setUserData }) => {
           }}>
             <h3 style={{ marginBottom: '12px', fontSize: '24px' }}>🎉 Congratulations!</h3>
             <div style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
-              {result.name}
+              {spinResult.name}
             </div>
             <div style={{ fontSize: '16px', opacity: 0.9, marginBottom: '12px' }}>
-              {result.effect}
+              {spinResult.effect}
             </div>
             <div style={{ 
               fontSize: '14px', 
@@ -419,7 +427,7 @@ const Spin = ({ socket, userData, setUserData }) => {
               borderRadius: '20px',
               display: 'inline-block'
             }}>
-              {result.type} card
+              {spinResult.type} card
             </div>
           </div>
         )}
