@@ -169,8 +169,8 @@ const Spin = ({ socket, userData, setUserData }) => {
             // MCQ challenge
             setMcqQuestion(additionalData.question);
             setMcqTimer(additionalData.timeLimit);
-            toast.success('Answer the spiritual question within 10 seconds for +15 coins!', {
-              duration: 4000,
+            toast.success('Mystery Question Challenge! Answer within 10 seconds (+15 for correct, -10 for wrong). No card added to inventory.', {
+              duration: 6000,
               position: 'top-center',
               style: {
                 background: '#667eea',
@@ -243,9 +243,13 @@ const Spin = ({ socket, userData, setUserData }) => {
           }
         });
       } else {
-        toast.error(`Wrong answer! The correct answer was option ${response.data.correctAnswer + 1}.`, {
+        toast.error(`Wrong answer! You lost ${Math.abs(response.data.reward)} coins. The correct answer was option ${response.data.correctAnswer + 1}.`, {
           duration: 4000,
-          position: 'top-center'
+          position: 'top-center',
+          style: {
+            background: '#f44336',
+            color: 'white'
+          }
         });
       }
       

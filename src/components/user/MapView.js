@@ -85,6 +85,15 @@ const MapView = ({ userData, setUserData, socket }) => {
         });
       });
 
+      // Listen for country visibility updates
+      socket.on('country-visibility-update', ({ countryId, visible }) => {
+        setCountries(prev => prev.map(country => 
+          country.id === countryId 
+            ? { ...country, isVisible: visible }
+            : country
+        ));
+      });
+
       // Listen for mining updates
       socket.on('user-update', (updatedUser) => {
         if (updatedUser.id === userData?.id) {
@@ -94,6 +103,7 @@ const MapView = ({ userData, setUserData, socket }) => {
 
       return () => {
         socket.off('countries-update');
+        socket.off('country-visibility-update');
         socket.off('user-update');
       };
     }
@@ -326,7 +336,7 @@ const MapView = ({ userData, setUserData, socket }) => {
         </div>
 
         <div className="map-grid">
-          {countries.map((country) => (
+          {countries.filter(country => country.isVisible !== false).map((country) => (
             <div
               key={country.id}
               className="country-item"

@@ -7,7 +7,10 @@ import {
   Package, 
   Users, 
   Trophy, 
-  LogOut
+  LogOut,
+  Map,
+  Gamepad2,
+  BarChart3
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -139,6 +142,12 @@ const AdminDashboard = ({ socket }) => {
         return <AdminScoreboard teams={teams} />;
       case 'teams':
         return <TeamManagement teams={teams} fetchTeams={fetchTeams} />;
+      case 'countries':
+        return <CountryManagement teams={teams} />;
+      case 'games':
+        return <GameManagement />;
+      case 'statistics':
+        return <StatisticsView />;
       default:
         return <PromoCodes teams={teams} />;
     }
@@ -277,6 +286,27 @@ const AdminDashboard = ({ socket }) => {
           >
             <Users className="nav-icon" />
             <span className="nav-text">Teams</span>
+          </div>
+          <div 
+            className={`nav-item ${activeTab === 'countries' ? 'active' : ''}`}
+            onClick={() => setActiveTab('countries')}
+          >
+            <Map className="nav-icon" />
+            <span className="nav-text">Countries</span>
+          </div>
+          <div 
+            className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
+            onClick={() => setActiveTab('games')}
+          >
+            <Gamepad2 className="nav-icon" />
+            <span className="nav-text">Games</span>
+          </div>
+          <div 
+            className={`nav-item ${activeTab === 'statistics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('statistics')}
+          >
+            <BarChart3 className="nav-icon" />
+            <span className="nav-text">Statistics</span>
           </div>
         </div>
       </nav>
@@ -868,6 +898,664 @@ const TeamManagement = ({ teams, fetchTeams }) => {
             Update Score
           </button>
         </form>
+      </div>
+    </div>
+  );
+};
+
+// Country Management Component
+const CountryManagement = ({ teams }) => {
+  const [countries, setCountries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterOwnership, setFilterOwnership] = useState('all'); // all, owned, unowned
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [newOwnerId, setNewOwnerId] = useState('');
+
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+
+  const fetchCountries = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/api/admin/countries`, { withCredentials: true });
+      setCountries(response.data);
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      toast.error('Failed to fetch countries');
+    } finally {
+      setLoading(false);
+    }
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    fetchCountries();
+  }, [fetchCountries]);
+
+  const handleToggleVisibility = async (countryId, currentVisibility) => {
+    try {
+      await axios.post(`${API_BASE_URL}/api/admin/countries/visibility`, {
+        countryId,
+        visible: !currentVisibility
+      }, { withCredentials: true });
+      
+      toast.success(`Country visibility ${!currentVisibility ? 'enabled' : 'disabled'}`);
+      fetchCountries(); // Refresh the list
+    } catch (error) {
+      console.error('Error toggling visibility:', error);
+      toast.error('Failed to toggle visibility');
+    }
+  };
+
+  const handleChangeOwnership = async (e) => {
+    e.preventDefault();
+    if (!selectedCountry) return;
+
+    try {
+      await axios.post(`${API_BASE_URL}/api/admin/countries/ownership`, {
+        countryId: selectedCountry.id,
+        newOwnerId: newOwnerId || null
+      }, { withCredentials: true });
+      
+      const ownerName = newOwnerId ? teams.find(t => t.id === newOwnerId)?.teamName : 'None';
+      toast.success(`Country ownership changed to: ${ownerName}`);
+      setSelectedCountry(null);
+      setNewOwnerId('');
+      fetchCountries(); // Refresh the list
+    } catch (error) {
+      console.error('Error changing ownership:', error);
+      toast.error('Failed to change ownership');
+    }
+  };
+
+  // Filter countries based on search and ownership filter
+  const filteredCountries = countries.filter(country => {
+    const matchesSearch = country.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesOwnership = 
+      filterOwnership === 'all' ||
+      (filterOwnership === 'owned' && country.owner) ||
+      (filterOwnership === 'unowned' && !country.owner);
+    
+    return matchesSearch && matchesOwnership;
+  });
+
+  if (loading) {
+    return (
+      <div className="card">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div className="spinner"></div>
+          <p>Loading countries...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card">
+      <h3>Country Management</h3>
+      <p style={{ color: '#666', marginBottom: '24px' }}>
+        Manage country ownership and visibility settings.
+      </p>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: '200px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Search Countries</label>
+          <input
+            type="text"
+            className="input"
+            placeholder="Search by country name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div style={{ minWidth: '150px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Filter</label>
+          <select
+            className="input"
+            value={filterOwnership}
+            onChange={(e) => setFilterOwnership(e.target.value)}
+          >
+            <option value="all">All Countries</option>
+            <option value="owned">Owned Only</option>
+            <option value="unowned">Unowned Only</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Countries List */}
+      <div style={{ marginBottom: '24px' }}>
+        <h4>Countries ({filteredCountries.length})</h4>
+        <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '8px' }}>
+          {filteredCountries.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+              No countries found matching your criteria.
+            </div>
+          ) : (
+            filteredCountries.map(country => (
+              <div 
+                key={country.id} 
+                style={{ 
+                  padding: '12px 16px', 
+                  borderBottom: '1px solid #eee',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: country.isVisible ? 'white' : '#fff3cd'
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '4px' }}>
+                    {country.name}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>
+                    <span>Cost: {country.cost} coins</span>
+                    <span style={{ margin: '0 12px' }}>•</span>
+                    <span>Score: {country.score} points</span>
+                    <span style={{ margin: '0 12px' }}>•</span>
+                    <span>Mining: {country.miningRate}/hr</span>
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#333', marginTop: '4px' }}>
+                    <strong>Owner:</strong> {country.ownerName || 'None'}
+                    {!country.isVisible && (
+                      <span style={{ 
+                        marginLeft: '12px', 
+                        padding: '2px 8px', 
+                        backgroundColor: '#dc3545', 
+                        color: 'white', 
+                        fontSize: '12px', 
+                        borderRadius: '4px' 
+                      }}>
+                        HIDDEN
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button
+                    onClick={() => handleToggleVisibility(country.id, country.isVisible)}
+                    className="btn btn-secondary"
+                    style={{ 
+                      padding: '6px 12px', 
+                      fontSize: '12px',
+                      backgroundColor: country.isVisible ? '#dc3545' : '#28a745',
+                      color: 'white'
+                    }}
+                  >
+                    {country.isVisible ? 'Hide' : 'Show'}
+                  </button>
+                  <button
+                    onClick={() => setSelectedCountry(country)}
+                    className="btn"
+                    style={{ padding: '6px 12px', fontSize: '12px' }}
+                  >
+                    Change Owner
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Change Ownership Modal */}
+      {selectedCountry && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div className="card" style={{ maxWidth: '400px', width: '100%' }}>
+            <h3 style={{ marginBottom: '16px' }}>
+              Change Owner: {selectedCountry.name}
+            </h3>
+            
+            <form onSubmit={handleChangeOwnership}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Current Owner: {selectedCountry.ownerName || 'None'}
+                </label>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  New Owner
+                </label>
+                <select
+                  className="input"
+                  value={newOwnerId}
+                  onChange={(e) => setNewOwnerId(e.target.value)}
+                >
+                  <option value="">Remove Owner</option>
+                  {teams.map(team => (
+                    <option key={team.id} value={team.id}>
+                      {team.teamName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn" style={{ flex: 1 }}>
+                  Change Owner
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setSelectedCountry(null);
+                    setNewOwnerId('');
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Game Management Component
+const GameManagement = () => {
+  const [gameSettings, setGameSettings] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+
+  const fetchGameSettings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
+      setGameSettings(response.data);
+    } catch (error) {
+      console.error('Error fetching game settings:', error);
+      toast.error('Failed to fetch game settings');
+    } finally {
+      setLoading(false);
+    }
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    fetchGameSettings();
+  }, [fetchGameSettings]);
+
+  const handleToggleGame = async (gameId, currentStatus) => {
+    try {
+      await axios.post(`${API_BASE_URL}/api/admin/games/toggle`, {
+        gameId: parseInt(gameId),
+        enabled: !currentStatus
+      }, { withCredentials: true });
+      
+      toast.success(`Game ${gameId} ${!currentStatus ? 'enabled' : 'disabled'}`);
+      fetchGameSettings(); // Refresh the settings
+    } catch (error) {
+      console.error('Error toggling game:', error);
+      toast.error('Failed to toggle game');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="card">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div className="spinner"></div>
+          <p>Loading game settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card">
+      <h3>Game Management</h3>
+      <p style={{ color: '#666', marginBottom: '24px' }}>
+        Control which games are available for card selections. Disabled games will not appear in card usage options.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        {Object.entries(gameSettings).map(([gameId, enabled]) => (
+          <div 
+            key={gameId}
+            style={{
+              padding: '16px',
+              border: '2px solid',
+              borderColor: enabled ? '#28a745' : '#dc3545',
+              borderRadius: '8px',
+              backgroundColor: enabled ? '#f8fff9' : '#fff5f5',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <div>
+              <div style={{ 
+                fontWeight: '600', 
+                fontSize: '16px', 
+                color: enabled ? '#28a745' : '#dc3545',
+                marginBottom: '4px' 
+              }}>
+                Game {gameId}
+              </div>
+              <div style={{ 
+                fontSize: '14px', 
+                color: '#666' 
+              }}>
+                Status: {enabled ? 'Active' : 'Disabled'}
+              </div>
+            </div>
+            <button
+              onClick={() => handleToggleGame(gameId, enabled)}
+              className="btn"
+              style={{
+                backgroundColor: enabled ? '#dc3545' : '#28a745',
+                color: 'white',
+                padding: '8px 16px',
+                fontSize: '14px'
+              }}
+            >
+              {enabled ? 'Disable' : 'Enable'}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+        <h4 style={{ margin: '0 0 12px 0', color: '#333' }}>Game Control Info</h4>
+        <ul style={{ margin: 0, paddingLeft: '20px', color: '#666', fontSize: '14px' }}>
+          <li>Disabled games will not appear in dropdown menus for cards that require game selection</li>
+          <li>Cards requiring game selection: Robin Hood, Avenger, Betrayal, Secret Info, Freeze Player, Silent Game, Flip the Fate</li>
+          <li>Changes take effect immediately for all users</li>
+          <li>At least one game should remain enabled for cards to function properly</li>
+        </ul>
+      </div>
+
+      <div style={{ marginTop: '16px', textAlign: 'center' }}>
+        <p style={{ fontSize: '14px', color: '#666' }}>
+          <strong>Active Games:</strong> {Object.values(gameSettings).filter(Boolean).length} / {Object.keys(gameSettings).length}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Statistics View Component
+const StatisticsView = () => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
+
+  const fetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/api/admin/card-stats`, { withCredentials: true });
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      toast.error('Failed to fetch statistics');
+    } finally {
+      setLoading(false);
+    }
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  if (loading) {
+    return (
+      <div className="card">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div className="spinner"></div>
+          <p>Loading statistics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="card">
+        <h3>Statistics</h3>
+        <p style={{ color: '#666', textAlign: 'center', padding: '40px' }}>
+          No data available yet.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="card">
+        <h3>📊 Card Usage Statistics</h3>
+        <p style={{ color: '#666', marginBottom: '24px' }}>
+          Overview of card usage across all teams and games.
+        </p>
+
+        {/* Key Insights */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+          <div style={{ 
+            padding: '20px', 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+            borderRadius: '12px', 
+            color: 'white',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px' }}>
+              {stats.totalCardsUsed}
+            </div>
+            <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Cards Used</div>
+          </div>
+
+          {stats.insights.mostUsedCard && (
+            <div style={{ 
+              padding: '20px', 
+              background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)', 
+              borderRadius: '12px', 
+              color: 'white',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+                {stats.insights.mostUsedCard.name}
+              </div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>
+                Most Used Card ({stats.insights.mostUsedCard.count}x)
+              </div>
+            </div>
+          )}
+
+          {stats.insights.mostActiveTeam && (
+            <div style={{ 
+              padding: '20px', 
+              background: 'linear-gradient(135deg, #ff9500 0%, #ff5722 100%)', 
+              borderRadius: '12px', 
+              color: 'white',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+                {stats.insights.mostActiveTeam.name}
+              </div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>
+                Most Active Team ({stats.insights.mostActiveTeam.count} cards)
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Card Usage Breakdown */}
+        <div style={{ marginBottom: '32px' }}>
+          <h4>Card Usage Breakdown</h4>
+          <div style={{ 
+            maxHeight: '300px', 
+            overflowY: 'auto', 
+            border: '1px solid #ddd', 
+            borderRadius: '8px'
+          }}>
+            {Object.entries(stats.cardStats)
+              .sort(([,a], [,b]) => b.count - a.count)
+              .map(([cardName, cardData]) => (
+                <div 
+                  key={cardName}
+                  style={{ 
+                    padding: '12px 16px', 
+                    borderBottom: '1px solid #eee',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>{cardName}</div>
+                    <div style={{ fontSize: '12px', color: '#666', textTransform: 'capitalize' }}>
+                      {cardData.type} Card
+                    </div>
+                  </div>
+                  <div style={{ 
+                    background: '#667eea', 
+                    color: 'white', 
+                    padding: '4px 12px', 
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>
+                    {cardData.count}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* Team Activity */}
+        <div style={{ marginBottom: '32px' }}>
+          <h4>Team Activity</h4>
+          <div style={{ 
+            maxHeight: '250px', 
+            overflowY: 'auto', 
+            border: '1px solid #ddd', 
+            borderRadius: '8px'
+          }}>
+            {Object.entries(stats.teamStats)
+              .sort(([,a], [,b]) => b - a)
+              .map(([teamName, count]) => (
+                <div 
+                  key={teamName}
+                  style={{ 
+                    padding: '12px 16px', 
+                    borderBottom: '1px solid #eee',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <div style={{ fontWeight: '600' }}>{teamName}</div>
+                  <div style={{ 
+                    background: '#4CAF50', 
+                    color: 'white', 
+                    padding: '4px 12px', 
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>
+                    {count} cards
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* Game Selection Stats */}
+        {Object.keys(stats.gameStats).length > 0 && (
+          <div style={{ marginBottom: '32px' }}>
+            <h4>Game Selection Frequency</h4>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', 
+              gap: '12px'
+            }}>
+              {Object.entries(stats.gameStats)
+                .sort(([a,], [b,]) => parseInt(a) - parseInt(b))
+                .map(([gameId, count]) => (
+                  <div 
+                    key={gameId}
+                    style={{ 
+                      padding: '16px', 
+                      border: '2px solid #667eea',
+                      borderRadius: '8px',
+                      textAlign: 'center',
+                      background: '#f8f9ff'
+                    }}
+                  >
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
+                      Game {gameId}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#666' }}>
+                      {count} selections
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Activity */}
+        <div>
+          <h4>Recent Card Usage</h4>
+          <div style={{ 
+            maxHeight: '300px', 
+            overflowY: 'auto', 
+            border: '1px solid #ddd', 
+            borderRadius: '8px'
+          }}>
+            {stats.recentUsage.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                No recent card usage.
+              </div>
+            ) : (
+              stats.recentUsage.map((usage, index) => (
+                <div 
+                  key={usage.id}
+                  style={{ 
+                    padding: '12px 16px', 
+                    borderBottom: index < stats.recentUsage.length - 1 ? '1px solid #eee' : 'none'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                        {usage.teamName} used {usage.cardName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                        {usage.selectedGame && `Game ${usage.selectedGame} • `}
+                        {new Date(usage.timestamp).toLocaleString()}
+                      </div>
+                    </div>
+                    <div style={{ 
+                      background: '#f0f0f0', 
+                      padding: '4px 8px', 
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      color: '#666',
+                      textTransform: 'capitalize'
+                    }}>
+                      {usage.cardType}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
