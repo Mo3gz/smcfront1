@@ -1446,6 +1446,29 @@ const GameManagement = () => {
             Test Routes
           </button>
           <button
+            onClick={async () => {
+              try {
+                console.log('🎮 Testing games endpoint without auth...');
+                const response = await axios.get(`${API_BASE_URL}/api/admin/games-test`);
+                console.log('🎮 Games test response:', response.data);
+                toast.success('Games endpoint works without auth!');
+              } catch (error) {
+                console.error('🎮 Games test failed:', error);
+                toast.error(`Games test failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#e83e8c',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Games
+          </button>
+          <button
             onClick={() => setShowAddModal(true)}
             className="btn"
             style={{
