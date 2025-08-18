@@ -906,8 +906,6 @@ const CountryManagement = ({ teams }) => {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [newOwnerId, setNewOwnerId] = useState('');
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
-
   const fetchCountries = useCallback(async () => {
     try {
       setLoading(true);
@@ -1460,8 +1458,6 @@ const GameManagement = () => {
 const StatisticsView = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
   const fetchStats = useCallback(async () => {
     try {

@@ -3,16 +3,19 @@ import { Bell, Check, X, Trash2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 // Add socket.io import if not already present
 import io from 'socket.io-client';
 import ReactDOM from 'react-dom';
 
 const Notifications = ({ socket }) => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showAll, setShowAll] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
     try {
