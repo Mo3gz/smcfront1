@@ -147,7 +147,6 @@ const Spin = ({ socket, userData, setUserData }) => {
       
       console.log('🔄 Setting spin limitations:', limitations);
       console.log('🔄 Setting spin counts:', counts);
-      console.log('🔄 Previous spinCounts state:', spinCounts);
       
       setSpinLimitations(limitations);
       setSpinCounts(counts);
