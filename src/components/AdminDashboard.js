@@ -21,23 +21,11 @@ const AdminDashboard = ({ socket }) => {
   const [teams, setTeams] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [adminVerified, setAdminVerified] = useState(false);
-  const [teamsWithCards, setTeamsWithCards] = useState([]);
-  const [collapsedTeams, setCollapsedTeams] = useState({});
 
-  // Fetch all teams and their cards for admin (move this up before useEffect)
-  const fetchTeamsWithCards = useCallback(async () => {
-    try {
-      // Use the correct endpoint
-      const response = await axios.get(`${API_BASE_URL}/api/admin/teams-cards`, { withCredentials: true });
-      setTeamsWithCards(response.data);
-    } catch (error) {
-      console.error('Error fetching teams and cards:', error);
-    }
-  }, []);
 
   const fetchTeams = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
+      const response = await axios.get(`${API_BASE_URL}/api/admin/teams`, { withCredentials: true });
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -82,39 +70,23 @@ const AdminDashboard = ({ socket }) => {
         fetchNotifications(); // Only fetch from backend, don't add directly
         toast.info(`New notification from ${notification.teamName}`);
       });
-      // Listen for real-time scoreboard updates
-      socket.on('scoreboard-update', (updatedUsers) => {
-        // Filter only user teams and sort by score
-        const updatedScoreboard = updatedUsers
-          .filter(user => user.role === 'user')
-          .map(user => ({
-            id: user.id || user._id,
-            teamName: user.teamName,
-            score: user.score,
-            coins: user.coins
-          }))
-          .sort((a, b) => b.score - a.score);
-        setTeams(updatedScoreboard);
-        // Refetch teamsWithCards for real-time update
-        fetchTeamsWithCards();
+      
+      // Listen for team settings updates
+      socket.on('team-settings-updated', () => {
+        fetchTeams();
       });
-      // Listen for inventory updates (cards)
-      socket.on('inventory-update', () => {
-        fetchTeamsWithCards();
+      
+      socket.on('all-teams-settings-updated', () => {
+        fetchTeams();
       });
+      
       return () => {
         socket.off('admin-notification');
-        socket.off('scoreboard-update');
-        socket.off('inventory-update');
+        socket.off('team-settings-updated');
+        socket.off('all-teams-settings-updated');
       };
     }
-  }, [socket, adminVerified, fetchTeamsWithCards, fetchNotifications]);
-
-  useEffect(() => {
-    if (adminVerified) {
-      fetchTeamsWithCards();
-    }
-  }, [adminVerified, fetchTeamsWithCards]);
+  }, [socket, adminVerified, fetchNotifications, fetchTeams]);
 
   const handleLogout = async () => {
     try {
@@ -131,30 +103,27 @@ const AdminDashboard = ({ socket }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'promocodes':
-        return <PromoCodes teams={teams} />;
+        return <PromoCodes />;
       case 'cards':
-        return <CardManagement teams={teams} />;
+        return <CardManagement />;
       case 'notifications':
         return <AdminNotifications notifications={notifications} />;
       case 'scoreboard':
-        return <AdminScoreboard teams={teams} />;
+        return <AdminScoreboard />;
       case 'teams':
         return <TeamManagement teams={teams} fetchTeams={fetchTeams} />;
       case 'countries':
-        return <CountryManagement teams={teams} />;
+        return <CountryManagement />;
       case 'games':
         return <GameManagement />;
       case 'statistics':
         return <StatisticsView />;
       default:
-        return <PromoCodes teams={teams} />;
+        return <PromoCodes />;
     }
   };
 
-  // Collapsible handler
-  const toggleTeamCollapse = (teamId) => {
-    setCollapsedTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }));
-  };
+
 
   if (!adminVerified) {
     return (
@@ -198,54 +167,7 @@ const AdminDashboard = ({ socket }) => {
 
       <div className="page-content">
         {renderContent()}
-        {/* Collapsible Teams & Their Cards section, only on cards and scoreboard tabs */}
-        {(activeTab === 'cards' || activeTab === 'scoreboard') && (
-          <div className="card" style={{ marginTop: 32 }}>
-            <h3>Teams & Their Cards</h3>
-            {teamsWithCards.length === 0 ? (
-              <div style={{ color: '#666', textAlign: 'center', padding: '24px' }}>No teams or cards found.</div>
-            ) : (
-              teamsWithCards.map(team => (
-                <div key={team.id} style={{ marginBottom: 16, borderBottom: '1px solid #eee', paddingBottom: 8 }}>
-                  <div
-                    style={{ fontWeight: 600, fontSize: 16, color: '#333', marginBottom: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                    onClick={() => toggleTeamCollapse(team.id)}
-                  >
-                    <span>{team.teamName} ({team.username})</span>
-                    <span style={{ fontSize: 18, marginLeft: 8 }}>{collapsedTeams[team.id] ? '▼' : '▶'}</span>
-                  </div>
-                  <div style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>Score: {team.score} | Coins: {team.coins}</div>
-                  {collapsedTeams[team.id] && (
-                    <div style={{ fontSize: 14, color: '#555', marginTop: 8 }}>
-                      <strong>Cards:</strong>
-                      {team.cards && team.cards.length > 0 ? (
-                        <ul style={{ margin: '8px 0 0 16px', padding: 0 }}>
-                          {Object.values(
-                            team.cards.reduce((acc, card) => {
-                              const key = card.name + '|' + card.type + '|' + card.effect;
-                              if (!acc[key]) {
-                                acc[key] = { ...card, count: 1 };
-                              } else {
-                                acc[key].count += 1;
-                              }
-                              return acc;
-                            }, {})
-                          ).map(card => (
-                            <li key={card.name + card.type + card.effect} style={{ marginBottom: 4 }}>
-                              <span style={{ fontWeight: 500 }}>{card.count > 1 ? `${card.count} x ` : ''}{card.name}</span> <span style={{ color: '#999' }}>({card.type})</span> - <span style={{ fontSize: 12 }}>{card.effect}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <span style={{ color: '#aaa', marginLeft: 8 }}>No cards</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
+
       </div>
 
       <nav className="navbar">
@@ -278,6 +200,7 @@ const AdminDashboard = ({ socket }) => {
             <Trophy className="nav-icon" />
             <span className="nav-text">Scoreboard</span>
           </div>
+          
           <div 
             className={`nav-item ${activeTab === 'teams' ? 'active' : ''}`}
             onClick={() => setActiveTab('teams')}
@@ -285,6 +208,7 @@ const AdminDashboard = ({ socket }) => {
             <Users className="nav-icon" />
             <span className="nav-text">Teams</span>
           </div>
+          
           <div 
             className={`nav-item ${activeTab === 'countries' ? 'active' : ''}`}
             onClick={() => setActiveTab('countries')}
@@ -758,141 +682,255 @@ const AdminScoreboard = ({ teams }) => {
   );
 };
 
+
+
 // Team Management Component
 const TeamManagement = ({ teams, fetchTeams }) => {
-  const [selectedTeam, setSelectedTeam] = useState('');
-  const [coinAmount, setCoinAmount] = useState(0);
-  const [scoreAmount, setScoreAmount] = useState(0);
-  const [reason, setReason] = useState('');
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [showAllTeamsModal, setShowAllTeamsModal] = useState(false);
+  const [allTeamsSettings, setAllTeamsSettings] = useState({
+    scoreboardVisible: true,
+    spinLimitations: {
+      regular: { enabled: false, limit: 1 },
+      lucky: { enabled: false, limit: 1 },
+      special: { enabled: false, limit: 1 }
+    },
+    resetSpinCounts: false
+  });
 
-  const handleUpdateCoins = async (e) => {
-    e.preventDefault();
-    
+  const handleUpdateTeamSettings = async (teamId, settings) => {
     try {
-      await axios.post(`${API_BASE_URL}/api/admin/coins`, {
-        teamId: selectedTeam,
-        amount: coinAmount,
-        reason
-      }, { withCredentials: true });
-
-      toast.success('Coins updated successfully!');
-      setCoinAmount(0);
-      setReason('');
+      await axios.put(`${API_BASE_URL}/api/admin/teams/${teamId}/settings`, settings, { withCredentials: true });
+      toast.success('Team settings updated successfully!');
       fetchTeams();
     } catch (error) {
-      console.error('Update coins error:', error.response?.status, error.response?.data);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        toast.error('Authentication failed. Please log in again.');
-      } else {
-        toast.error('Failed to update coins');
-      }
+      console.error('Update team settings error:', error);
+      toast.error('Failed to update team settings');
     }
   };
 
-  const handleUpdateScore = async (e) => {
-    e.preventDefault();
-    
+  const handleUpdateAllTeams = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/api/admin/score`, {
-        teamId: selectedTeam,
-        amount: scoreAmount,
-        reason
-      }, { withCredentials: true });
-
-      toast.success('Score updated successfully!');
-      setScoreAmount(0);
-      setReason('');
+      await axios.put(`${API_BASE_URL}/api/admin/teams/settings/all`, allTeamsSettings, { withCredentials: true });
+      toast.success(`Settings updated for all teams!`);
+      setShowAllTeamsModal(false);
       fetchTeams();
     } catch (error) {
-      console.error('Update score error:', error.response?.status, error.response?.data);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        toast.error('Authentication failed. Please log in again.');
-      } else {
-        toast.error('Failed to update score');
-      }
+      console.error('Update all teams settings error:', error);
+      toast.error('Failed to update all teams settings');
+    }
+  };
+
+  const getSpinTypeLabel = (type) => {
+    switch (type) {
+      case 'regular': return 'Regular Spins';
+      case 'lucky': return 'Lucky Spins';
+      case 'special': return 'Special Spins (Game Helper, Challenge, etc.)';
+      default: return type;
     }
   };
 
   return (
     <div className="card">
-      <h3>Team Management</h3>
-      
-      <div style={{ marginBottom: '24px' }}>
-        <label>Select Team</label>
-        <select
-          className="input"
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
-          required
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h3>Team Management</h3>
+        <button 
+          className="btn btn-primary"
+          onClick={() => setShowAllTeamsModal(true)}
         >
-          <option value="">Select a team</option>
+          Manage All Teams
+        </button>
+      </div>
+
+      {teams.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+          No teams found.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '16px' }}>
           {teams.map(team => (
-            <option key={team.id} value={team.id}>
-              {team.teamName} (Score: {team.score}, Coins: {team.coins})
-            </option>
+            <div key={team.id} className="card" style={{ padding: '16px', border: '1px solid #eee' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div>
+                  <h4 style={{ margin: 0 }}>{team.teamName}</h4>
+                  <div style={{ fontSize: '14px', color: '#666' }}>
+                    Score: {team.score} | Coins: {team.coins}
+                  </div>
+                </div>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedTeam(selectedTeam?.id === team.id ? null : team)}
+                >
+                  {selectedTeam?.id === team.id ? 'Hide Settings' : 'Manage Settings'}
+                </button>
+              </div>
+
+              {selectedTeam?.id === team.id && (
+                <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                  <h5>Team Settings</h5>
+                  
+                  {/* Scoreboard Visibility */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <input
+                        type="checkbox"
+                        checked={team.settings?.scoreboardVisible !== false}
+                        onChange={(e) => handleUpdateTeamSettings(team.id, {
+                          scoreboardVisible: e.target.checked
+                        })}
+                      />
+                      Show in Scoreboard
+                    </label>
+                  </div>
+
+                  {/* Spin Limitations */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <h6>Spin Limitations</h6>
+                    {Object.entries(team.settings?.spinLimitations || {}).map(([type, limitation]) => (
+                      <div key={type} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #ddd', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                          <input
+                            type="checkbox"
+                            checked={limitation.enabled}
+                            onChange={(e) => {
+                              const updatedLimitations = {
+                                ...team.settings?.spinLimitations,
+                                [type]: { ...limitation, enabled: e.target.checked }
+                              };
+                              handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                            }}
+                          />
+                          <strong>{getSpinTypeLabel(type)}</strong>
+                        </div>
+                        {limitation.enabled && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <label>Limit:</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={limitation.limit}
+                              onChange={(e) => {
+                                const updatedLimitations = {
+                                  ...team.settings?.spinLimitations,
+                                  [type]: { ...limitation, limit: parseInt(e.target.value) || 1 }
+                                };
+                                handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                              }}
+                              style={{ width: '80px', padding: '4px 8px' }}
+                            />
+                            <span style={{ fontSize: '14px', color: '#666' }}>
+                              (Current: {team.settings?.spinCounts?.[type] || 0})
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Reset Spin Counts */}
+                  <div style={{ marginTop: '16px' }}>
+                    <button 
+                      className="btn btn-warning"
+                      onClick={() => handleUpdateTeamSettings(team.id, { resetSpinCounts: true })}
+                    >
+                      Reset Spin Counts
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
-        </select>
-      </div>
+        </div>
+      )}
 
-      <div style={{ display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-        <form onSubmit={handleUpdateCoins}>
-          <h4>Update Coins</h4>
-          <div style={{ marginBottom: '16px' }}>
-            <label>Coin Amount (+ or -)</label>
-            <input
-              type="number"
-              className="input"
-              value={coinAmount}
-              onChange={(e) => setCoinAmount(Number(e.target.value))}
-              placeholder="Enter amount (positive or negative)"
-              required
-            />
-          </div>
-          <div style={{ marginBottom: '16px' }}>
-            <label>Reason</label>
-            <input
-              type="text"
-              className="input"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Reason for coin update"
-              required
-            />
-          </div>
-          <button type="submit" className="btn" disabled={!selectedTeam}>
-            Update Coins
-          </button>
-        </form>
+      {/* All Teams Modal */}
+      {showAllTeamsModal && (
+        <div className="modal-overlay" onClick={() => setShowAllTeamsModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Manage All Teams</h3>
+              <button className="modal-close" onClick={() => setShowAllTeamsModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={allTeamsSettings.scoreboardVisible}
+                    onChange={(e) => setAllTeamsSettings(prev => ({
+                      ...prev,
+                      scoreboardVisible: e.target.checked
+                    }))}
+                  />
+                  Show All Teams in Scoreboard
+                </label>
+              </div>
 
-        <form onSubmit={handleUpdateScore}>
-          <h4>Update Score</h4>
-          <div style={{ marginBottom: '16px' }}>
-            <label>Score Amount (+ or -)</label>
-            <input
-              type="number"
-              className="input"
-              value={scoreAmount}
-              onChange={(e) => setScoreAmount(Number(e.target.value))}
-              placeholder="Enter amount (positive or negative)"
-              required
-            />
+              <div style={{ marginBottom: '20px' }}>
+                <h5>Spin Limitations for All Teams</h5>
+                {Object.entries(allTeamsSettings.spinLimitations).map(([type, limitation]) => (
+                  <div key={type} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #ddd', borderRadius: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <input
+                        type="checkbox"
+                        checked={limitation.enabled}
+                        onChange={(e) => setAllTeamsSettings(prev => ({
+                          ...prev,
+                          spinLimitations: {
+                            ...prev.spinLimitations,
+                            [type]: { ...limitation, enabled: e.target.checked }
+                          }
+                        }))}
+                      />
+                      <strong>{getSpinTypeLabel(type)}</strong>
+                    </div>
+                    {limitation.enabled && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label>Limit:</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={limitation.limit}
+                          onChange={(e) => setAllTeamsSettings(prev => ({
+                            ...prev,
+                            spinLimitations: {
+                              ...prev.spinLimitations,
+                              [type]: { ...limitation, limit: parseInt(e.target.value) || 1 }
+                            }
+                          }))}
+                          style={{ width: '80px', padding: '4px 8px' }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={allTeamsSettings.resetSpinCounts}
+                    onChange={(e) => setAllTeamsSettings(prev => ({
+                      ...prev,
+                      resetSpinCounts: e.target.checked
+                    }))}
+                  />
+                  Reset Spin Counts for All Teams
+                </label>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowAllTeamsModal(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={handleUpdateAllTeams}>
+                Apply to All Teams
+              </button>
+            </div>
           </div>
-          <div style={{ marginBottom: '16px' }}>
-            <label>Reason</label>
-            <input
-              type="text"
-              className="input"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Reason for score update"
-              required
-            />
-          </div>
-          <button type="submit" className="btn" disabled={!selectedTeam}>
-            Update Score
-          </button>
-        </form>
-      </div>
+        </div>
+      )}
     </div>
   );
 };
