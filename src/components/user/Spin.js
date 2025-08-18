@@ -110,7 +110,12 @@ const Spin = ({ socket, userData, setUserData }) => {
           coins: remainingCoins
         }));
 
-        // Handle different action types
+        // Always show the result card first
+        setResult(card);
+        setShowConfetti(true);
+        setPromoCode('');
+
+        // Handle different action types with appropriate messages
         switch(actionType) {
           case 'instant':
             // Instant coin changes
@@ -176,9 +181,15 @@ const Spin = ({ socket, userData, setUserData }) => {
 
           case 'admin':
             // Admin action required
-            toast.info(`${card.name} - Admin will handle this action.`, {
+            toast.success(`🎉 You got ${card.name}! Card added to inventory - Admin will handle this action.`, {
               duration: 4000,
-              position: 'top-center'
+              position: 'top-center',
+              style: {
+                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }
             });
             break;
 
@@ -196,9 +207,6 @@ const Spin = ({ socket, userData, setUserData }) => {
             });
         }
 
-        setResult(card);
-        setShowConfetti(true);
-        setPromoCode('');
         setTimeout(() => setShowConfetti(false), 3000);
 
       }, 2000);
