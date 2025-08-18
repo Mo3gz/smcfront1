@@ -129,13 +129,33 @@ const Spin = ({ socket, userData, setUserData }) => {
 
   // Update spin limitations and counts when userData changes
   useEffect(() => {
+    console.log('🔄 userData changed:', userData);
+    console.log('🔄 userData.teamSettings:', userData?.teamSettings);
+    
     if (userData?.teamSettings) {
-      setSpinLimitations(userData.teamSettings.spinLimitations || {});
-      setSpinCounts(userData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
-      console.log('🔄 Spin limitations updated:', userData.teamSettings.spinLimitations);
-      console.log('🔄 Spin counts updated:', userData.teamSettings.spinCounts);
+      const limitations = userData.teamSettings.spinLimitations || {};
+      const counts = userData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
+      
+      console.log('🔄 Setting spin limitations:', limitations);
+      console.log('🔄 Setting spin counts:', counts);
+      
+      setSpinLimitations(limitations);
+      setSpinCounts(counts);
+    } else {
+      console.log('⚠️ No teamSettings found in userData, using defaults');
+      // Set default limitations if none exist
+      const defaultLimitations = {
+        lucky: { enabled: true, limit: 1 },
+        gamehelper: { enabled: true, limit: 1 },
+        challenge: { enabled: true, limit: 1 },
+        hightier: { enabled: true, limit: 1 },
+        lowtier: { enabled: true, limit: 1 },
+        random: { enabled: true, limit: 1 }
+      };
+      setSpinLimitations(defaultLimitations);
+      setSpinCounts({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
     }
-  }, [userData?.teamSettings]);
+  }, [userData]);
 
   // Function to check if a spin type is disabled
   const isSpinDisabled = (spinId) => {
@@ -150,16 +170,24 @@ const Spin = ({ socket, userData, setUserData }) => {
     const currentCount = spinCounts[spinCategory] || 0;
     
     console.log(`🔍 Checking ${spinId} (${spinCategory}):`, {
+      spinLimitations,
       limitation,
       currentCount,
       isDisabled: !limitation || !limitation.enabled || limitation.limit === 0 || currentCount >= limitation.limit
     });
     
     if (!limitation || !limitation.enabled || limitation.limit === 0) {
+      console.log(`❌ ${spinId} disabled:`, { 
+        noLimitation: !limitation, 
+        notEnabled: limitation && !limitation.enabled, 
+        limitZero: limitation && limitation.limit === 0 
+      });
       return true; // No limitation, disabled, or limit is 0
     }
     
-    return currentCount >= limitation.limit;
+    const reachedLimit = currentCount >= limitation.limit;
+    console.log(`✅ ${spinId} enabled:`, { currentCount, limit: limitation.limit, reachedLimit });
+    return reachedLimit;
   };
 
   // Function to get spin status message

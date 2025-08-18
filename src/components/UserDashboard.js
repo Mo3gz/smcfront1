@@ -52,16 +52,17 @@ const UserDashboard = ({ socket }) => {
     }
   }, [socket, user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch mining information
+  // Fetch user data including team settings
   useEffect(() => {
-    const fetchMiningInfo = async () => {
+    const fetchUserData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/mining/info`, {
+        // Fetch mining information
+        const miningResponse = await fetch(`${API_BASE_URL}/api/mining/info`, {
           credentials: 'include',
         });
         
-        if (response.ok) {
-          const miningData = await response.json();
+        if (miningResponse.ok) {
+          const miningData = await miningResponse.json();
           setUserData(prev => ({
             ...prev,
             miningRate: miningData.miningRate,
@@ -69,13 +70,39 @@ const UserDashboard = ({ socket }) => {
             lastMined: miningData.lastMined
           }));
         }
+
+        // Fetch user's team settings
+        const userResponse = await fetch(`${API_BASE_URL}/api/user`, {
+          credentials: 'include',
+        });
+        
+        if (userResponse.ok) {
+          const userProfile = await userResponse.json();
+          console.log('🔄 Fetched user profile:', userProfile);
+          setUserData(prev => ({
+            ...prev,
+            ...userProfile,
+            teamSettings: userProfile.teamSettings || {
+              scoreboardVisible: true,
+              spinLimitations: {
+                lucky: { enabled: true, limit: 1 },
+                gamehelper: { enabled: true, limit: 1 },
+                challenge: { enabled: true, limit: 1 },
+                hightier: { enabled: true, limit: 1 },
+                lowtier: { enabled: true, limit: 1 },
+                random: { enabled: true, limit: 1 }
+              },
+              spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
+            }
+          }));
+        }
       } catch (error) {
-        console.error('Error fetching mining info:', error);
+        console.error('Error fetching user data:', error);
       }
     };
 
     if (user.id) {
-      fetchMiningInfo();
+      fetchUserData();
     }
   }, [user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -200,26 +200,26 @@ const AdminDashboard = ({ socket }) => {
             <Settings className="nav-icon" />
             <span className="nav-text">Notifications</span>
           </div>
-                      <div 
-              className={`nav-item ${activeTab === 'scoreboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('scoreboard')}
-            >
-              <Trophy className="nav-icon" />
-              <span className="nav-text">Scoreboard</span>
-            </div>
+          <div 
+            className={`nav-item ${activeTab === 'scoreboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('scoreboard')}
+          >
+            <Trophy className="nav-icon" />
+            <span className="nav-text">Scoreboard</span>
+          </div>
             
-            <div 
-              className={`nav-item ${activeTab === 'teams' ? 'active' : ''}`}
-              onClick={() => setActiveTab('teams')}
-            >
-              <Users className="nav-icon" />
-              <span className="nav-text">Teams</span>
-            </div>
+          <div 
+            className={`nav-item ${activeTab === 'teams' ? 'active' : ''}`}
+            onClick={() => setActiveTab('teams')}
+          >
+            <Users className="nav-icon" />
+            <span className="nav-text">Teams</span>
+          </div>
             
-            <div 
-              className={`nav-item ${activeTab === 'countries' ? 'active' : ''}`}
-              onClick={() => setActiveTab('countries')}
-            >
+          <div 
+            className={`nav-item ${activeTab === 'countries' ? 'active' : ''}`}
+            onClick={() => setActiveTab('countries')}
+          >
             <Map className="nav-icon" />
             <span className="nav-text">Countries</span>
           </div>
@@ -757,7 +757,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h3>Team Management</h3>
+      <h3>Team Management</h3>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button 
             className="btn btn-warning"
@@ -879,8 +879,8 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                         }}
                       />
                       {team.settings?.spinLimitations?.lucky?.enabled && (
-                        <input
-                          type="number"
+            <input
+              type="number"
                           min="0"
                           value={team.settings?.spinLimitations?.lucky?.limit || 1}
                           onChange={(e) => {
@@ -899,11 +899,11 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                       <span style={{ fontSize: '11px', color: '#666' }}>
                         {team.settings?.spinCounts?.lucky || 0}
                       </span>
-                    </div>
+          </div>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <input
+            <input
                         type="checkbox"
                         checked={team.settings?.spinLimitations?.gamehelper?.enabled || false}
                         onChange={(e) => {
@@ -938,7 +938,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                       <span style={{ fontSize: '11px', color: '#666' }}>
                         {team.settings?.spinCounts?.gamehelper || 0}
                       </span>
-                    </div>
+          </div>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -1103,7 +1103,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                       onClick={() => handleUpdateTeamSettings(team.id, { resetSpinCounts: true })}
                     >
                       Reset
-                    </button>
+          </button>
                   </td>
                 </tr>
               ))}
@@ -1156,8 +1156,8 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                     {limitation.enabled && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <label>Limit:</label>
-                        <input
-                          type="number"
+            <input
+              type="number"
                           min="0"
                           value={limitation.limit}
                           onChange={(e) => setAllTeamsSettings(prev => ({
@@ -1168,8 +1168,8 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                             }
                           }))}
                           style={{ width: '80px', padding: '4px 8px' }}
-                        />
-                      </div>
+            />
+          </div>
                     )}
                   </div>
                 ))}
@@ -1177,7 +1177,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input
+            <input
                     type="checkbox"
                     checked={allTeamsSettings.resetSpinCounts}
                     onChange={(e) => setAllTeamsSettings(prev => ({
@@ -1187,16 +1187,16 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                   />
                   Reset Spin Counts for All Teams
                 </label>
-              </div>
+          </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setShowAllTeamsModal(false)}>
                 Cancel
-              </button>
+          </button>
               <button className="btn btn-primary" onClick={handleUpdateAllTeams}>
                 Apply to All Teams
               </button>
-            </div>
+      </div>
           </div>
         </div>
       )}
@@ -1438,7 +1438,7 @@ const CountryManagement = ({ teams }) => {
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h3>Country Management</h3>
+      <h3>Country Management</h3>
           <p style={{ color: '#666', margin: 0 }}>
             Manage countries, ownership, and user resources.
           </p>
