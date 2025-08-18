@@ -1170,6 +1170,9 @@ const CountryManagement = ({ teams }) => {
 const GameManagement = () => {
   const [gameSettings, setGameSettings] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newGameName, setNewGameName] = useState('');
+  const [addingGame, setAddingGame] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app';
 
@@ -1205,6 +1208,55 @@ const GameManagement = () => {
     }
   };
 
+  const handleAddGame = async () => {
+    if (!newGameName.trim()) {
+      toast.error('Please enter a game name');
+      return;
+    }
+
+    try {
+      setAddingGame(true);
+      const response = await axios.post(`${API_BASE_URL}/api/admin/games/add`, {
+        gameName: newGameName.trim()
+      }, { withCredentials: true });
+      
+      toast.success(response.data.message || 'Game added successfully');
+      setNewGameName('');
+      setShowAddModal(false);
+      fetchGameSettings(); // Refresh the settings
+    } catch (error) {
+      console.error('Error adding game:', error);
+      toast.error(error.response?.data?.error || 'Failed to add game');
+    } finally {
+      setAddingGame(false);
+    }
+  };
+
+  const handleDeleteGame = async (gameId) => {
+    const gameCount = Object.keys(gameSettings).length;
+    
+    if (gameCount <= 1) {
+      toast.error('Cannot delete the last game');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete Game ${gameId}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/api/admin/games/${gameId}`, { 
+        withCredentials: true 
+      });
+      
+      toast.success(response.data.message || 'Game deleted successfully');
+      fetchGameSettings(); // Refresh the settings
+    } catch (error) {
+      console.error('Error deleting game:', error);
+      toast.error(error.response?.data?.error || 'Failed to delete game');
+    }
+  };
+
   if (loading) {
     return (
       <div className="card">
@@ -1218,56 +1270,102 @@ const GameManagement = () => {
 
   return (
     <div className="card">
-      <h3>Game Management</h3>
-      <p style={{ color: '#666', marginBottom: '24px' }}>
-        Control which games are available for card selections. Disabled games will not appear in card usage options.
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h3>Game Management</h3>
+          <p style={{ color: '#666', margin: 0 }}>
+            Control which games are available for card selections. Disabled games will not appear in card usage options.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="btn"
+          style={{
+            backgroundColor: '#28a745',
+            color: 'white',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}
+        >
+          + Add Game
+        </button>
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-        {Object.entries(gameSettings).map(([gameId, enabled]) => (
-          <div 
-            key={gameId}
-            style={{
-              padding: '16px',
-              border: '2px solid',
-              borderColor: enabled ? '#28a745' : '#dc3545',
-              borderRadius: '8px',
-              backgroundColor: enabled ? '#f8fff9' : '#fff5f5',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}
-          >
-            <div>
-              <div style={{ 
-                fontWeight: '600', 
-                fontSize: '16px', 
-                color: enabled ? '#28a745' : '#dc3545',
-                marginBottom: '4px' 
-              }}>
-                Game {gameId}
-              </div>
-              <div style={{ 
-                fontSize: '14px', 
-                color: '#666' 
-              }}>
-                Status: {enabled ? 'Active' : 'Disabled'}
-              </div>
-            </div>
-            <button
-              onClick={() => handleToggleGame(gameId, enabled)}
-              className="btn"
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        {Object.entries(gameSettings)
+          .sort(([a], [b]) => parseInt(a) - parseInt(b))
+          .map(([gameId, enabled]) => (
+            <div 
+              key={gameId}
               style={{
-                backgroundColor: enabled ? '#dc3545' : '#28a745',
-                color: 'white',
-                padding: '8px 16px',
-                fontSize: '14px'
+                padding: '16px',
+                border: '2px solid',
+                borderColor: enabled ? '#28a745' : '#dc3545',
+                borderRadius: '8px',
+                backgroundColor: enabled ? '#f8fff9' : '#fff5f5',
+                position: 'relative'
               }}
             >
-              {enabled ? 'Disable' : 'Enable'}
-            </button>
-          </div>
-        ))}
+              {/* Delete button */}
+              <button
+                onClick={() => handleDeleteGame(gameId)}
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  background: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.8
+                }}
+                title="Delete Game"
+                onMouseEnter={(e) => e.target.style.opacity = '1'}
+                onMouseLeave={(e) => e.target.style.opacity = '0.8'}
+              >
+                ×
+              </button>
+
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ 
+                  fontWeight: '600', 
+                  fontSize: '16px', 
+                  color: enabled ? '#28a745' : '#dc3545',
+                  marginBottom: '4px' 
+                }}>
+                  Game {gameId}
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#666' 
+                }}>
+                  Status: {enabled ? 'Active' : 'Disabled'}
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleToggleGame(gameId, enabled)}
+                className="btn"
+                style={{
+                  backgroundColor: enabled ? '#dc3545' : '#28a745',
+                  color: 'white',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  width: '100%'
+                }}
+              >
+                {enabled ? 'Disable' : 'Enable'}
+              </button>
+            </div>
+          ))}
       </div>
 
       <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
@@ -1285,6 +1383,81 @@ const GameManagement = () => {
           <strong>Active Games:</strong> {Object.values(gameSettings).filter(Boolean).length} / {Object.keys(gameSettings).length}
         </p>
       </div>
+
+      {/* Add Game Modal */}
+      {showAddModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '24px',
+            borderRadius: '8px',
+            minWidth: '400px',
+            maxWidth: '500px'
+          }}>
+            <h4 style={{ margin: '0 0 16px 0' }}>Add New Game</h4>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                Game Name:
+              </label>
+              <input
+                type="text"
+                className="input"
+                value={newGameName}
+                onChange={(e) => setNewGameName(e.target.value)}
+                placeholder="Enter game name..."
+                maxLength={50}
+                style={{ width: '100%' }}
+                autoFocus
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleAddGame();
+                  }
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setNewGameName('');
+                }}
+                className="btn"
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  padding: '8px 16px'
+                }}
+                disabled={addingGame}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddGame}
+                className="btn"
+                style={{
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  padding: '8px 16px'
+                }}
+                disabled={addingGame || !newGameName.trim()}
+              >
+                {addingGame ? 'Adding...' : 'Add Game'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
