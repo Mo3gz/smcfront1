@@ -1,9 +1,15 @@
 import axios from 'axios';
 
-// Use localhost for development, production URL for production
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
+// Force localhost for local development, production URL for production
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:8080'
   : (process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app');
+
+// Debug logging
+console.log('🔧 API Configuration:');
+console.log('🔧 Hostname:', window.location.hostname);
+console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔧 API_BASE_URL:', API_BASE_URL);
 
 // Create axios instance with mobile-friendly configuration
 const api = axios.create({
@@ -20,6 +26,7 @@ api.interceptors.request.use(
   (config) => {
     // Add mobile-specific headers
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
+    console.log('🔧 Making request to:', config.url);
     return config;
   },
   (error) => {

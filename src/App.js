@@ -7,11 +7,17 @@ import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { API_BASE_URL } from './utils/api';
 import './App.css';
 
+// Use the same logic as API_BASE_URL for socket connection
+const SOCKET_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8080'
+  : (process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app');
+
+console.log('🔧 Socket URL:', SOCKET_URL);
+
 // Use the same URL logic as the API
-const socket = io(API_BASE_URL, {
+const socket = io(SOCKET_URL, {
   withCredentials: true,
   timeout: 20000, // 20 second timeout for mobile
   transports: ['websocket', 'polling'] // Fallback for mobile browsers
