@@ -1428,7 +1428,15 @@ const GameManagement = () => {
                 console.log('🔍 Testing routes endpoint...');
                 const response = await axios.get(`${API_BASE_URL}/api/debug/routes`);
                 console.log('🔍 Routes test:', response.data);
-                toast.success(`Found ${response.data.routes.length} API routes`);
+                
+                // Show detailed route information
+                const adminRoutes = response.data.routes.filter(route => route.path.includes('/admin'));
+                const gamesRoutes = response.data.routes.filter(route => route.path.includes('/games'));
+                
+                console.log('🔍 Admin routes:', adminRoutes);
+                console.log('🔍 Games routes:', gamesRoutes);
+                
+                toast.success(`Found ${response.data.routes.length} API routes (${adminRoutes.length} admin, ${gamesRoutes.length} games)`);
               } catch (error) {
                 console.error('🔍 Routes test failed:', error);
                 toast.error(`Routes test failed: ${error.message}`);
@@ -1467,6 +1475,29 @@ const GameManagement = () => {
             }}
           >
             Test Games
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🎮 Testing simple admin route...');
+                const response = await axios.get(`${API_BASE_URL}/api/admin/test-simple-route`);
+                console.log('🎮 Simple admin route response:', response.data);
+                toast.success('Simple admin route works!');
+              } catch (error) {
+                console.error('🎮 Simple admin route failed:', error);
+                toast.error(`Simple admin route failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#6f42c1',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Simple
           </button>
           <button
             onClick={() => setShowAddModal(true)}
