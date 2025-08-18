@@ -36,7 +36,7 @@ const MapView = ({ userData, setUserData, socket }) => {
     if (userData?.id) {
       fetchMiningInfo();
     }
-  }, [userData?.id, setUserData]);
+  }, [userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for real-time country updates
   useEffect(() => {
@@ -69,7 +69,7 @@ const MapView = ({ userData, setUserData, socket }) => {
         socket.off('user-update');
       };
     }
-  }, [socket, userData?.id, setUserData]);
+  }, [socket, userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchCountries = async () => {
     try {

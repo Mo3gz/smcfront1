@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { 
@@ -23,9 +23,6 @@ const UserDashboard = ({ socket }) => {
   const [userData, setUserData] = useState(user);
   const [socketConnected, setSocketConnected] = useState(false);
 
-  // Wrap setUserData in useCallback to prevent unnecessary re-renders
-  const setUserDataCallback = useCallback(setUserData, []);
-
   useEffect(() => {
     // Check socket connection status
     if (socket) {
@@ -44,7 +41,7 @@ const UserDashboard = ({ socket }) => {
       // Listen for real-time user updates
       socket.on('user-update', (updatedUser) => {
         if (updatedUser.id === user.id) {
-          setUserDataCallback(prev => ({ ...prev, ...updatedUser }));
+          setUserData(prev => ({ ...prev, ...updatedUser }));
         }
       });
 
@@ -54,7 +51,7 @@ const UserDashboard = ({ socket }) => {
         socket.off('user-update');
       };
     }
-  }, [socket, user.id]);
+  }, [socket, user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch mining information
   useEffect(() => {
@@ -66,7 +63,7 @@ const UserDashboard = ({ socket }) => {
         
         if (response.ok) {
           const miningData = await response.json();
-          setUserDataCallback(prev => ({
+          setUserData(prev => ({
             ...prev,
             miningRate: miningData.miningRate,
             totalMined: miningData.totalMined,
@@ -81,7 +78,7 @@ const UserDashboard = ({ socket }) => {
     if (user.id) {
       fetchMiningInfo();
     }
-  }, [user.id, setUserDataCallback]);
+  }, [user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogout = async () => {
     await logout();
@@ -111,7 +108,7 @@ const UserDashboard = ({ socket }) => {
       const data = await response.json();
       
       // Update user data with new values
-      setUserDataCallback(prev => ({ 
+      setUserData(prev => ({ 
         ...prev, 
         coins: data.newCoins, 
         lastMined: data.lastMined,
@@ -153,9 +150,9 @@ const UserDashboard = ({ socket }) => {
       case 'inventory':
         return <Inventory socket={socket} />;
       case 'spin':
-        return <Spin socket={socket} userData={userData} setUserData={setUserDataCallback} />;
+        return <Spin socket={socket} userData={userData} setUserData={setUserData} />;
       case 'map':
-        return <MapView userData={userData} setUserData={setUserDataCallback} socket={socket} />;
+        return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
       case 'program':
         return <ProgramOfTheDay />;
       default:
