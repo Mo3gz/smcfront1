@@ -905,6 +905,34 @@ const CountryManagement = ({ teams }) => {
   const [filterOwnership, setFilterOwnership] = useState('all'); // all, owned, unowned
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [newOwnerId, setNewOwnerId] = useState('');
+  
+  // New country form state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCountry, setNewCountry] = useState({
+    name: '',
+    cost: '',
+    score: '',
+    miningRate: ''
+  });
+  const [addingCountry, setAddingCountry] = useState(false);
+  
+  // Edit country form state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCountry, setEditingCountry] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    cost: '',
+    score: '',
+    miningRate: ''
+  });
+  const [updatingCountry, setUpdatingCountry] = useState(false);
+  
+  // User management state
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [userCoins, setUserCoins] = useState('');
+  const [userScore, setUserScore] = useState('');
+  const [userOperation, setUserOperation] = useState('add'); // add, subtract, set
 
   const fetchCountries = useCallback(async () => {
     try {
@@ -959,6 +987,124 @@ const CountryManagement = ({ teams }) => {
     }
   };
 
+  const handleAddCountry = async (e) => {
+    e.preventDefault();
+    if (!newCountry.name || !newCountry.cost || !newCountry.score || !newCountry.miningRate) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setAddingCountry(true);
+      const response = await axios.post(`${API_BASE_URL}/api/admin/countries/add`, newCountry, { withCredentials: true });
+      
+      toast.success(response.data.message);
+      setNewCountry({ name: '', cost: '', score: '', miningRate: '' });
+      setShowAddModal(false);
+      fetchCountries(); // Refresh the list
+    } catch (error) {
+      console.error('Error adding country:', error);
+      toast.error(error.response?.data?.error || 'Failed to add country');
+    } finally {
+      setAddingCountry(false);
+    }
+  };
+
+  const handleDeleteCountry = async (countryId, countryName) => {
+    if (!window.confirm(`Are you sure you want to delete "${countryName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/api/admin/countries/${countryId}`, { withCredentials: true });
+      
+      toast.success(response.data.message);
+      fetchCountries(); // Refresh the list
+    } catch (error) {
+      console.error('Error deleting country:', error);
+      toast.error(error.response?.data?.error || 'Failed to delete country');
+    }
+  };
+
+  const handleEditCountry = (country) => {
+    setEditingCountry(country);
+    setEditForm({
+      name: country.name,
+      cost: country.cost.toString(),
+      score: country.score.toString(),
+      miningRate: country.miningRate.toString()
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateCountry = async (e) => {
+    e.preventDefault();
+    if (!editingCountry) return;
+
+    try {
+      setUpdatingCountry(true);
+      const response = await axios.put(`${API_BASE_URL}/api/admin/countries/${editingCountry.id}`, editForm, { withCredentials: true });
+      
+      toast.success(response.data.message);
+      setShowEditModal(false);
+      setEditingCountry(null);
+      fetchCountries(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating country:', error);
+      toast.error(error.response?.data?.error || 'Failed to update country');
+    } finally {
+      setUpdatingCountry(false);
+    }
+  };
+
+  const handleUserManagement = (user) => {
+    setSelectedUser(user);
+    setUserCoins('');
+    setUserScore('');
+    setUserOperation('add');
+    setShowUserModal(true);
+  };
+
+  const handleUpdateUserCoins = async (e) => {
+    e.preventDefault();
+    if (!selectedUser || !userCoins) return;
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/coins`, {
+        coins: parseInt(userCoins),
+        operation: userOperation
+      }, { withCredentials: true });
+      
+      toast.success(response.data.message);
+      setUserCoins('');
+      setShowUserModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error updating user coins:', error);
+      toast.error(error.response?.data?.error || 'Failed to update user coins');
+    }
+  };
+
+  const handleUpdateUserScore = async (e) => {
+    e.preventDefault();
+    if (!selectedUser || !userScore) return;
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/score`, {
+        score: parseInt(userScore),
+        operation: userOperation
+      }, { withCredentials: true });
+      
+      toast.success(response.data.message);
+      setUserScore('');
+      setShowUserModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error updating user score:', error);
+      toast.error(error.response?.data?.error || 'Failed to update user score');
+    }
+  };
+
   // Filter countries based on search and ownership filter
   const filteredCountries = countries.filter(country => {
     const matchesSearch = country.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -983,10 +1129,42 @@ const CountryManagement = ({ teams }) => {
 
   return (
     <div className="card">
-      <h3>Country Management</h3>
-      <p style={{ color: '#666', marginBottom: '24px' }}>
-        Manage country ownership and visibility settings.
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h3>Country Management</h3>
+          <p style={{ color: '#666', margin: 0 }}>
+            Manage countries, ownership, and user resources.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="btn"
+            style={{
+              backgroundColor: '#28a745',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            + Add Country
+          </button>
+          <button
+            onClick={() => setShowUserModal(true)}
+            className="btn"
+            style={{
+              backgroundColor: '#007bff',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Manage Users
+          </button>
+        </div>
+      </div>
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
@@ -1063,6 +1241,30 @@ const CountryManagement = ({ teams }) => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button
+                    onClick={() => handleEditCountry(country)}
+                    className="btn"
+                    style={{
+                      backgroundColor: '#ffc107',
+                      color: 'black',
+                      padding: '6px 12px',
+                      fontSize: '12px'
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCountry(country.id, country.name)}
+                    className="btn"
+                    style={{
+                      backgroundColor: '#dc3545',
+                      color: 'white',
+                      padding: '6px 12px',
+                      fontSize: '12px'
+                    }}
+                  >
+                    Delete
+                  </button>
                   <button
                     onClick={() => handleToggleVisibility(country.id, country.isVisible)}
                     className="btn btn-secondary"
@@ -1151,6 +1353,327 @@ const CountryManagement = ({ teams }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Country Modal */}
+      {showAddModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div className="card" style={{ maxWidth: '500px', width: '100%' }}>
+            <h3 style={{ marginBottom: '16px' }}>Add New Country</h3>
+            
+            <form onSubmit={handleAddCountry}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Country Name
+                </label>
+                <input
+                  type="text"
+                  className="input"
+                  value={newCountry.name}
+                  onChange={(e) => setNewCountry({...newCountry, name: e.target.value})}
+                  placeholder="Enter country name..."
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Cost (coins)
+                </label>
+                <input
+                  type="number"
+                  className="input"
+                  value={newCountry.cost}
+                  onChange={(e) => setNewCountry({...newCountry, cost: e.target.value})}
+                  placeholder="Enter cost..."
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Score (points)
+                </label>
+                <input
+                  type="number"
+                  className="input"
+                  value={newCountry.score}
+                  onChange={(e) => setNewCountry({...newCountry, score: e.target.value})}
+                  placeholder="Enter score..."
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Mining Rate (per hour)
+                </label>
+                <input
+                  type="number"
+                  className="input"
+                  value={newCountry.miningRate}
+                  onChange={(e) => setNewCountry({...newCountry, miningRate: e.target.value})}
+                  placeholder="Enter mining rate..."
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn" style={{ flex: 1 }} disabled={addingCountry}>
+                  {addingCountry ? 'Adding...' : 'Add Country'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setNewCountry({ name: '', cost: '', score: '', miningRate: '' });
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Country Modal */}
+      {showEditModal && editingCountry && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div className="card" style={{ maxWidth: '500px', width: '100%' }}>
+            <h3 style={{ marginBottom: '16px' }}>Edit Country: {editingCountry.name}</h3>
+            
+            <form onSubmit={handleUpdateCountry}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Country Name
+                </label>
+                <input
+                  type="text"
+                  className="input"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                  placeholder="Enter country name..."
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Cost (coins)
+                </label>
+                <input
+                  type="number"
+                  className="input"
+                  value={editForm.cost}
+                  onChange={(e) => setEditForm({...editForm, cost: e.target.value})}
+                  placeholder="Enter cost..."
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Score (points)
+                </label>
+                <input
+                  type="number"
+                  className="input"
+                  value={editForm.score}
+                  onChange={(e) => setEditForm({...editForm, score: e.target.value})}
+                  placeholder="Enter score..."
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+                  Mining Rate (per hour)
+                </label>
+                <input
+                  type="number"
+                  className="input"
+                  value={editForm.miningRate}
+                  onChange={(e) => setEditForm({...editForm, miningRate: e.target.value})}
+                  placeholder="Enter mining rate..."
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn" style={{ flex: 1 }} disabled={updatingCountry}>
+                  {updatingCountry ? 'Updating...' : 'Update Country'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingCountry(null);
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Management Modal */}
+      {showUserModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div className="card" style={{ maxWidth: '600px', width: '100%' }}>
+            <h3 style={{ marginBottom: '16px' }}>User Management</h3>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ marginBottom: '12px' }}>Select User</h4>
+              <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '4px' }}>
+                {teams.map(team => (
+                  <div
+                    key={team.id}
+                    onClick={() => setSelectedUser(team)}
+                    style={{
+                      padding: '12px',
+                      borderBottom: '1px solid #eee',
+                      cursor: 'pointer',
+                      backgroundColor: selectedUser?.id === team.id ? '#e3f2fd' : 'white'
+                    }}
+                  >
+                    <div style={{ fontWeight: '600' }}>{team.teamName}</div>
+                    <div style={{ fontSize: '14px', color: '#666' }}>
+                      Coins: {team.coins} | Score: {team.score}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selectedUser && (
+              <div>
+                <h4 style={{ marginBottom: '16px' }}>Manage: {selectedUser.teamName}</h4>
+                
+                {/* Coins Management */}
+                <form onSubmit={handleUpdateUserCoins} style={{ marginBottom: '24px' }}>
+                  <h5 style={{ marginBottom: '12px' }}>Update Coins</h5>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                    <select
+                      className="input"
+                      value={userOperation}
+                      onChange={(e) => setUserOperation(e.target.value)}
+                      style={{ flex: 1 }}
+                    >
+                      <option value="add">Add</option>
+                      <option value="subtract">Subtract</option>
+                      <option value="set">Set to</option>
+                    </select>
+                    <input
+                      type="number"
+                      className="input"
+                      value={userCoins}
+                      onChange={(e) => setUserCoins(e.target.value)}
+                      placeholder="Amount"
+                      min="0"
+                      style={{ flex: 1 }}
+                      required
+                    />
+                    <button type="submit" className="btn" style={{ flex: 1 }}>
+                      Update Coins
+                    </button>
+                  </div>
+                </form>
+
+                {/* Score Management */}
+                <form onSubmit={handleUpdateUserScore}>
+                  <h5 style={{ marginBottom: '12px' }}>Update Score</h5>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <select
+                      className="input"
+                      value={userOperation}
+                      onChange={(e) => setUserOperation(e.target.value)}
+                      style={{ flex: 1 }}
+                    >
+                      <option value="add">Add</option>
+                      <option value="subtract">Subtract</option>
+                      <option value="set">Set to</option>
+                    </select>
+                    <input
+                      type="number"
+                      className="input"
+                      value={userScore}
+                      onChange={(e) => setUserScore(e.target.value)}
+                      placeholder="Amount"
+                      min="0"
+                      style={{ flex: 1 }}
+                      required
+                    />
+                    <button type="submit" className="btn" style={{ flex: 1 }}>
+                      Update Score
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div style={{ marginTop: '24px', textAlign: 'center' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowUserModal(false);
+                  setSelectedUser(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1456,41 +1979,7 @@ const GameManagement = () => {
           </button>
         </div>
         
-        <details style={{ marginTop: '16px', textAlign: 'left' }}>
-          <summary style={{ cursor: 'pointer', color: '#007bff', fontSize: '14px' }}>
-            Debug: Current Game Settings
-          </summary>
-          <pre style={{ 
-            backgroundColor: '#f8f9fa', 
-            padding: '12px', 
-            borderRadius: '4px', 
-            fontSize: '12px', 
-            overflow: 'auto',
-            marginTop: '8px'
-          }}>
-            {JSON.stringify(gameSettings, null, 2)}
-          </pre>
-        </details>
-        
-        <details style={{ marginTop: '8px', textAlign: 'left' }}>
-          <summary style={{ cursor: 'pointer', color: '#dc3545', fontSize: '14px' }}>
-            Debug: API Configuration
-          </summary>
-          <div style={{ 
-            backgroundColor: '#fff5f5', 
-            padding: '12px', 
-            borderRadius: '4px', 
-            fontSize: '12px', 
-            marginTop: '8px'
-          }}>
-            <p><strong>API Base URL:</strong> {API_BASE_URL}</p>
-            <p><strong>Current Hostname:</strong> {window.location.hostname}</p>
-            <p><strong>Environment:</strong> {process.env.NODE_ENV}</p>
-            <p><strong>With Credentials:</strong> true</p>
-            <p><strong>User Agent:</strong> {navigator.userAgent}</p>
-            <p><strong>Platform:</strong> {navigator.platform}</p>
-          </div>
-        </details>
+
       </div>
 
       {/* Add Game Modal */}
