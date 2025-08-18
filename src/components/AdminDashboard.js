@@ -2010,10 +2010,20 @@ const GameManagement = () => {
       if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
         setGameSettings(response.data);
       } else {
-        // Fallback to default game settings
+        // Fallback to default game settings with new format
         const fallbackSettings = {
-          1: true, 2: true, 3: true, 4: true, 5: true, 6: true,
-          7: true, 8: true, 9: true, 10: true, 11: true, 12: true
+          1: { enabled: true, name: 'Game 1' },
+          2: { enabled: true, name: 'Game 2' },
+          3: { enabled: true, name: 'Game 3' },
+          4: { enabled: true, name: 'Game 4' },
+          5: { enabled: true, name: 'Game 5' },
+          6: { enabled: true, name: 'Game 6' },
+          7: { enabled: true, name: 'Game 7' },
+          8: { enabled: true, name: 'Game 8' },
+          9: { enabled: true, name: 'Game 9' },
+          10: { enabled: true, name: 'Game 10' },
+          11: { enabled: true, name: 'Game 11' },
+          12: { enabled: true, name: 'Game 12' }
         };
         setGameSettings(fallbackSettings);
         toast.warning('Using fallback game settings. Please refresh the page.');
@@ -2021,10 +2031,20 @@ const GameManagement = () => {
     } catch (error) {
       console.error('Error fetching game settings:', error);
       
-      // Set fallback settings on error
+      // Set fallback settings on error with new format
       const fallbackSettings = {
-        1: true, 2: true, 3: true, 4: true, 5: true, 6: true,
-        7: true, 8: true, 9: true, 10: true, 11: true, 12: true
+        1: { enabled: true, name: 'Game 1' },
+        2: { enabled: true, name: 'Game 2' },
+        3: { enabled: true, name: 'Game 3' },
+        4: { enabled: true, name: 'Game 4' },
+        5: { enabled: true, name: 'Game 5' },
+        6: { enabled: true, name: 'Game 6' },
+        7: { enabled: true, name: 'Game 7' },
+        8: { enabled: true, name: 'Game 8' },
+        9: { enabled: true, name: 'Game 9' },
+        10: { enabled: true, name: 'Game 10' },
+        11: { enabled: true, name: 'Game 11' },
+        12: { enabled: true, name: 'Game 12' }
       };
       setGameSettings(fallbackSettings);
       
@@ -2191,77 +2211,83 @@ const GameManagement = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
         {Object.entries(gameSettings)
           .sort(([a], [b]) => parseInt(a) - parseInt(b))
-          .map(([gameId, enabled]) => (
-            <div 
-              key={gameId}
-              style={{
-                padding: '16px',
-                border: '2px solid',
-                borderColor: enabled ? '#28a745' : '#dc3545',
-                borderRadius: '8px',
-                backgroundColor: enabled ? '#f8fff9' : '#fff5f5',
-                position: 'relative'
-              }}
-            >
-              {/* Delete button */}
-              <button
-                onClick={() => handleDeleteGame(gameId)}
+          .map(([gameId, gameData]) => {
+            // Handle both old boolean format and new object format
+            const isEnabled = typeof gameData === 'object' ? gameData.enabled : gameData;
+            const gameName = typeof gameData === 'object' ? gameData.name : `Game ${gameId}`;
+            
+            return (
+              <div 
+                key={gameId}
                 style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  background: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: 0.8
+                  padding: '16px',
+                  border: '2px solid',
+                  borderColor: isEnabled ? '#28a745' : '#dc3545',
+                  borderRadius: '8px',
+                  backgroundColor: isEnabled ? '#f8fff9' : '#fff5f5',
+                  position: 'relative'
                 }}
-                title="Delete Game"
-                onMouseEnter={(e) => e.target.style.opacity = '1'}
-                onMouseLeave={(e) => e.target.style.opacity = '0.8'}
               >
-                ×
-              </button>
+                {/* Delete button */}
+                <button
+                  onClick={() => handleDeleteGame(gameId)}
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    background: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0.8
+                  }}
+                  title="Delete Game"
+                  onMouseEnter={(e) => e.target.style.opacity = '1'}
+                  onMouseLeave={(e) => e.target.style.opacity = '0.8'}
+                >
+                  ×
+                </button>
 
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ 
-                  fontWeight: '600', 
-                  fontSize: '16px', 
-                  color: enabled ? '#28a745' : '#dc3545',
-                  marginBottom: '4px' 
-                }}>
-                  Game {gameId}
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ 
+                    fontWeight: '600', 
+                    fontSize: '16px', 
+                    color: isEnabled ? '#28a745' : '#dc3545',
+                    marginBottom: '4px' 
+                  }}>
+                    {gameName}
+                  </div>
+                  <div style={{ 
+                    fontSize: '14px', 
+                    color: '#666' 
+                  }}>
+                    Status: {isEnabled ? 'Active' : 'Disabled'}
+                  </div>
                 </div>
-                <div style={{ 
-                  fontSize: '14px', 
-                  color: '#666' 
-                }}>
-                  Status: {enabled ? 'Active' : 'Disabled'}
-                </div>
+
+                <button
+                  onClick={() => handleToggleGame(gameId, isEnabled)}
+                  className="btn"
+                  style={{
+                    backgroundColor: isEnabled ? '#dc3545' : '#28a745',
+                    color: 'white',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    width: '100%'
+                  }}
+                >
+                  {isEnabled ? 'Disable' : 'Enable'}
+                </button>
               </div>
-
-              <button
-                onClick={() => handleToggleGame(gameId, enabled)}
-                className="btn"
-                style={{
-                  backgroundColor: enabled ? '#dc3545' : '#28a745',
-                  color: 'white',
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  width: '100%'
-                }}
-              >
-                {enabled ? 'Disable' : 'Enable'}
-              </button>
-            </div>
-          ))}
+            );
+          })}
       </div>
 
       <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
@@ -2276,7 +2302,7 @@ const GameManagement = () => {
 
       <div style={{ marginTop: '16px', textAlign: 'center' }}>
         <p style={{ fontSize: '14px', color: '#666' }}>
-          <strong>Active Games:</strong> {Object.values(gameSettings).filter(Boolean).length} / {Object.keys(gameSettings).length}
+          <strong>Active Games:</strong> {Object.values(gameSettings).filter(game => typeof game === 'object' ? game.enabled : game).length} / {Object.keys(gameSettings).length}
         </p>
         
         <div style={{ marginTop: '16px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
