@@ -101,6 +101,9 @@ const Spin = ({ socket, userData, setUserData }) => {
       setTimeout(() => {
         const { card, remainingCoins, actionType, additionalData } = response.data;
         
+        // Always set spinning to false first
+        setSpinning(false);
+        
         // Update user coins
         setUserData(prev => ({
           ...prev,
@@ -196,10 +199,9 @@ const Spin = ({ socket, userData, setUserData }) => {
         setResult(card);
         setShowConfetti(true);
         setPromoCode('');
-        setSpinning(false);
         setTimeout(() => setShowConfetti(false), 3000);
 
-      }, 3000);
+      }, 2000);
 
     } catch (error) {
       toast.error(error.response?.data?.error || 'Spin failed!');
