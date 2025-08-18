@@ -742,7 +742,6 @@ const TeamManagement = ({ teams, fetchTeams }) => {
 
   const getSpinTypeLabel = (type) => {
     switch (type) {
-      case 'regular': return 'Regular Spins';
       case 'lucky': return 'Lucky Spins';
       case 'gamehelper': return 'Game Helper Spins';
       case 'challenge': return 'Challenge Spins';
@@ -837,7 +836,6 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Score</th>
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Coins</th>
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Scoreboard</th>
-                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Regular</th>
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Lucky</th>
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Game Helper</th>
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Challenge</th>
@@ -866,45 +864,6 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                       <input
                         type="checkbox"
-                        checked={team.settings?.spinLimitations?.regular?.enabled || false}
-                        onChange={(e) => {
-                          const updatedLimitations = {
-                            ...team.settings?.spinLimitations,
-                            regular: { 
-                              ...team.settings?.spinLimitations?.regular,
-                              enabled: e.target.checked 
-                            }
-                          };
-                          handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
-                        }}
-                      />
-                      {team.settings?.spinLimitations?.regular?.enabled && (
-                        <input
-                          type="number"
-                          min="1"
-                          value={team.settings?.spinLimitations?.regular?.limit || 1}
-                          onChange={(e) => {
-                            const updatedLimitations = {
-                              ...team.settings?.spinLimitations,
-                              regular: { 
-                                ...team.settings?.spinLimitations?.regular,
-                                limit: parseInt(e.target.value) || 1 
-                              }
-                            };
-                            handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
-                          }}
-                          style={{ width: '50px', padding: '2px 4px', fontSize: '12px' }}
-                        />
-                      )}
-                      <span style={{ fontSize: '11px', color: '#666' }}>
-                        {team.settings?.spinCounts?.regular || 0}
-                      </span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <input
-                        type="checkbox"
                         checked={team.settings?.spinLimitations?.lucky?.enabled || false}
                         onChange={(e) => {
                           const updatedLimitations = {
@@ -920,7 +879,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                       {team.settings?.spinLimitations?.lucky?.enabled && (
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           value={team.settings?.spinLimitations?.lucky?.limit || 1}
                           onChange={(e) => {
                             const updatedLimitations = {
@@ -959,7 +918,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                       {team.settings?.spinLimitations?.gamehelper?.enabled && (
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           value={team.settings?.spinLimitations?.gamehelper?.limit || 1}
                           onChange={(e) => {
                             const updatedLimitations = {
@@ -998,7 +957,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                       {team.settings?.spinLimitations?.challenge?.enabled && (
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           value={team.settings?.spinLimitations?.challenge?.limit || 1}
                           onChange={(e) => {
                             const updatedLimitations = {
@@ -1037,7 +996,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                       {team.settings?.spinLimitations?.hightier?.enabled && (
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           value={team.settings?.spinLimitations?.hightier?.limit || 1}
                           onChange={(e) => {
                             const updatedLimitations = {
@@ -1115,7 +1074,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                       {team.settings?.spinLimitations?.random?.enabled && (
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           value={team.settings?.spinLimitations?.random?.limit || 1}
                           onChange={(e) => {
                             const updatedLimitations = {
@@ -1197,7 +1156,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                         <label>Limit:</label>
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           value={limitation.limit}
                           onChange={(e) => setAllTeamsSettings(prev => ({
                             ...prev,
