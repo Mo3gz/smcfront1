@@ -1172,6 +1172,18 @@ const GameManagement = () => {
     try {
       setLoading(true);
       console.log('🎮 Fetching game settings from:', `${API_BASE_URL}/api/admin/games`);
+      console.log('🎮 API_BASE_URL:', API_BASE_URL);
+      
+      // First, test admin access
+      try {
+        const adminTest = await axios.get(`${API_BASE_URL}/api/admin/check`, { withCredentials: true });
+        console.log('🎮 Admin test successful:', adminTest.data);
+      } catch (adminError) {
+        console.error('🎮 Admin test failed:', adminError.response?.data);
+        toast.error(`Admin access failed: ${adminError.response?.data?.error || adminError.message}`);
+        throw adminError;
+      }
+      
       const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
       console.log('🎮 Game settings response:', response.data);
       
@@ -1192,7 +1204,7 @@ const GameManagement = () => {
       console.error('Error fetching game settings:', error);
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
-      toast.error(`Failed to fetch game settings: ${error.response?.data?.error || error.message}`);
+      console.error('Error message:', error.message);
       
       // Set fallback settings on error
       const fallbackSettings = {
@@ -1200,6 +1212,14 @@ const GameManagement = () => {
         7: true, 8: true, 9: true, 10: true, 11: true, 12: true
       };
       setGameSettings(fallbackSettings);
+      
+      if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please log in again.');
+      } else if (error.response?.status === 403) {
+        toast.error('Admin access required. You do not have permission to access this feature.');
+      } else {
+        toast.error(`Failed to fetch game settings: ${error.response?.data?.error || error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -1325,6 +1345,52 @@ const GameManagement = () => {
             }}
           >
             Test Admin
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🔧 Testing backend connection...');
+                const response = await axios.get(`${API_BASE_URL}/api/health`, { withCredentials: true });
+                console.log('🔧 Backend health check:', response.data);
+                toast.success('Backend is running!');
+              } catch (error) {
+                console.error('🔧 Backend health check failed:', error);
+                toast.error(`Backend connection failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#6c757d',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Backend
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🔧 Testing public admin endpoint...');
+                const response = await axios.get(`${API_BASE_URL}/api/admin/test-public`);
+                console.log('🔧 Public admin test:', response.data);
+                toast.success('Public admin endpoint works!');
+              } catch (error) {
+                console.error('🔧 Public admin test failed:', error);
+                toast.error(`Public admin test failed: ${error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#28a745',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Public
           </button>
           <button
             onClick={() => setShowAddModal(true)}
@@ -1459,6 +1525,22 @@ const GameManagement = () => {
         <p style={{ fontSize: '14px', color: '#666' }}>
           <strong>Active Games:</strong> {Object.values(gameSettings).filter(Boolean).length} / {Object.keys(gameSettings).length}
         </p>
+        
+        <div style={{ marginTop: '16px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          <button
+            onClick={fetchGameSettings}
+            className="btn"
+            style={{
+              backgroundColor: '#17a2b8',
+              color: 'white',
+              padding: '8px 16px',
+              fontSize: '14px'
+            }}
+          >
+            🔄 Refresh Settings
+          </button>
+        </div>
+        
         <details style={{ marginTop: '16px', textAlign: 'left' }}>
           <summary style={{ cursor: 'pointer', color: '#007bff', fontSize: '14px' }}>
             Debug: Current Game Settings
@@ -1473,6 +1555,24 @@ const GameManagement = () => {
           }}>
             {JSON.stringify(gameSettings, null, 2)}
           </pre>
+        </details>
+        
+        <details style={{ marginTop: '8px', textAlign: 'left' }}>
+          <summary style={{ cursor: 'pointer', color: '#dc3545', fontSize: '14px' }}>
+            Debug: API Configuration
+          </summary>
+          <div style={{ 
+            backgroundColor: '#fff5f5', 
+            padding: '12px', 
+            borderRadius: '4px', 
+            fontSize: '12px', 
+            marginTop: '8px'
+          }}>
+            <p><strong>API Base URL:</strong> {API_BASE_URL}</p>
+            <p><strong>Current Hostname:</strong> {window.location.hostname}</p>
+            <p><strong>Environment:</strong> {process.env.NODE_ENV}</p>
+            <p><strong>With Credentials:</strong> true</p>
+          </div>
         </details>
       </div>
 
