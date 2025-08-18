@@ -46,8 +46,20 @@ const UserDashboard = ({ socket }) => {
 
       socket.on('user-update', handleUserUpdate);
 
+      // Listen for team settings updates
+      socket.on('user-team-settings-updated', (data) => {
+        if (data.userId === user.id) {
+          console.log('🔄 Team settings updated via socket:', data.teamSettings);
+          setUserData(prev => ({
+            ...prev,
+            teamSettings: data.teamSettings
+          }));
+        }
+      });
+
       return () => {
         socket.off('user-update');
+        socket.off('user-team-settings-updated');
       };
     }
   }, [socket, user.id]); // eslint-disable-line react-hooks/exhaustive-deps

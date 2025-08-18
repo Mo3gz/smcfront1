@@ -16,6 +16,7 @@ const Inventory = ({ socket }) => {
   const [description, setDescription] = useState('');
   const [teams, setTeams] = useState([]);
   const [availableGames, setAvailableGames] = useState([]);
+  const [gameSettings, setGameSettings] = useState({});
 
   const fetchInventory = useCallback(async () => {
     try {
@@ -75,13 +76,22 @@ const Inventory = ({ socket }) => {
       });
 
       socket.on('game-settings-update', (newGameSettings) => {
-        console.log('Game settings updated via socket');
-        fetchAvailableGames(); // Refresh available games when admin toggles
+        console.log('Game settings updated via socket:', newGameSettings);
         
-        // Show notification about game changes
+        // Update available games directly from socket data
         if (newGameSettings && typeof newGameSettings === 'object') {
-          const enabledGames = Object.keys(newGameSettings).filter(gameId => newGameSettings[gameId]);
-          toast.info(`Game settings updated. ${enabledGames.length} games now available.`, {
+          // Store the full game settings
+          setGameSettings(newGameSettings);
+          
+          const enabledGameIds = Object.keys(newGameSettings).filter(gameId => {
+            const gameData = newGameSettings[gameId];
+            return typeof gameData === 'object' ? gameData.enabled : gameData;
+          });
+          console.log('🎮 Updated available games from socket:', enabledGameIds);
+          setAvailableGames(enabledGameIds);
+          
+          // Show notification about game changes
+          toast.info(`Game settings updated. ${enabledGameIds.length} games now available.`, {
             duration: 3000,
             position: 'top-center',
             style: {
@@ -91,6 +101,8 @@ const Inventory = ({ socket }) => {
           });
         } else {
           console.warn('Invalid game settings data received:', newGameSettings);
+          // Fallback to API call if socket data is invalid
+          fetchAvailableGames();
         }
       });
 
@@ -312,11 +324,15 @@ const Inventory = ({ socket }) => {
                       }
                       return true; // All games for other cards
                     })
-                    .map((gameId) => (
-                      <option key={gameId} value={gameId}>
-                        Game {gameId}
-                      </option>
-                    ))}
+                    .map((gameId) => {
+                      const gameData = gameSettings[gameId];
+                      const gameName = gameData && typeof gameData === 'object' ? gameData.name : `Game ${gameId}`;
+                      return (
+                        <option key={gameId} value={gameId}>
+                          {gameName}
+                        </option>
+                      );
+                    })}
                 </select>
                 <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
                   Available games: {availableGames.length} | Card requires game: {requiresGameSelection(selectedCard.name) ? 'Yes' : 'No'}

@@ -93,9 +93,24 @@ const Scoreboard = ({ socket }) => {
         // The scoreboard-update event will handle the display
       });
 
+      // Listen for team settings updates (scoreboard visibility changes)
+      socket.on('all-teams-settings-updated', (data) => {
+        console.log('All teams settings updated via socket:', data);
+        // Refresh scoreboard to reflect visibility changes
+        fetchScoreboard();
+      });
+
+      socket.on('user-team-settings-updated', (data) => {
+        console.log('User team settings updated via socket:', data);
+        // Refresh scoreboard to reflect visibility changes
+        fetchScoreboard();
+      });
+
       return () => {
         socket.off('scoreboard-update');
         socket.off('user-update');
+        socket.off('all-teams-settings-updated');
+        socket.off('user-team-settings-updated');
       };
     }
   }, [socket, previousScoreboard, scoreboard]);
@@ -202,7 +217,12 @@ const Scoreboard = ({ socket }) => {
         {scoreboard.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <Trophy size={48} color="#667eea" />
-            <p style={{ marginTop: '16px', color: '#666' }}>No teams yet</p>
+            <p style={{ marginTop: '16px', color: '#666' }}>
+              {loading ? 'Loading teams...' : 'All teams are currently hidden from the scoreboard'}
+            </p>
+            <p style={{ color: '#999', fontSize: '14px', marginTop: '8px' }}>
+              Teams will appear here when they become visible
+            </p>
           </div>
         ) : (
           scoreboard.map((team, index) => (
