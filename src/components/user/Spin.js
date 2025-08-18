@@ -8,10 +8,10 @@ import Confetti from 'react-confetti';
 // Move these above all hooks and state
 const spinTypes = [
   { id: 'lucky', name: '🎡 Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
-  { id: 'gamehelper', name: '🛠 Game Helper', cost: 75, icon: Zap, color: '#ff6b6b' },
-  { id: 'challenge', name: '⚔ Challenge', cost: 100, icon: Heart, color: '#4ecdc4' },
-  { id: 'hightier', name: '🔥 High Tier', cost: 150, icon: Gift, color: '#ff9ff3' },
-  { id: 'lowtier', name: '🥉 Low Tier', cost: 25, icon: RotateCcw, color: '#74b9ff' },
+  { id: 'gamehelper', name: '🛠 Game Helper', cost: 50, icon: Zap, color: '#ff6b6b' },
+  { id: 'challenge', name: '⚔ Challenge', cost: 50, icon: Heart, color: '#4ecdc4' },
+  { id: 'hightier', name: '🔥 High Tier', cost: 50, icon: Gift, color: '#ff9ff3' },
+  { id: 'lowtier', name: '🥉 Low Tier', cost: 50, icon: RotateCcw, color: '#74b9ff' },
   { id: 'random', name: '🎲 Random', cost: 30, icon: RotateCcw, color: '#667eea' }
 ];
 
@@ -33,7 +33,7 @@ const Spin = ({ socket, userData, setUserData }) => {
   
   // Spin limitation states
   const [spinLimitations, setSpinLimitations] = useState({});
-     const [spinCounts, setSpinCounts] = useState({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+  const [spinCounts, setSpinCounts] = useState({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
 
   useEffect(() => {
     // Update final cost when spinType or discount changes
@@ -76,66 +76,66 @@ const Spin = ({ socket, userData, setUserData }) => {
         }
       });
 
-             socket.on('spin-counts-reset', (data) => {
-         if (data.userId === userData?.id) {
-           toast.success(data.message);
-           // Refresh user data to get updated spin counts
-                      setUserData(prev => ({
-              ...prev,
-              teamSettings: {
-                ...prev.teamSettings,
-                spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
-              }
-            }));
-         }
-       });
+      socket.on('spin-counts-reset', (data) => {
+        if (data.userId === userData?.id) {
+          toast.success(data.message);
+          // Refresh user data to get updated spin counts
+          setUserData(prev => ({
+            ...prev,
+            teamSettings: {
+              ...prev.teamSettings,
+              spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
+            }
+          }));
+        }
+      });
 
-       // Listen for team settings updates from admin
-       socket.on('user-team-settings-updated', (data) => {
-         if (data.userId === userData?.id) {
-           console.log('🔄 Team settings updated via socket:', data.teamSettings);
-           // Update user data with new team settings
-           setUserData(prev => ({
-             ...prev,
-             teamSettings: data.teamSettings
-           }));
-           
-           // Show notification about the update
-           const enabledSpins = Object.entries(data.teamSettings.spinLimitations || {})
-             .filter(([type, lim]) => lim.enabled && lim.limit > 0)
-             .map(([type]) => type);
-           
-           if (enabledSpins.length > 0) {
-             toast.success(`Spin settings updated! Enabled: ${enabledSpins.join(', ')}`, {
-               duration: 3000,
-               position: 'top-center'
-             });
-           } else {
-             toast.info('All spin limitations have been disabled', {
-               duration: 3000,
-               position: 'top-center'
-             });
-           }
-         }
-       });
+      // Listen for team settings updates from admin
+      socket.on('user-team-settings-updated', (data) => {
+        if (data.userId === userData?.id) {
+          console.log('🔄 Team settings updated via socket:', data.teamSettings);
+          // Update user data with new team settings
+          setUserData(prev => ({
+            ...prev,
+            teamSettings: data.teamSettings
+          }));
+          
+          // Show notification about the update
+          const enabledSpins = Object.entries(data.teamSettings.spinLimitations || {})
+            .filter(([type, lim]) => lim.enabled && lim.limit > 0)
+            .map(([type]) => type);
+          
+          if (enabledSpins.length > 0) {
+            toast.success(`Spin settings updated! Enabled: ${enabledSpins.join(', ')}`, {
+              duration: 3000,
+              position: 'top-center'
+            });
+          } else {
+            toast.info('All spin limitations have been disabled', {
+              duration: 3000,
+              position: 'top-center'
+            });
+          }
+        }
+      });
 
-             return () => {
-         socket.off('user-update');
-         socket.off('spin-counts-reset');
-         socket.off('user-team-settings-updated');
-       };
+      return () => {
+        socket.off('user-update');
+        socket.off('spin-counts-reset');
+        socket.off('user-team-settings-updated');
+      };
     }
   }, [socket, userData?.id, setUserData]);
 
-    // Update spin limitations and counts when userData changes
+  // Update spin limitations and counts when userData changes
   useEffect(() => {
-         if (userData?.teamSettings) {
-       setSpinLimitations(userData.teamSettings.spinLimitations || {});
-       setSpinCounts(userData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
-       console.log('🔄 Spin limitations updated:', userData.teamSettings.spinLimitations);
-       console.log('🔄 Spin counts updated:', userData.teamSettings.spinCounts);
-     }
-   }, [userData?.teamSettings]);
+    if (userData?.teamSettings) {
+      setSpinLimitations(userData.teamSettings.spinLimitations || {});
+      setSpinCounts(userData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+      console.log('🔄 Spin limitations updated:', userData.teamSettings.spinLimitations);
+      console.log('🔄 Spin counts updated:', userData.teamSettings.spinCounts);
+    }
+  }, [userData?.teamSettings]);
 
   // Function to check if a spin type is disabled
   const isSpinDisabled = (spinId) => {
@@ -507,14 +507,14 @@ const Spin = ({ socket, userData, setUserData }) => {
             border: '1px solid #dee2e6'
           }}>
             <h4 style={{ marginBottom: '12px', color: '#495057', fontSize: '16px' }}>🎯 Spin Status</h4>
-                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                              {['lucky', 'gamehelper', 'challenge', 'hightier', 'lowtier', 'random'].map(category => {
-                 const limitation = spinLimitations[category];
-                 const count = spinCounts[category] || 0;
-                 const isDisabled = limitation?.enabled && limitation.limit > 0 && count >= limitation.limit;
-                 
-                 if (!limitation?.enabled || limitation.limit === 0) return null;
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              {['lucky', 'gamehelper', 'challenge', 'hightier', 'lowtier', 'random'].map(category => {
+                const limitation = spinLimitations[category];
+                const count = spinCounts[category] || 0;
+                const isDisabled = limitation?.enabled && limitation.limit > 0 && count >= limitation.limit;
                 
+                if (!limitation?.enabled || limitation.limit === 0) return null;
+               
                 return (
                   <div key={category} style={{
                     padding: '8px 12px',
