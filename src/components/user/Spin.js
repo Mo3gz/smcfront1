@@ -78,15 +78,24 @@ const Spin = ({ socket, userData, setUserData }) => {
 
       socket.on('spin-counts-reset', (data) => {
         if (data.userId === userData?.id) {
+          console.log('🔄 Spin counts reset event received:', data);
           toast.success(data.message);
           // Refresh user data to get updated spin counts
-          setUserData(prev => ({
-            ...prev,
-            teamSettings: {
-              ...prev.teamSettings,
-              spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
-            }
-          }));
+          setUserData(prev => {
+            const updatedUserData = {
+              ...prev,
+              teamSettings: {
+                ...prev.teamSettings,
+                spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
+              }
+            };
+            console.log('🔄 Updated userData with reset spin counts:', updatedUserData);
+            return updatedUserData;
+          });
+          
+          // Also directly update the local spinCounts state
+          setSpinCounts({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+          console.log('🔄 Directly reset local spinCounts state');
         }
       });
 
@@ -138,9 +147,12 @@ const Spin = ({ socket, userData, setUserData }) => {
       
       console.log('🔄 Setting spin limitations:', limitations);
       console.log('🔄 Setting spin counts:', counts);
+      console.log('🔄 Previous spinCounts state:', spinCounts);
       
       setSpinLimitations(limitations);
       setSpinCounts(counts);
+      
+      console.log('🔄 Updated spinCounts state to:', counts);
     } else {
       console.log('⚠️ No teamSettings found in userData, using defaults');
       // Set default limitations if none exist
