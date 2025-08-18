@@ -701,24 +701,32 @@ const TeamManagement = ({ teams, fetchTeams }) => {
 
   const handleUpdateTeamSettings = async (teamId, settings) => {
     try {
-      await axios.put(`${API_BASE_URL}/api/admin/teams/${teamId}/settings`, settings, { withCredentials: true });
+      console.log('🔄 Updating team settings:', { teamId, settings });
+      const response = await axios.put(`${API_BASE_URL}/api/admin/teams/${teamId}/settings`, settings, { withCredentials: true });
+      console.log('✅ Team settings update response:', response.data);
       toast.success('Team settings updated successfully!');
       fetchTeams();
     } catch (error) {
-      console.error('Update team settings error:', error);
-      toast.error('Failed to update team settings');
+      console.error('❌ Update team settings error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      toast.error(`Failed to update team settings: ${error.response?.data?.details || error.message}`);
     }
   };
 
   const handleUpdateAllTeams = async () => {
     try {
-      await axios.put(`${API_BASE_URL}/api/admin/teams/settings/all`, allTeamsSettings, { withCredentials: true });
+      console.log('🔄 Sending all teams settings update:', allTeamsSettings);
+      const response = await axios.put(`${API_BASE_URL}/api/admin/teams/settings/all`, allTeamsSettings, { withCredentials: true });
+      console.log('✅ All teams settings update response:', response.data);
       toast.success(`Settings updated for all teams!`);
       setShowAllTeamsModal(false);
       fetchTeams();
     } catch (error) {
-      console.error('Update all teams settings error:', error);
-      toast.error('Failed to update all teams settings');
+      console.error('❌ Update all teams settings error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      toast.error(`Failed to update all teams settings: ${error.response?.data?.details || error.message}`);
     }
   };
 
