@@ -108,23 +108,6 @@ const Spin = ({ socket, userData, setUserData }) => {
             ...prev,
             teamSettings: data.teamSettings
           }));
-          
-          // Show notification about the update
-          const enabledSpins = Object.entries(data.teamSettings.spinLimitations || {})
-            .filter(([type, lim]) => lim.enabled && lim.limit > 0)
-            .map(([type]) => type);
-          
-          if (enabledSpins.length > 0) {
-            toast.success(`Spin settings updated! Enabled: ${enabledSpins.join(', ')}`, {
-              duration: 3000,
-              position: 'top-center'
-            });
-          } else {
-            toast.info('All spin limitations have been disabled', {
-              duration: 3000,
-              position: 'top-center'
-            });
-          }
         }
       });
 
@@ -536,48 +519,7 @@ const Spin = ({ socket, userData, setUserData }) => {
           Price after discount: {finalCost === 0 ? 'Free!' : `${finalCost} coins`}
         </div>
 
-        {/* Spin Status Overview */}
-        {(Object.keys(spinLimitations).some(key => spinLimitations[key]?.enabled)) && (
-          <div style={{ 
-            marginBottom: '24px', 
-            padding: '16px', 
-            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-            borderRadius: '12px',
-            border: '1px solid #dee2e6'
-          }}>
-            <h4 style={{ marginBottom: '12px', color: '#495057', fontSize: '16px' }}>🎯 Spin Status</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-              {['lucky', 'gamehelper', 'challenge', 'hightier', 'lowtier', 'random'].map(category => {
-                const limitation = spinLimitations[category];
-                const count = spinCounts[category] || 0;
-                const isDisabled = limitation?.enabled && limitation.limit > 0 && count >= limitation.limit;
-                
-                if (!limitation?.enabled || limitation.limit === 0) return null;
-               
-                return (
-                  <div key={category} style={{
-                    padding: '8px 12px',
-                    background: isDisabled ? '#ff4757' : '#4ecdc4',
-                    color: 'white',
-                    borderRadius: '8px',
-                    textAlign: 'center',
-                    fontSize: '12px',
-                    fontWeight: 'bold'
-                  }}>
-                    <div style={{ textTransform: 'capitalize', marginBottom: '2px' }}>
-                      {category === 'gamehelper' ? 'Game Helper' : 
-                       category === 'hightier' ? 'High Tier' :
-                       category === 'lowtier' ? 'Low Tier' : category} Spins
-                    </div>
-                    <div>
-                      {count}/{limitation.limit}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
 
         {/* Spin Wheel */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
