@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { 
@@ -23,6 +23,9 @@ const UserDashboard = ({ socket }) => {
   const [userData, setUserData] = useState(user);
   const [socketConnected, setSocketConnected] = useState(false);
 
+  // Wrap setUserData in useCallback to prevent unnecessary re-renders
+  const setUserDataCallback = useCallback(setUserData, []);
+
   useEffect(() => {
     // Check socket connection status
     if (socket) {
@@ -41,7 +44,7 @@ const UserDashboard = ({ socket }) => {
       // Listen for real-time user updates
       socket.on('user-update', (updatedUser) => {
         if (updatedUser.id === user.id) {
-          setUserData(prev => ({ ...prev, ...updatedUser }));
+          setUserDataCallback(prev => ({ ...prev, ...updatedUser }));
         }
       });
 
@@ -63,7 +66,7 @@ const UserDashboard = ({ socket }) => {
         
         if (response.ok) {
           const miningData = await response.json();
-          setUserData(prev => ({
+          setUserDataCallback(prev => ({
             ...prev,
             miningRate: miningData.miningRate,
             totalMined: miningData.totalMined,
@@ -78,7 +81,7 @@ const UserDashboard = ({ socket }) => {
     if (user.id) {
       fetchMiningInfo();
     }
-  }, [user.id]);
+  }, [user.id, setUserDataCallback]);
 
   const handleLogout = async () => {
     await logout();
@@ -108,7 +111,7 @@ const UserDashboard = ({ socket }) => {
       const data = await response.json();
       
       // Update user data with new values
-      setUserData(prev => ({ 
+      setUserDataCallback(prev => ({ 
         ...prev, 
         coins: data.newCoins, 
         lastMined: data.lastMined,
@@ -150,9 +153,9 @@ const UserDashboard = ({ socket }) => {
       case 'inventory':
         return <Inventory socket={socket} />;
       case 'spin':
-        return <Spin socket={socket} userData={userData} setUserData={setUserData} />;
+        return <Spin socket={socket} userData={userData} setUserData={setUserDataCallback} />;
       case 'map':
-        return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
+        return <MapView userData={userData} setUserData={setUserDataCallback} socket={socket} />;
       case 'program':
         return <ProgramOfTheDay />;
       default:

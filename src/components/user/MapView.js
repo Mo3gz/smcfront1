@@ -36,7 +36,7 @@ const MapView = ({ userData, setUserData, socket }) => {
     if (userData?.id) {
       fetchMiningInfo();
     }
-  }, [userData?.id]);
+  }, [userData?.id, setUserData]);
 
   // Listen for real-time country updates
   useEffect(() => {
@@ -69,7 +69,7 @@ const MapView = ({ userData, setUserData, socket }) => {
         socket.off('user-update');
       };
     }
-  }, [socket]);
+  }, [socket, userData?.id, setUserData]);
 
   const fetchCountries = async () => {
     try {
