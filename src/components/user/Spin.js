@@ -108,7 +108,11 @@ const Spin = ({ socket, userData, setUserData }) => {
   // Function to check if a spin type is disabled
   const isSpinDisabled = (spinId) => {
     const spinCategory = spinId === 'lucky' ? 'lucky' : 
-                        (spinId === 'gamehelper' || spinId === 'challenge' || spinId === 'hightier' || spinId === 'lowtier') ? 'special' : 'regular';
+                        spinId === 'gamehelper' ? 'gamehelper' :
+                        spinId === 'challenge' ? 'challenge' :
+                        spinId === 'hightier' ? 'hightier' :
+                        spinId === 'lowtier' ? 'lowtier' :
+                        spinId === 'random' ? 'random' : 'regular';
     
     const limitation = spinLimitations[spinCategory];
     if (!limitation || !limitation.enabled) {
@@ -121,7 +125,11 @@ const Spin = ({ socket, userData, setUserData }) => {
   // Function to get spin status message
   const getSpinStatusMessage = (spinId) => {
     const spinCategory = spinId === 'lucky' ? 'lucky' : 
-                        (spinId === 'gamehelper' || spinId === 'challenge' || spinId === 'hightier' || spinId === 'lowtier') ? 'special' : 'regular';
+                        spinId === 'gamehelper' ? 'gamehelper' :
+                        spinId === 'challenge' ? 'challenge' :
+                        spinId === 'hightier' ? 'hightier' :
+                        spinId === 'lowtier' ? 'lowtier' :
+                        spinId === 'random' ? 'random' : 'regular';
     
     const limitation = spinLimitations[spinCategory];
     if (!limitation || !limitation.enabled) {
@@ -460,7 +468,7 @@ const Spin = ({ socket, userData, setUserData }) => {
           }}>
             <h4 style={{ marginBottom: '12px', color: '#495057', fontSize: '16px' }}>🎯 Spin Status</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-              {['regular', 'lucky', 'special'].map(category => {
+              {['regular', 'lucky', 'gamehelper', 'challenge', 'hightier', 'lowtier', 'random'].map(category => {
                 const limitation = spinLimitations[category];
                 const count = spinCounts[category] || 0;
                 const isDisabled = limitation?.enabled && count >= limitation.limit;
@@ -478,7 +486,9 @@ const Spin = ({ socket, userData, setUserData }) => {
                     fontWeight: 'bold'
                   }}>
                     <div style={{ textTransform: 'capitalize', marginBottom: '2px' }}>
-                      {category} Spins
+                      {category === 'gamehelper' ? 'Game Helper' : 
+                       category === 'hightier' ? 'High Tier' :
+                       category === 'lowtier' ? 'Low Tier' : category} Spins
                     </div>
                     <div>
                       {count}/{limitation.limit}

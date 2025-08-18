@@ -697,7 +697,11 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     spinLimitations: {
       regular: { enabled: false, limit: 1 },
       lucky: { enabled: false, limit: 1 },
-      special: { enabled: false, limit: 1 }
+      gamehelper: { enabled: false, limit: 1 },
+      challenge: { enabled: false, limit: 1 },
+      hightier: { enabled: false, limit: 1 },
+      lowtier: { enabled: false, limit: 1 },
+      random: { enabled: false, limit: 1 }
     },
     resetSpinCounts: false
   });
@@ -740,7 +744,11 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     switch (type) {
       case 'regular': return 'Regular Spins';
       case 'lucky': return 'Lucky Spins';
-      case 'special': return 'Special Spins (Game Helper, Challenge, etc.)';
+      case 'gamehelper': return 'Game Helper Spins';
+      case 'challenge': return 'Challenge Spins';
+      case 'hightier': return 'High Tier Spins';
+      case 'lowtier': return 'Low Tier Spins';
+      case 'random': return 'Random Spins';
       default: return type;
     }
   };
@@ -787,7 +795,11 @@ const TeamManagement = ({ teams, fetchTeams }) => {
               spinLimitations: {
                 regular: { enabled: true, limit: 1 },
                 lucky: { enabled: true, limit: 1 },
-                special: { enabled: true, limit: 1 }
+                gamehelper: { enabled: true, limit: 1 },
+                challenge: { enabled: true, limit: 1 },
+                hightier: { enabled: true, limit: 1 },
+                lowtier: { enabled: true, limit: 1 },
+                random: { enabled: true, limit: 1 }
               }
             })}
           >
@@ -799,7 +811,11 @@ const TeamManagement = ({ teams, fetchTeams }) => {
               spinLimitations: {
                 regular: { enabled: false, limit: 1 },
                 lucky: { enabled: false, limit: 1 },
-                special: { enabled: false, limit: 1 }
+                gamehelper: { enabled: false, limit: 1 },
+                challenge: { enabled: false, limit: 1 },
+                hightier: { enabled: false, limit: 1 },
+                lowtier: { enabled: false, limit: 1 },
+                random: { enabled: false, limit: 1 }
               }
             })}
           >
@@ -821,9 +837,13 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Score</th>
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Coins</th>
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Scoreboard</th>
-                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Regular Spins</th>
-                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Lucky Spins</th>
-                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Special Spins</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Regular</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Lucky</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Game Helper</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Challenge</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>High Tier</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Low Tier</th>
+                <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Random</th>
                 <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Actions</th>
               </tr>
             </thead>
@@ -924,28 +944,28 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                       <input
                         type="checkbox"
-                        checked={team.settings?.spinLimitations?.special?.enabled || false}
+                        checked={team.settings?.spinLimitations?.gamehelper?.enabled || false}
                         onChange={(e) => {
                           const updatedLimitations = {
                             ...team.settings?.spinLimitations,
-                            special: { 
-                              ...team.settings?.spinLimitations?.special,
+                            gamehelper: { 
+                              ...team.settings?.spinLimitations?.gamehelper,
                               enabled: e.target.checked 
                             }
                           };
                           handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
                         }}
                       />
-                      {team.settings?.spinLimitations?.special?.enabled && (
+                      {team.settings?.spinLimitations?.gamehelper?.enabled && (
                         <input
                           type="number"
                           min="1"
-                          value={team.settings?.spinLimitations?.special?.limit || 1}
+                          value={team.settings?.spinLimitations?.gamehelper?.limit || 1}
                           onChange={(e) => {
                             const updatedLimitations = {
                               ...team.settings?.spinLimitations,
-                              special: { 
-                                ...team.settings?.spinLimitations?.special,
+                              gamehelper: { 
+                                ...team.settings?.spinLimitations?.gamehelper,
                                 limit: parseInt(e.target.value) || 1 
                               }
                             };
@@ -955,7 +975,163 @@ const TeamManagement = ({ teams, fetchTeams }) => {
                         />
                       )}
                       <span style={{ fontSize: '11px', color: '#666' }}>
-                        {team.settings?.spinCounts?.special || 0}
+                        {team.settings?.spinCounts?.gamehelper || 0}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <input
+                        type="checkbox"
+                        checked={team.settings?.spinLimitations?.challenge?.enabled || false}
+                        onChange={(e) => {
+                          const updatedLimitations = {
+                            ...team.settings?.spinLimitations,
+                            challenge: { 
+                              ...team.settings?.spinLimitations?.challenge,
+                              enabled: e.target.checked 
+                            }
+                          };
+                          handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                        }}
+                      />
+                      {team.settings?.spinLimitations?.challenge?.enabled && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={team.settings?.spinLimitations?.challenge?.limit || 1}
+                          onChange={(e) => {
+                            const updatedLimitations = {
+                              ...team.settings?.spinLimitations,
+                              challenge: { 
+                                ...team.settings?.spinLimitations?.challenge,
+                                limit: parseInt(e.target.value) || 1 
+                              }
+                            };
+                            handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                          }}
+                          style={{ width: '50px', padding: '2px 4px', fontSize: '12px' }}
+                        />
+                      )}
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        {team.settings?.spinCounts?.challenge || 0}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <input
+                        type="checkbox"
+                        checked={team.settings?.spinLimitations?.hightier?.enabled || false}
+                        onChange={(e) => {
+                          const updatedLimitations = {
+                            ...team.settings?.spinLimitations,
+                            hightier: { 
+                              ...team.settings?.spinLimitations?.hightier,
+                              enabled: e.target.checked 
+                            }
+                          };
+                          handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                        }}
+                      />
+                      {team.settings?.spinLimitations?.hightier?.enabled && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={team.settings?.spinLimitations?.hightier?.limit || 1}
+                          onChange={(e) => {
+                            const updatedLimitations = {
+                              ...team.settings?.spinLimitations,
+                              hightier: { 
+                                ...team.settings?.spinLimitations?.hightier,
+                                limit: parseInt(e.target.value) || 1 
+                              }
+                            };
+                            handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                          }}
+                          style={{ width: '50px', padding: '2px 4px', fontSize: '12px' }}
+                        />
+                      )}
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        {team.settings?.spinCounts?.hightier || 0}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <input
+                        type="checkbox"
+                        checked={team.settings?.spinLimitations?.lowtier?.enabled || false}
+                        onChange={(e) => {
+                          const updatedLimitations = {
+                            ...team.settings?.spinLimitations,
+                            lowtier: { 
+                              ...team.settings?.spinLimitations?.lowtier,
+                              enabled: e.target.checked 
+                            }
+                          };
+                          handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                        }}
+                      />
+                      {team.settings?.spinLimitations?.lowtier?.enabled && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={team.settings?.spinLimitations?.lowtier?.limit || 1}
+                          onChange={(e) => {
+                            const updatedLimitations = {
+                              ...team.settings?.spinLimitations,
+                              lowtier: { 
+                                ...team.settings?.spinLimitations?.lowtier,
+                                limit: parseInt(e.target.value) || 1 
+                              }
+                            };
+                            handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                          }}
+                          style={{ width: '50px', padding: '2px 4px', fontSize: '12px' }}
+                        />
+                      )}
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        {team.settings?.spinCounts?.lowtier || 0}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <input
+                        type="checkbox"
+                        checked={team.settings?.spinLimitations?.random?.enabled || false}
+                        onChange={(e) => {
+                          const updatedLimitations = {
+                            ...team.settings?.spinLimitations,
+                            random: { 
+                              ...team.settings?.spinLimitations?.random,
+                              enabled: e.target.checked 
+                            }
+                          };
+                          handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                        }}
+                      />
+                      {team.settings?.spinLimitations?.random?.enabled && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={team.settings?.spinLimitations?.random?.limit || 1}
+                          onChange={(e) => {
+                            const updatedLimitations = {
+                              ...team.settings?.spinLimitations,
+                              random: { 
+                                ...team.settings?.spinLimitations?.random,
+                                limit: parseInt(e.target.value) || 1 
+                              }
+                            };
+                            handleUpdateTeamSettings(team.id, { spinLimitations: updatedLimitations });
+                          }}
+                          style={{ width: '50px', padding: '2px 4px', fontSize: '12px' }}
+                        />
+                      )}
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        {team.settings?.spinCounts?.random || 0}
                       </span>
                     </div>
                   </td>
