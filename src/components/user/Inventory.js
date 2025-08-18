@@ -42,9 +42,14 @@ const Inventory = ({ socket }) => {
       console.log('🎮 Fetching available games...');
       const response = await axios.get(`${API_BASE_URL}/api/games/available`, { withCredentials: true });
       console.log('🎮 Received available games:', response.data);
+      console.log('🎮 Available games type:', typeof response.data);
+      console.log('🎮 Available games length:', Array.isArray(response.data) ? response.data.length : 'Not an array');
       setAvailableGames(response.data);
     } catch (error) {
       console.error('Error fetching available games:', error);
+      console.error('Error details:', error.response?.data);
+      // Set a default fallback to prevent empty dropdown
+      setAvailableGames(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
     }
   }, []);
 
@@ -86,6 +91,10 @@ const Inventory = ({ socket }) => {
   }, [socket, fetchInventory, fetchAvailableGames]);
 
   const handleCardClick = (card) => {
+    console.log('🎮 Card clicked:', card);
+    console.log('🎮 Card requiresGameSelection:', card.requiresGameSelection);
+    console.log('🎮 Card requiresTeamSelection:', card.requiresTeamSelection);
+    console.log('🎮 Card maxGame:', card.maxGame);
     setSelectedCard(card);
     setShowModal(true);
   };
@@ -162,6 +171,13 @@ const Inventory = ({ socket }) => {
 
   // Helper function to check if card requires game selection
   const requiresGameSelection = (cardName) => {
+    // Use the card's requiresGameSelection property if available, otherwise fallback to hardcoded list
+    const selectedCard = inventory.find(card => card.name === cardName);
+    if (selectedCard && selectedCard.requiresGameSelection !== undefined) {
+      return selectedCard.requiresGameSelection;
+    }
+    
+    // Fallback to hardcoded list for backward compatibility
     const gameCards = [
       'Secret Info', 'Robin Hood', 'Avenger', 'Betrayal', 
       'Freeze Player', 'Silent Game', 'Flip the Fate'
@@ -171,6 +187,13 @@ const Inventory = ({ socket }) => {
 
   // Helper function to check if card requires team selection
   const requiresTeamSelection = (cardName) => {
+    // Use the card's requiresTeamSelection property if available, otherwise fallback to hardcoded list
+    const selectedCard = inventory.find(card => card.name === cardName);
+    if (selectedCard && selectedCard.requiresTeamSelection !== undefined) {
+      return selectedCard.requiresTeamSelection;
+    }
+    
+    // Fallback to hardcoded list for backward compatibility
     const teamCards = ['Robin Hood', 'Avenger', 'Freeze Player'];
     return teamCards.includes(cardName);
   };
@@ -247,11 +270,18 @@ const Inventory = ({ socket }) => {
             </div>
 
             {/* Game Selection */}
-            {requiresGameSelection(selectedCard.name) && (
+            {(() => {
+              const shouldShow = requiresGameSelection(selectedCard.name);
+              console.log('🎮 Should show game selection for', selectedCard.name, ':', shouldShow);
+              return shouldShow;
+            })() && (
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
                   Select Game
                 </label>
+                {console.log('🎮 Debug - selectedCard:', selectedCard)}
+                {console.log('🎮 Debug - availableGames:', availableGames)}
+                {console.log('🎮 Debug - requiresGameSelection result:', requiresGameSelection(selectedCard.name))}
                 <select
                   className="input"
                   value={selectedGame}
@@ -262,6 +292,10 @@ const Inventory = ({ socket }) => {
                   {availableGames
                     .filter(gameId => {
                       // Filter games based on card restrictions
+                      if (selectedCard.maxGame) {
+                        return parseInt(gameId) <= selectedCard.maxGame;
+                      }
+                      // Fallback to hardcoded logic for backward compatibility
                       if (selectedCard.name === "Flip the Fate") {
                         return parseInt(gameId) <= 11; // Only games 1-11
                       }
@@ -273,6 +307,9 @@ const Inventory = ({ socket }) => {
                       </option>
                     ))}
                 </select>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  Available games: {availableGames.length} | Card requires game: {requiresGameSelection(selectedCard.name) ? 'Yes' : 'No'}
+                </div>
               </div>
             )}
 
