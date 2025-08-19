@@ -22,7 +22,6 @@ const api = axios.create({
 });
 
 // Retry configuration
-const MAX_RETRIES = 2;
 const RETRY_DELAY = 1000; // 1 second
 
 // Request interceptor
