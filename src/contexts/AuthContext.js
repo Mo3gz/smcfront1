@@ -52,16 +52,46 @@ export const AuthProvider = ({ children }) => {
         userAgent: userAgent 
       });
       
-      // Enhanced config for Safari (iOS + macOS) compatibility
-      const config = {
-        ...createAxiosConfig(),
-        headers: {
-          ...createAxiosConfig().headers,
-        }
-      };
-      
-      // For Safari, try multiple token sources
+      // For Safari, try the simple auth approach first
       if (isSafari) {
+        console.log('🦁 Safari detected - trying simple auth approach');
+        
+        // Check if we have a stored username
+        const storedUsername = localStorage.getItem('safariUsername');
+        if (storedUsername) {
+          console.log('🦁 Found stored username for Safari:', storedUsername);
+          
+          try {
+            const simpleConfig = {
+              ...createAxiosConfig(),
+              headers: {
+                ...createAxiosConfig().headers,
+                'x-username': storedUsername
+              }
+            };
+            
+            const simpleResponse = await axios.get(`${API_BASE_URL}/api/safari/simple-auth?username=${storedUsername}`, simpleConfig);
+            console.log('🦁 Safari simple auth response:', simpleResponse.data);
+            
+            if (simpleResponse.data.id) {
+              console.log('🦁 Safari simple auth successful');
+              setUser(simpleResponse.data);
+              return;
+            }
+          } catch (simpleError) {
+            console.log('🦁 Safari simple auth failed, trying token approach:', simpleError.message);
+          }
+        }
+        
+        // Fallback to token approach for Safari
+        const config = {
+          ...createAxiosConfig(),
+          headers: {
+            ...createAxiosConfig().headers,
+          }
+        };
+        
+        // Try multiple token sources for Safari
         const token = localStorage.getItem('authToken') || 
                      localStorage.getItem('token') || 
                      localStorage.getItem('safariToken') ||
@@ -74,34 +104,48 @@ export const AuthProvider = ({ children }) => {
         } else {
           console.log('🔍 No Safari token found in any storage');
         }
+        
+        const response = await axios.get(`${API_BASE_URL}/api/safari/auth/me`, config);
+        console.log('🔍 Safari auth check response:', response.data);
+        
+        if (response.data.id || response.data.username) {
+          setUser(response.data);
+          return;
+        }
       } else {
         // For other browsers, use standard approach
+        const config = {
+          ...createAxiosConfig(),
+          headers: {
+            ...createAxiosConfig().headers,
+          }
+        };
+        
         if (localStorage.getItem('authToken')) {
           config.headers['x-auth-token'] = localStorage.getItem('authToken');
         }
+        
+        const response = await axios.get(`${API_BASE_URL}/api/user`, config);
+        console.log('🔍 Standard auth check response:', response.data);
+        
+        // Handle different response formats
+        let userData;
+        if (response.data.user) {
+          userData = response.data.user;
+        } else if (response.data.id || response.data.username) {
+          userData = response.data;
+        } else {
+          throw new Error('Invalid response format from server');
+        }
+        
+        console.log('🔍 Processed user data:', userData);
+        setUser(userData);
+        return;
       }
       
-      // Use Safari-specific endpoint if detected
-      const endpoint = isSafari ? '/api/safari/auth/me' : '/api/user';
-      console.log('🔍 Using endpoint:', endpoint);
-      
-      const response = await axios.get(`${API_BASE_URL}${endpoint}`, config);
-      console.log('🔍 Auth check response:', response.data);
-      
-      // Handle different response formats
-      let userData;
-      if (response.data.user) {
-        // Backend returns { user: {...} }
-        userData = response.data.user;
-      } else if (response.data.id || response.data.username) {
-        // Backend returns user object directly
-        userData = response.data;
-      } else {
-        throw new Error('Invalid response format from server');
-      }
-      
-      console.log('🔍 Processed user data:', userData);
-      setUser(userData);
+      // If we get here, no authentication method worked
+      console.log('🔍 No authentication method worked');
+      setUser(null);
     } catch (error) {
       let errorMessage = 'Unknown error';
       if (error.response) {
@@ -189,6 +233,12 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
+      // For Safari, also store username for simple auth fallback
+      if (isSafari) {
+        localStorage.setItem('safariUsername', username);
+        console.log('🔐 Username stored for Safari simple auth fallback');
+      }
+      
       // Set user in state and localStorage
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -255,6 +305,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('authToken');
       localStorage.removeItem('token');
       localStorage.removeItem('safariToken');
+      localStorage.removeItem('safariUsername');
       
       // Clear sessionStorage (especially important for Safari)
       sessionStorage.clear();
