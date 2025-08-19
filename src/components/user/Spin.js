@@ -147,10 +147,47 @@ const Spin = ({ socket, userData, setUserData }) => {
         }
       });
 
+      // Listen for spin limitation status updates from backend
+      socket.on('spin-limitation-status', (data) => {
+        console.log('📡 Spin limitation status received:', data);
+        console.log('📡 Current userData ID:', userData?.id);
+        console.log('📡 Event user ID:', data.userId);
+        
+        if (data.userId === userData?.id) {
+          console.log('🔄 Spin limitation status for current user:', data);
+          console.log('🔄 All completed:', data.allCompleted);
+          console.log('🔄 Should reset:', data.shouldReset);
+          
+          // Update local states with real-time data from backend
+          setSpinLimitations(data.spinLimitations);
+          setSpinCounts(data.currentSpinCounts);
+          
+          // If backend says all limitations are completed, trigger manual reset
+          if (data.shouldReset && data.allCompleted) {
+            console.log('🎯 Backend indicates all spin limitations completed! Triggering manual reset...');
+            
+            // Call the manual reset endpoint
+            axios.post(`${API_BASE_URL}/api/spin/reset-when-completed`, {}, { withCredentials: true })
+              .then(response => {
+                console.log('✅ Manual reset triggered successfully:', response.data);
+                toast.success('🎉 All spin limitations completed! Counts have been reset.', {
+                  duration: 4000,
+                  position: 'top-center'
+                });
+              })
+              .catch(error => {
+                console.error('❌ Error triggering manual reset:', error);
+                toast.error('Failed to reset spin counts automatically');
+              });
+          }
+        }
+      });
+
       return () => {
         socket.off('user-update');
         socket.off('spin-counts-reset');
         socket.off('user-team-settings-updated');
+        socket.off('spin-limitation-status');
       };
     }
   }, [socket, userData?.id, setUserData]);
