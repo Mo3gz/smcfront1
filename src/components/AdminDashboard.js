@@ -12,7 +12,8 @@ import {
   Gamepad2,
   BarChart3
 } from 'lucide-react';
-import api from '../utils/api';
+import api, { API_BASE_URL } from '../utils/api';
+import axios from 'axios';
 
 const AdminDashboard = ({ socket }) => {
   const { user, logout, checkAdminStatus } = useAuth();
