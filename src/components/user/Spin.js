@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { RotateCcw, Gift, TrendingDown, Shuffle, Swords, Star, Target, Crown } from 'lucide-react';
+import { RotateCcw, Gift, TrendingDown, Shuffle, Swords, Star, heart-handshake , Crown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/api';
@@ -8,7 +8,7 @@ import Confetti from 'react-confetti';
 // Move these above all hooks and state
 const spinTypes = [
   { id: 'lucky', name: 'Lucky Spin', cost: 50, icon: Star, color: '#feca57' }, // clover (using Star as clover)
-  { id: 'gamehelper', name: 'Game Helper', cost: 50, icon: Target, color: '#ff6b6b' }, // heart-handshake (using Target as alternative)
+  { id: 'gamehelper', name: 'Game Helper', cost: 50, icon: heart-handshake, color: '#ff6b6b' }, // heart-handshake (using Target as alternative)
   { id: 'challenge', name: 'Challenge', cost: 50, icon: Swords, color: '#4ecdc4' }, // swords/codesandbox
   { id: 'random', name: 'Random', cost: 30, icon: Shuffle, color: '#667eea' }, // shuffle
   { id: 'hightier', name: 'High Tier', cost: 50, icon: Crown, color: '#ff9ff3' }, // trending up (using Crown for high tier)
