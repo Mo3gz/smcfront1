@@ -60,7 +60,7 @@ const Notifications = ({ socket }) => {
         setUnreadCount(prev => prev + 1);
       }
       setIsVisible(true); // Open modal automatically
-      // Custom toast for card-received
+      // Custom toast for different notification types
       if (notification.type === 'card-received') {
         toast.success('🎴 You received a new card! Check your inventory.', {
           icon: '🎴',
@@ -70,6 +70,17 @@ const Notifications = ({ socket }) => {
             fontWeight: 'bold',
             fontSize: '16px'
           }
+        });
+      } else if (notification.type === 'tax-paid') {
+        toast.error(`💰 ${notification.message}`, {
+          icon: '💰',
+          style: {
+            background: '#ff4757',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '16px'
+          },
+          duration: 6000
         });
       } else {
         toast.success('New notification received!');
@@ -157,7 +168,8 @@ const Notifications = ({ socket }) => {
             notifications.map(notification => (
               <div key={notification.id} style={{
                 padding: '12px',
-                border: notification.type === 'card-received' ? '2px solid #4facfe' : '1px solid #eee',
+                border: notification.type === 'card-received' ? '2px solid #4facfe' : 
+                        notification.type === 'tax-paid' ? '2px solid #ff4757' : '1px solid #eee',
                 borderRadius: '8px',
                 marginBottom: '12px',
                 background: notification.read ? '#f9f9f9' : 'white',
@@ -175,6 +187,17 @@ const Notifications = ({ socket }) => {
                       fontWeight: 700,
                       marginLeft: '8px'
                     }}>New Card</span>
+                  )}
+                  {notification.type === 'tax-paid' && (
+                    <span style={{
+                      background: '#ff4757',
+                      color: 'white',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      marginLeft: '8px'
+                    }}>Tax Paid</span>
                   )}
                 </div>
                 <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>
