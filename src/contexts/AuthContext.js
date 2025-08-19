@@ -57,16 +57,29 @@ export const AuthProvider = ({ children }) => {
         ...createAxiosConfig(),
         headers: {
           ...createAxiosConfig().headers,
-          // Add token from localStorage as fallback for Safari
-          ...(localStorage.getItem('authToken') && {
-            'x-auth-token': localStorage.getItem('authToken')
-          }),
-          // Add Authorization header for Safari
-          ...(localStorage.getItem('authToken') && {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          })
         }
       };
+      
+      // For Safari, try multiple token sources
+      if (isSafari) {
+        const token = localStorage.getItem('authToken') || 
+                     localStorage.getItem('token') || 
+                     localStorage.getItem('safariToken') ||
+                     sessionStorage.getItem('authToken');
+        
+        if (token) {
+          config.headers['x-auth-token'] = token;
+          config.headers['Authorization'] = `Bearer ${token}`;
+          console.log('🔍 Safari token found and added to headers');
+        } else {
+          console.log('🔍 No Safari token found in any storage');
+        }
+      } else {
+        // For other browsers, use standard approach
+        if (localStorage.getItem('authToken')) {
+          config.headers['x-auth-token'] = localStorage.getItem('authToken');
+        }
+      }
       
       // Use Safari-specific endpoint if detected
       const endpoint = isSafari ? '/api/safari/auth/me' : '/api/user';
@@ -133,8 +146,12 @@ export const AuthProvider = ({ children }) => {
       
       console.log('🔐 Browser detection for login:', { isSafari, isIOS, isMacOS });
       
+      // Use Safari-specific endpoint if Safari is detected
+      const endpoint = isSafari ? '/api/safari/login' : '/api/login';
+      console.log('🔐 Using login endpoint:', endpoint);
+      
       const config = createAxiosConfig();
-      const response = await axios.post(`${API_BASE_URL}/api/login`, {
+      const response = await axios.post(`${API_BASE_URL}${endpoint}`, {
         username,
         password
       }, config);
@@ -164,6 +181,11 @@ export const AuthProvider = ({ children }) => {
         if (isSafari) {
           sessionStorage.setItem('authToken', response.data.token);
           console.log('🔐 Token also stored in sessionStorage for Safari');
+          
+          // Also store in multiple localStorage keys for Safari
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('safariToken', response.data.token);
+          console.log('🔐 Token stored in multiple localStorage keys for Safari');
         }
       }
       
@@ -213,9 +235,12 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🚪 Starting logout process...');
       
-      // Call backend to clear cookie
+      // Use Safari-specific logout endpoint if Safari is detected
+      const logoutEndpoint = isSafari ? '/api/safari/logout' : '/api/logout';
+      console.log('🚪 Using logout endpoint:', logoutEndpoint);
+      
       const config = createAxiosConfig();
-      await axios.post(`${API_BASE_URL}/api/logout`, {}, config);
+      await axios.post(`${API_BASE_URL}${logoutEndpoint}`, {}, config);
       
       console.log('✅ Backend logout successful');
     } catch (error) {
@@ -225,10 +250,11 @@ export const AuthProvider = ({ children }) => {
       // Clear all possible stored data
       setUser(null);
       
-      // Clear localStorage
+      // Clear localStorage (Safari-specific keys)
       localStorage.removeItem('user');
       localStorage.removeItem('authToken');
       localStorage.removeItem('token');
+      localStorage.removeItem('safariToken');
       
       // Clear sessionStorage (especially important for Safari)
       sessionStorage.clear();
