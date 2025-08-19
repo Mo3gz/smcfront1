@@ -155,7 +155,7 @@ const Spin = ({ socket, userData, setUserData }) => {
          
          if (data.userId === userData?.id) {
            console.log('🔄 Spin limitation status for current user:', data);
-           console.log('🔄 All spin types:', data.allSpinTypes);
+           console.log('🔄 Enabled spin types:', data.enabledSpinTypes);
            console.log('🔄 Completed spin types:', data.completedSpinTypes);
            console.log('🔄 All completed:', data.allCompleted);
            console.log('🔄 Should reset:', data.shouldReset);
@@ -164,15 +164,15 @@ const Spin = ({ socket, userData, setUserData }) => {
            setSpinLimitations(data.spinLimitations);
            setSpinCounts(data.currentSpinCounts);
            
-           // If backend says all spin types are completed, trigger manual reset
+           // If backend says all enabled spin types are completed, trigger manual reset
            if (data.shouldReset && data.allCompleted) {
-             console.log('🎯 Backend indicates all spin types completed! Triggering manual reset...');
+             console.log('🎯 Backend indicates all enabled spin types completed! Triggering manual reset...');
              
              // Call the manual reset endpoint
              axios.post(`${API_BASE_URL}/api/spin/reset-when-completed`, {}, { withCredentials: true })
                .then(response => {
                  console.log('✅ Manual reset triggered successfully:', response.data);
-                 toast.success('🎉 All spin types completed! Counts have been reset.', {
+                 toast.success('🎉 All enabled spin types completed! Counts have been reset.', {
                    duration: 4000,
                    position: 'top-center'
                  });
