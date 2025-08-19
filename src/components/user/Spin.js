@@ -254,9 +254,14 @@ const Spin = ({ socket, userData, setUserData }) => {
     const limitation = spinLimitations[spinCategory];
     const currentCount = spinCounts[spinCategory] || 0;
     
-    // If no limitation exists or limitation is disabled, spin is enabled
-    if (!limitation || !limitation.enabled || limitation.limit === 0) {
-      return false; // No limitation or disabled = spin is enabled
+    // If no limitation exists, spin is enabled (no restrictions)
+    if (!limitation) {
+      return false; // No limitation = spin is enabled
+    }
+    
+    // If limitation is disabled, spin is disabled
+    if (!limitation.enabled || limitation.limit === 0) {
+      return true; // Disabled = spin is disabled
     }
     
     // Check if user has reached the limit for this spin type

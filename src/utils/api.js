@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Force localhost for local development, production URL for production
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8080'
+  ? 'http://localhost:5000'
   : (process.env.REACT_APP_API_BASE_URL || 'https://smcback-production-6d12.up.railway.app');
 
 // Debug logging
