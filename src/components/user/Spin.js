@@ -215,12 +215,12 @@ const Spin = ({ socket, userData, setUserData }) => {
       console.log('⚠️ No teamSettings found in userData, using defaults');
       // Set default limitations if none exist
       const defaultLimitations = {
-        lucky: { enabled: true, limit: 1 },
-        gamehelper: { enabled: true, limit: 1 },
-        challenge: { enabled: true, limit: 1 },
-        hightier: { enabled: true, limit: 1 },
-        lowtier: { enabled: true, limit: 1 },
-        random: { enabled: true, limit: 1 }
+        lucky: { enabled: false, limit: 1 },
+        gamehelper: { enabled: false, limit: 1 },
+        challenge: { enabled: false, limit: 1 },
+        hightier: { enabled: false, limit: 1 },
+        lowtier: { enabled: false, limit: 1 },
+        random: { enabled: false, limit: 1 }
       };
       setSpinLimitations(prev => {
         const newLimitations = JSON.stringify(defaultLimitations);
@@ -254,10 +254,12 @@ const Spin = ({ socket, userData, setUserData }) => {
     const limitation = spinLimitations[spinCategory];
     const currentCount = spinCounts[spinCategory] || 0;
     
+    // If no limitation exists or limitation is disabled, spin is enabled
     if (!limitation || !limitation.enabled || limitation.limit === 0) {
-      return true; // No limitation, disabled, or limit is 0
+      return false; // No limitation or disabled = spin is enabled
     }
     
+    // Check if user has reached the limit for this spin type
     const reachedLimit = currentCount >= limitation.limit;
     return reachedLimit;
   }, [spinLimitations, spinCounts]);

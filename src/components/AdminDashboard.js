@@ -710,7 +710,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
   const handleUpdateTeamSettings = async (teamId, settings) => {
     try {
       console.log('🔄 Updating team settings:', { teamId, settings });
-      const response = await axios.put(`${API_BASE_URL}/api/admin/teams/${teamId}/settings`, settings, { withCredentials: true });
+      const response = await api.put(`/api/admin/teams/${teamId}/settings`, settings);
       console.log('✅ Team settings update response:', response.data);
       toast.success('Team settings updated successfully!');
       fetchTeams();
@@ -726,7 +726,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     try {
       const settingsToUpdate = settings || allTeamsSettings;
       console.log('🔄 Sending all teams settings update:', settingsToUpdate);
-      const response = await axios.put(`${API_BASE_URL}/api/admin/teams/settings/all`, settingsToUpdate, { withCredentials: true });
+      const response = await api.put(`/api/admin/teams/settings/all`, settingsToUpdate);
       console.log('✅ All teams settings update response:', response.data);
       toast.success(`Settings updated for all teams!`);
       if (!settings) {
@@ -1244,7 +1244,7 @@ const CountryManagement = ({ teams, socket }) => {
   const fetchCountries = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/admin/countries`, { withCredentials: true });
+      const response = await api.get(`/api/admin/countries`);
       setCountries(response.data);
     } catch (error) {
       console.error('Error fetching countries:', error);
@@ -1256,7 +1256,7 @@ const CountryManagement = ({ teams, socket }) => {
 
   const fetchFiftyCoinsVisibilityState = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/admin/countries/fifty-coins-visibility`, { withCredentials: true });
+      const response = await api.get(`/api/admin/countries/fifty-coins-visibility`);
       setFiftyCoinsCountriesHidden(response.data.hidden);
     } catch (error) {
       console.error('Error fetching 50 coins visibility state:', error);
@@ -1285,10 +1285,10 @@ const CountryManagement = ({ teams, socket }) => {
 
   const handleToggleVisibility = async (countryId, currentVisibility) => {
     try {
-      await axios.post(`${API_BASE_URL}/api/admin/countries/visibility`, {
+      await api.post(`/api/admin/countries/visibility`, {
         countryId,
         visible: !currentVisibility
-      }, { withCredentials: true });
+      });
       
       toast.success(`Country visibility ${!currentVisibility ? 'enabled' : 'disabled'}`);
       fetchCountries(); // Refresh the list
@@ -1303,10 +1303,10 @@ const CountryManagement = ({ teams, socket }) => {
     if (!selectedCountry) return;
 
     try {
-      await axios.post(`${API_BASE_URL}/api/admin/countries/ownership`, {
+      await api.post(`/api/admin/countries/ownership`, {
         countryId: selectedCountry.id,
         newOwnerId: newOwnerId || null
-      }, { withCredentials: true });
+      });
       
       const ownerName = newOwnerId ? teams.find(t => t.id === newOwnerId)?.teamName : 'None';
       toast.success(`Country ownership changed to: ${ownerName}`);
@@ -1328,7 +1328,7 @@ const CountryManagement = ({ teams, socket }) => {
 
     try {
       setAddingCountry(true);
-      const response = await axios.post(`${API_BASE_URL}/api/admin/countries/add`, newCountry, { withCredentials: true });
+      const response = await api.post(`/api/admin/countries/add`, newCountry);
       
       toast.success(response.data.message);
       setNewCountry({ name: '', cost: '', score: '', miningRate: '' });
@@ -1348,7 +1348,7 @@ const CountryManagement = ({ teams, socket }) => {
     }
 
     try {
-      const response = await axios.delete(`${API_BASE_URL}/api/admin/countries/${countryId}`, { withCredentials: true });
+      const response = await api.delete(`/api/admin/countries/${countryId}`);
       
       toast.success(response.data.message);
       fetchCountries(); // Refresh the list
@@ -1375,7 +1375,7 @@ const CountryManagement = ({ teams, socket }) => {
 
     try {
       setUpdatingCountry(true);
-      const response = await axios.put(`${API_BASE_URL}/api/admin/countries/${editingCountry.id}`, editForm, { withCredentials: true });
+      const response = await api.put(`/api/admin/countries/${editingCountry.id}`, editForm);
       
       toast.success(response.data.message);
       setShowEditModal(false);
@@ -1402,10 +1402,10 @@ const CountryManagement = ({ teams, socket }) => {
     if (!selectedUser || !userCoins) return;
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/coins`, {
+      const response = await api.post(`/api/admin/users/${selectedUser.id}/coins`, {
         coins: parseInt(userCoins),
         operation: userOperation
-      }, { withCredentials: true });
+      });
       
       toast.success(response.data.message);
       setUserCoins('');
@@ -1422,10 +1422,10 @@ const CountryManagement = ({ teams, socket }) => {
     if (!selectedUser || !userScore) return;
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/score`, {
+      const response = await api.post(`/api/admin/users/${selectedUser.id}/score`, {
         score: parseInt(userScore),
         operation: userOperation
-      }, { withCredentials: true });
+      });
       
       toast.success(response.data.message);
       setUserScore('');
@@ -1439,9 +1439,9 @@ const CountryManagement = ({ teams, socket }) => {
 
   const handleToggleFiftyCoinsVisibility = async () => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/admin/countries/toggle-fifty-coins`, {
+      const response = await api.post(`/api/admin/countries/toggle-fifty-coins`, {
         hidden: !fiftyCoinsCountriesHidden
-      }, { withCredentials: true });
+      });
       
       console.log('Global 50 coins visibility toggle response:', response.data);
       setFiftyCoinsCountriesHidden(!fiftyCoinsCountriesHidden);
@@ -2064,7 +2064,7 @@ const GameManagement = () => {
   const fetchGameSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/admin/games`, { withCredentials: true });
+      const response = await api.get(`/api/admin/games`);
       
       if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
         setGameSettings(response.data);
@@ -2135,11 +2135,11 @@ const GameManagement = () => {
       newSettings[gameId] = { enabled: !currentEnabled, name: currentName };
       setGameSettings(newSettings);
       
-      const response = await axios.post(`${API_BASE_URL}/api/admin/games/toggle`, {
+      const response = await api.post(`/api/admin/games/toggle`, {
         gameId: parseInt(gameId),
         enabled: !currentEnabled,
         gameName: currentName
-      }, { withCredentials: true });
+      });
       
       // Update with the actual response from server
       if (response.data && response.data.gameSettings) {
