@@ -212,24 +212,9 @@ const Spin = ({ socket, userData, setUserData }) => {
       
       console.log('🔄 Updated spinCounts state to:', counts);
     } else {
-      console.log('⚠️ No teamSettings found in userData, using defaults');
-      // Set default limitations if none exist
-      const defaultLimitations = {
-        lucky: { enabled: false, limit: 1 },
-        gamehelper: { enabled: false, limit: 1 },
-        challenge: { enabled: false, limit: 1 },
-        hightier: { enabled: false, limit: 1 },
-        lowtier: { enabled: false, limit: 1 },
-        random: { enabled: false, limit: 1 }
-      };
-      setSpinLimitations(prev => {
-        const newLimitations = JSON.stringify(defaultLimitations);
-        const prevLimitations = JSON.stringify(prev);
-        if (newLimitations !== prevLimitations) {
-          return defaultLimitations;
-        }
-        return prev;
-      });
+      console.log('⚠️ No teamSettings found in userData, spins will be enabled by default');
+      // If no teamSettings exist, don't set any limitations (spins will be enabled by default)
+      // Only set default spin counts
       setSpinCounts(prev => {
         const defaultCounts = { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
         const newCounts = JSON.stringify(defaultCounts);
@@ -279,8 +264,15 @@ const Spin = ({ socket, userData, setUserData }) => {
                         spinId === 'random' ? 'random' : 'lucky';
     
     const limitation = spinLimitations[spinCategory];
-    if (!limitation || !limitation.enabled || limitation.limit === 0) {
-      return 'Disabled'; // No limitation, disabled, or limit is 0
+    
+    // If no limitation exists, spin is available (no restrictions)
+    if (!limitation) {
+      return 'Available'; // No limitation = spin is available
+    }
+    
+    // If limitation is disabled, spin is disabled
+    if (!limitation.enabled || limitation.limit === 0) {
+      return 'Disabled'; // Disabled = spin is disabled
     }
     
     const current = spinCounts[spinCategory] || 0;

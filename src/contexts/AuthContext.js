@@ -396,17 +396,40 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // Set user in state and localStorage
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      // After successful login, fetch complete user data including teamSettings
+      console.log('🔐 Fetching complete user data after login...');
       
-      // Add a small delay to ensure state is properly set
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Verify the user data is properly set
-      console.log('🔐 Current user state after login:', userData);
-      
-      return { success: true, user: userData };
+      try {
+        // Use the appropriate endpoint based on browser
+        const userEndpoint = isSafari ? '/api/safari/auth/me' : '/api/user';
+        console.log('🔐 Using user endpoint:', userEndpoint);
+        
+        const userConfig = createAxiosConfig();
+        if (response.data.token) {
+          userConfig.headers['x-auth-token'] = response.data.token;
+          userConfig.headers['Authorization'] = `Bearer ${response.data.token}`;
+        }
+        
+        const userResponse = await api.get(userEndpoint, userConfig);
+        console.log('🔐 Complete user data response:', userResponse.data);
+        
+        // Use the complete user data with teamSettings
+        const completeUserData = userResponse.data;
+        setUser(completeUserData);
+        localStorage.setItem('user', JSON.stringify(completeUserData));
+        
+        console.log('🔐 Complete user data set:', completeUserData);
+        
+        return { success: true, user: completeUserData };
+      } catch (userError) {
+        console.error('🔐 Failed to fetch complete user data:', userError);
+        // Fallback to basic user data if complete data fetch fails
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        console.log('🔐 Fallback to basic user data:', userData);
+        return { success: true, user: userData };
+      }
     } catch (error) {
       console.error('🔐 Login failed:', error);
       let errorMessage = 'Login failed';

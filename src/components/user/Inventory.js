@@ -12,9 +12,11 @@ const Inventory = ({ socket }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [selectedGame, setSelectedGame] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
   const [description, setDescription] = useState('');
   const [teams, setTeams] = useState([]);
   const [availableGames, setAvailableGames] = useState([]);
+  const [availableCountries, setAvailableCountries] = useState([]);
   const [gameSettings, setGameSettings] = useState({});
 
   const fetchInventory = useCallback(async () => {
@@ -87,11 +89,38 @@ const Inventory = ({ socket }) => {
     }
   }, []);
 
+  const fetchAvailableCountries = useCallback(async () => {
+    try {
+      console.log('🌍 Fetching available countries for borrowing...');
+      
+      // Safari-specific authentication
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const config = { withCredentials: true };
+      
+      if (isSafari) {
+        const storedUsername = localStorage.getItem('safariUsername');
+        if (storedUsername) {
+          config.headers = { 'x-username': storedUsername };
+          console.log('🦁 Available Countries: Adding Safari username:', storedUsername);
+        }
+      }
+      
+      const response = await api.get(`/api/countries/available-for-borrow`, config);
+      console.log('🌍 Received available countries:', response.data);
+      setAvailableCountries(response.data);
+    } catch (error) {
+      console.error('Error fetching available countries:', error);
+      setAvailableCountries([]);
+    }
+  }, []);
+
   useEffect(() => {
     fetchInventory();
     fetchTeams();
     fetchAvailableGames();
-  }, [fetchInventory, fetchTeams, fetchAvailableGames]);
+    fetchAvailableCountries();
+  }, [fetchInventory, fetchTeams, fetchAvailableGames, fetchAvailableCountries]);
 
   // Listen for inventory updates when cards are used
   useEffect(() => {
@@ -132,9 +161,16 @@ const Inventory = ({ socket }) => {
         }
       });
 
+      // Listen for countries updates to refresh available countries for borrowing
+      socket.on('countries-update', () => {
+        console.log('Countries updated via socket, refreshing available countries for borrowing');
+        fetchAvailableCountries();
+      });
+
       return () => {
         socket.off('inventory-update');
         socket.off('game-settings-update');
+        socket.off('countries-update');
       };
     }
   }, [socket, fetchInventory, fetchAvailableGames]);
@@ -156,12 +192,22 @@ const Inventory = ({ socket }) => {
         cardId: selectedCard.id,
         selectedTeam,
         selectedGame,
+        selectedCountry,
         description
       }, { withCredentials: true });
 
       // Special handling for Secret Info card
       if (selectedCard.name === "Secret Info" && response.data.gameData) {
         toast.success(`Secret Info revealed: ${response.data.gameData.details}`, {
+          duration: 6000,
+          position: 'top-center',
+          style: {
+            background: '#667eea',
+            color: 'white'
+          }
+        });
+      } else if (selectedCard.name === "Borrow coins to buy a country" && response.data.success) {
+        toast.success(`Successfully purchased ${response.data.purchasedCountry.name} for ${response.data.purchasedCountry.cost} coins! New balance: ${response.data.newBalance} coins`, {
           duration: 6000,
           position: 'top-center',
           style: {
@@ -177,6 +223,7 @@ const Inventory = ({ socket }) => {
       setSelectedCard(null);
       setSelectedTeam('');
       setSelectedGame('');
+      setSelectedCountry('');
       setDescription('');
       fetchInventory(); // Refresh inventory
     } catch (error) {
@@ -245,6 +292,11 @@ const Inventory = ({ socket }) => {
     // Fallback to hardcoded list for backward compatibility
     const teamCards = ['Robin Hood', 'Avenger', 'Freeze Player'];
     return teamCards.includes(cardName);
+  };
+
+  // Helper function to check if card requires country selection
+  const requiresCountrySelection = (cardName) => {
+    return cardName === "Borrow coins to buy a country";
   };
 
   if (loading) {
@@ -388,6 +440,31 @@ const Inventory = ({ socket }) => {
               </div>
             )}
 
+            {/* Country Selection for Borrow Card */}
+            {requiresCountrySelection(selectedCard.name) && (
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
+                  Select Country to Buy
+                </label>
+                <select
+                  className="input"
+                  value={selectedCountry}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  required
+                >
+                  <option value="">Choose a country...</option>
+                  {availableCountries.map((country) => (
+                    <option key={country.id} value={country.id}>
+                      {country.name} - {country.cost} coins
+                    </option>
+                  ))}
+                </select>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  Available countries: {availableCountries.length} | Your balance can go down to -200 coins
+                </div>
+              </div>
+            )}
+
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
                 Description (Optional)
@@ -409,6 +486,7 @@ const Inventory = ({ socket }) => {
                 disabled={
                   (requiresGameSelection(selectedCard.name) && !selectedGame) ||
                   (requiresTeamSelection(selectedCard.name) && !selectedTeam) ||
+                  (requiresCountrySelection(selectedCard.name) && !selectedCountry) ||
                   ((selectedCard.type === 'attack' || selectedCard.type === 'alliance') && !selectedTeam)
                 }
                 style={{ flex: 1 }}
@@ -422,6 +500,7 @@ const Inventory = ({ socket }) => {
                   setSelectedCard(null);
                   setSelectedTeam('');
                   setSelectedGame('');
+                  setSelectedCountry('');
                   setDescription('');
                 }}
                 style={{ flex: 1 }}
