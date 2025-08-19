@@ -20,7 +20,20 @@ const Inventory = ({ socket }) => {
 
   const fetchInventory = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/inventory`, { withCredentials: true });
+      // Safari-specific authentication
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const config = { withCredentials: true };
+      
+      if (isSafari) {
+        const storedUsername = localStorage.getItem('safariUsername');
+        if (storedUsername) {
+          config.headers = { 'x-username': storedUsername };
+          console.log('🦁 Inventory: Adding Safari username:', storedUsername);
+        }
+      }
+      
+      const response = await axios.get(`${API_BASE_URL}/api/inventory`, config);
       setInventory(response.data);
     } catch (error) {
       console.error('Error fetching inventory:', error);
@@ -41,7 +54,21 @@ const Inventory = ({ socket }) => {
   const fetchAvailableGames = useCallback(async () => {
     try {
       console.log('🎮 Fetching available games...');
-      const response = await axios.get(`${API_BASE_URL}/api/games/available`, { withCredentials: true });
+      
+      // Safari-specific authentication
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const config = { withCredentials: true };
+      
+      if (isSafari) {
+        const storedUsername = localStorage.getItem('safariUsername');
+        if (storedUsername) {
+          config.headers = { 'x-username': storedUsername };
+          console.log('🦁 Available Games: Adding Safari username:', storedUsername);
+        }
+      }
+      
+      const response = await axios.get(`${API_BASE_URL}/api/games/available`, config);
       console.log('🎮 Received available games:', response.data);
       console.log('🎮 Available games type:', typeof response.data);
       console.log('🎮 Available games length:', Array.isArray(response.data) ? response.data.length : 'Not an array');

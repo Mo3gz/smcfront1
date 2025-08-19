@@ -54,7 +54,20 @@ const MapView = ({ userData, setUserData, socket }) => {
   useEffect(() => {
     const fetchMiningInfo = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/mining/info`, { withCredentials: true });
+        // Safari-specific authentication
+        const userAgent = navigator.userAgent;
+        const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+        const config = { withCredentials: true };
+        
+        if (isSafari) {
+          const storedUsername = localStorage.getItem('safariUsername');
+          if (storedUsername) {
+            config.headers = { 'x-username': storedUsername };
+            console.log('🦁 Mining Info: Adding Safari username:', storedUsername);
+          }
+        }
+        
+        const response = await axios.get(`${API_BASE_URL}/api/mining/info`, config);
         if (response.data) {
           setUserData(prev => ({
             ...prev,
@@ -140,9 +153,22 @@ const MapView = ({ userData, setUserData, socket }) => {
     if (!country) return;
     setConfirmModal({ open: false, country: null });
     try {
+      // Safari-specific authentication
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const config = { withCredentials: true };
+      
+      if (isSafari) {
+        const storedUsername = localStorage.getItem('safariUsername');
+        if (storedUsername) {
+          config.headers = { 'x-username': storedUsername };
+          console.log('🦁 Buy Country: Adding Safari username:', storedUsername);
+        }
+      }
+      
       const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
         countryId: country.id
-      }, { withCredentials: true });
+      }, config);
       
       // Update user data with new coins, score, and mining rate
       setUserData(prev => ({

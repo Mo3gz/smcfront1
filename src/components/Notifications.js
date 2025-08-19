@@ -14,7 +14,20 @@ const Notifications = ({ socket }) => {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/notifications`, { withCredentials: true });
+      // Safari-specific authentication
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const config = { withCredentials: true };
+      
+      if (isSafari) {
+        const storedUsername = localStorage.getItem('safariUsername');
+        if (storedUsername) {
+          config.headers = { 'x-username': storedUsername };
+          console.log('🦁 Notifications: Adding Safari username:', storedUsername);
+        }
+      }
+      
+      const response = await axios.get(`${API_BASE_URL}/api/notifications`, config);
       setNotifications(response.data);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -84,7 +97,18 @@ const Notifications = ({ socket }) => {
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
       // Sync with backend
-      axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, { withCredentials: true }).catch(() => {});
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const config = { withCredentials: true };
+      
+      if (isSafari) {
+        const storedUsername = localStorage.getItem('safariUsername');
+        if (storedUsername) {
+          config.headers = { 'x-username': storedUsername };
+        }
+      }
+      
+      axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, config).catch(() => {});
     }
   }, [isVisible, notifications.length]);
 

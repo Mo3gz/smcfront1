@@ -27,15 +27,15 @@ export const AuthProvider = ({ children }) => {
     const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
     
     if (isSafari) {
-      console.log('🦁 Setting up Safari API interceptor');
+      console.log('🦁 Setting up Safari API interceptor for global axios');
       
-      // Add request interceptor for Safari
+      // Add request interceptor for Safari to global axios
       const requestInterceptor = axios.interceptors.request.use(
         (config) => {
           const storedUsername = localStorage.getItem('safariUsername');
           if (storedUsername && !config.headers['x-username']) {
             config.headers['x-username'] = storedUsername;
-            console.log('🦁 Safari interceptor added username to request:', storedUsername);
+            console.log('🦁 Safari global interceptor added username to request:', storedUsername, 'URL:', config.url);
           }
           return config;
         },
@@ -50,6 +50,32 @@ export const AuthProvider = ({ children }) => {
       };
     }
   }, []);
+
+  // Immediate Safari interceptor setup (runs on every render)
+  const userAgent = navigator.userAgent;
+  const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+  
+  if (isSafari && typeof window !== 'undefined') {
+    // Set up interceptor immediately if not already set
+    if (!window.safariInterceptorSet) {
+      console.log('🦁 Setting up immediate Safari interceptor');
+      window.safariInterceptorSet = true;
+      
+      axios.interceptors.request.use(
+        (config) => {
+          const storedUsername = localStorage.getItem('safariUsername');
+          if (storedUsername && !config.headers['x-username']) {
+            config.headers['x-username'] = storedUsername;
+            console.log('🦁 Safari immediate interceptor added username to request:', storedUsername, 'URL:', config.url);
+          }
+          return config;
+        },
+        (error) => {
+          return Promise.reject(error);
+        }
+      );
+    }
+  }
 
   // Simple axios configuration
   const createAxiosConfig = () => {
