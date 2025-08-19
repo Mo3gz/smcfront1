@@ -406,9 +406,7 @@ const Inventory = ({ socket, userData, setUserData }) => {
                         return parseInt(gameId) <= selectedCard.maxGame;
                       }
                       // Fallback to hardcoded logic for backward compatibility
-                      if (selectedCard.name === "Flip the Fate") {
-                        return parseInt(gameId) <= 11; // Only games 1-11
-                      }
+                      // Flip the Fate can now show all games
                       return true; // All games for other cards
                     })
                     .map((gameId) => {
