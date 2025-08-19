@@ -38,6 +38,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "proxy": "smcback-production-6d12.up.railway.app"
+  }
 }
