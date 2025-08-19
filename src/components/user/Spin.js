@@ -85,19 +85,10 @@ const Spin = ({ socket, userData, setUserData }) => {
         if (data.userId === userData?.id) {
           console.log('🔄 Spin counts reset event received for current user:', data);
           
-          // Show a more prominent notification
+          // Show simple notification
           toast.success(data.message, {
-            duration: 5000,
-            position: 'top-center',
-            style: {
-              background: '#4CAF50',
-              color: 'white',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              padding: '16px',
-              borderRadius: '8px'
-            },
-            icon: '🎉'
+            duration: 3000,
+            position: 'top-center'
           });
           
           // Refresh user data to get updated spin counts
@@ -164,23 +155,9 @@ const Spin = ({ socket, userData, setUserData }) => {
            setSpinLimitations(data.spinLimitations);
            setSpinCounts(data.currentSpinCounts);
            
-           // If backend says all enabled spin types are completed, trigger manual reset
+           // Backend automatically handles the reset, no need for manual trigger
            if (data.shouldReset && data.allCompleted) {
-             console.log('🎯 Backend indicates all enabled spin types completed! Triggering manual reset...');
-             
-             // Call the manual reset endpoint
-             axios.post(`${API_BASE_URL}/api/spin/reset-when-completed`, {}, { withCredentials: true })
-               .then(response => {
-                 console.log('✅ Manual reset triggered successfully:', response.data);
-                 toast.success('🎉 All enabled spin types completed! Counts have been reset.', {
-                   duration: 4000,
-                   position: 'top-center'
-                 });
-               })
-               .catch(error => {
-                 console.error('❌ Error triggering manual reset:', error);
-                 toast.error('Failed to reset spin counts automatically');
-               });
+             console.log('🎯 Backend indicates all enabled spin types completed! Reset will be handled automatically.');
            }
          }
        });
