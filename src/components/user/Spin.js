@@ -535,20 +535,21 @@ const Spin = ({ socket, userData, setUserData }) => {
             fontWeight: 'bold'
           }
         });
-      } else {
-        toast.info(`❌ Wrong answer! No penalty - the correct answer was option ${response.data.correctAnswer + 1}.`, {
-          duration: 4000,
-          position: 'top-center',
-          style: {
-            background: '#ff9500',
-            color: 'white',
-            fontSize: '14px'
-          }
-        });
-      }
-      
-      setMcqQuestion(null);
-      setMcqTimer(null);
+                    } else {
+                toast(`❌ Wrong answer! No penalty - the correct answer was option ${response.data.correctAnswer + 1}.`, {
+                  duration: 4000,
+                  position: 'top-center',
+                  style: {
+                    background: '#ff9500',
+                    color: 'white',
+                    fontSize: '14px'
+                  }
+                });
+                            }
+        
+        // Hide the question from UI
+        setMcqQuestion(null);
+        setMcqTimer(null);
     } catch (error) {
       console.error('❌ MCQ: Error submitting answer:', error);
       console.error('❌ MCQ: Error response:', error.response?.data);
