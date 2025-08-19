@@ -30,11 +30,23 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  // Check if user is authenticated
+  // Check if user is authenticated - Enhanced for macOS/iOS
   const checkAuth = useCallback(async () => {
     try {
       console.log('🔍 Checking authentication...');
-      const config = createAxiosConfig();
+      
+      // Enhanced config for macOS/iOS compatibility
+      const config = {
+        ...createAxiosConfig(),
+        headers: {
+          ...createAxiosConfig().headers,
+          // Add token from localStorage as fallback for iOS
+          ...(localStorage.getItem('authToken') && {
+            'x-auth-token': localStorage.getItem('authToken')
+          })
+        }
+      };
+      
       const response = await axios.get(`${API_BASE_URL}/api/user`, config);
       console.log('🔍 Auth check response:', response.data);
       
@@ -57,6 +69,9 @@ export const AuthProvider = ({ children }) => {
       if (error.response) {
         if (error.response.status === 401) {
           errorMessage = 'Token expired or invalid. Please log in again.';
+          // Clear stored tokens on auth failure
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
         } else if (error.response.status === 403) {
           errorMessage = 'Access forbidden.';
         } else {
@@ -80,7 +95,7 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [checkAuth]);
 
-  // Enhanced login function with better error handling
+  // Enhanced login function with better error handling - macOS/iOS compatible
   const login = async (username, password) => {
     try {
       console.log('🔐 Attempting login for:', username);
@@ -105,6 +120,12 @@ export const AuthProvider = ({ children }) => {
       }
       
       console.log('🔐 Processed user data:', userData);
+      
+      // Store token in localStorage for macOS/iOS compatibility
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+        console.log('🔐 Token stored in localStorage for macOS/iOS compatibility');
+      }
       
       // Set user in state and localStorage
       setUser(userData);
@@ -139,18 +160,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
+  // Logout function - Enhanced for macOS/iOS
   const logout = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/api/logout`, {}, createAxiosConfig());
+      console.log('🚪 Starting logout process...');
+      
+      // Call backend to clear cookie
+      const config = createAxiosConfig();
+      await axios.post(`${API_BASE_URL}/api/logout`, {}, config);
+      
+      console.log('✅ Backend logout successful');
     } catch (error) {
-      // Ignore errors
+      console.error('❌ Backend logout error:', error);
+      // Continue with frontend cleanup even if backend fails
     } finally {
+      // Clear all possible stored data
       setUser(null);
+      
+      // Clear localStorage
       localStorage.removeItem('user');
       localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
+      
+      // Clear sessionStorage
       sessionStorage.clear();
-      window.location.href = '/';
+      
+      // Clear any cached axios headers
+      delete axios.defaults.headers.common['Authorization'];
+      
+      console.log('✅ Frontend logout cleanup completed');
+      
+      // Force a complete page reload to ensure clean state
+      window.location.reload();
     }
   };
 
