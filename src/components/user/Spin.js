@@ -480,7 +480,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         {/* Spin Type Selection */}
         <div style={{ marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '16px', color: '#333' }}>Choose Spin Type</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
             {spinTypes.map((spin) => {
               const isDisabled = isSpinDisabled(spin.id);
               const statusMessage = getSpinStatusMessage(spin.id);
