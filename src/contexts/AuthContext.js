@@ -105,8 +105,15 @@ export const AuthProvider = ({ children }) => {
   // Token refresh function
   const refreshToken = async () => {
     try {
-      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-      if (!token) return false;
+      // Try multiple token sources for better compatibility
+      const token = localStorage.getItem('authToken') || 
+                    sessionStorage.getItem('authToken') ||
+                    localStorage.getItem('token');
+      
+      if (!token) {
+        console.log('🔄 No token found for refresh');
+        return false;
+      }
       
       console.log('🔄 Attempting token refresh...');
       
@@ -120,16 +127,20 @@ export const AuthProvider = ({ children }) => {
       });
       
       if (response.data.token) {
+        // Store new token in all locations for maximum compatibility
         localStorage.setItem('authToken', response.data.token);
         sessionStorage.setItem('authToken', response.data.token);
-        console.log('🔄 Token refreshed successfully');
+        localStorage.setItem('token', response.data.token);
+        
+        console.log('🔄 Token refreshed successfully and stored in all locations');
         return true;
       }
     } catch (error) {
       console.log('🔄 Token refresh failed:', error.message);
-      // If refresh fails, clear tokens
+      // If refresh fails, clear all tokens
       localStorage.removeItem('authToken');
       sessionStorage.removeItem('authToken');
+      localStorage.removeItem('token');
     }
     return false;
   };
@@ -231,18 +242,28 @@ export const AuthProvider = ({ children }) => {
           }
         };
         
-        // Try multiple token sources for better compatibility
-        const token = localStorage.getItem('authToken') || 
-                     sessionStorage.getItem('authToken') ||
-                     localStorage.getItem('token');
-        
-        if (token) {
-          config.headers['x-auth-token'] = token;
-          config.headers['Authorization'] = `Bearer ${token}`;
-          console.log('🔍 Token found and added to headers for standard browser');
-        } else {
-          console.log('🔍 No token found in any storage for standard browser');
-        }
+                 // Try multiple token sources for better compatibility
+         const token = localStorage.getItem('authToken') || 
+                      sessionStorage.getItem('authToken') ||
+                      localStorage.getItem('token');
+         
+         if (token) {
+           config.headers['x-auth-token'] = token;
+           config.headers['Authorization'] = `Bearer ${token}`;
+           console.log('🔍 Token found and added to headers for standard browser');
+           console.log('🔍 Token source check:', {
+             authToken: localStorage.getItem('authToken') ? 'found' : 'not found',
+             sessionToken: sessionStorage.getItem('authToken') ? 'found' : 'not found',
+             token: localStorage.getItem('token') ? 'found' : 'not found'
+           });
+         } else {
+           console.log('🔍 No token found in any storage for standard browser');
+           console.log('🔍 Storage check:', {
+             authToken: localStorage.getItem('authToken'),
+             sessionToken: sessionStorage.getItem('authToken'),
+             token: localStorage.getItem('token')
+           });
+         }
         
         const response = await axios.get(`${API_BASE_URL}/api/user`, config);
         console.log('🔍 Standard auth check response:', response.data);
@@ -463,6 +484,39 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Test authentication function for debugging
+  const testAuth = async () => {
+    try {
+      console.log('🧪 Testing authentication...');
+      
+      // Check what tokens we have stored
+      const authToken = localStorage.getItem('authToken');
+      const sessionToken = sessionStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
+      
+      console.log('🧪 Stored tokens:', {
+        authToken: authToken ? authToken.substring(0, 20) + '...' : 'not found',
+        sessionToken: sessionToken ? sessionToken.substring(0, 20) + '...' : 'not found',
+        token: token ? token.substring(0, 20) + '...' : 'not found'
+      });
+      
+      // Test the auth endpoint
+      const response = await axios.get(`${API_BASE_URL}/api/auth/test`, {
+        headers: {
+          'Authorization': `Bearer ${authToken || sessionToken || token}`,
+          'x-auth-token': authToken || sessionToken || token
+        },
+        withCredentials: true
+      });
+      
+      console.log('🧪 Auth test response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('🧪 Auth test failed:', error.response?.data || error.message);
+      return { success: false, error: error.response?.data || error.message };
+    }
+  };
+
   // Check admin status
   const checkAdminStatus = async () => {
     try {
@@ -503,7 +557,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     checkAuth,
-    checkAdminStatus
+    checkAdminStatus,
+    testAuth
   };
 
   return (

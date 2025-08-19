@@ -9,7 +9,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const { login } = useAuth();
+  const { login, testAuth } = useAuth();
 
   // Auto sign-in credentials
   const autoSignInCredentials = [
@@ -312,6 +312,34 @@ const Login = () => {
                   </div>
                 </button>
               ))}
+            </div>
+            
+            {/* Debug Test Button */}
+            <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(255, 193, 7, 0.1)', borderRadius: '8px' }}>
+              <button
+                onClick={async () => {
+                  console.log('🧪 Testing authentication...');
+                  const result = await testAuth();
+                  console.log('🧪 Test result:', result);
+                  if (result.success) {
+                    toast.success('Auth test passed!');
+                  } else {
+                    toast.error('Auth test failed: ' + (result.message || result.error));
+                  }
+                }}
+                style={{
+                  padding: '8px 12px',
+                  background: '#ffc107',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  color: '#333',
+                  fontWeight: 'bold'
+                }}
+              >
+                🧪 Test Authentication
+              </button>
             </div>
           </div>
         </div>
