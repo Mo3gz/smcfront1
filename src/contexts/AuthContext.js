@@ -102,6 +102,32 @@ export const AuthProvider = ({ children }) => {
     return config;
   };
 
+  // Token refresh function
+  const refreshToken = async () => {
+    try {
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      if (!token) return false;
+      
+      const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
+      });
+      
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+        sessionStorage.setItem('authToken', response.data.token);
+        console.log('🔄 Token refreshed successfully');
+        return true;
+      }
+    } catch (error) {
+      console.log('🔄 Token refresh failed:', error.message);
+    }
+    return false;
+  };
+
   // Check if user is authenticated - Enhanced for Safari (iOS + macOS)
   const checkAuth = useCallback(async () => {
     try {
@@ -222,6 +248,20 @@ export const AuthProvider = ({ children }) => {
       let errorMessage = 'Unknown error';
       if (error.response) {
         if (error.response.status === 401) {
+          console.log('🔍 401 error - attempting token refresh');
+          // Try to refresh the token before giving up
+          const refreshSuccess = await refreshToken();
+          if (refreshSuccess) {
+            console.log('🔍 Token refreshed, retrying auth check');
+            // Retry the auth check with the new token
+            try {
+              await checkAuth();
+              return; // Exit early if retry succeeds
+            } catch (retryError) {
+              console.log('🔍 Retry failed after token refresh');
+            }
+          }
+          
           errorMessage = 'Token expired or invalid. Please log in again.';
           // Clear stored tokens on auth failure
           localStorage.removeItem('authToken');

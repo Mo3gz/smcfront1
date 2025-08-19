@@ -21,11 +21,22 @@ const api = axios.create({
   }
 });
 
+// Retry configuration
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000; // 1 second
+
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
     // Add mobile-specific headers
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
+    
+    // Add authentication token to all requests if available
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    if (token && !config.headers['Authorization']) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers['x-auth-token'] = token;
+    }
     
     // Safari-specific authentication (add username to all requests)
     const userAgent = navigator.userAgent;
@@ -50,7 +61,9 @@ api.interceptors.request.use(
 // Response interceptor for better error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
     // Handle mobile-specific errors
     if (error.code === 'ECONNABORTED') {
       console.error('Request timeout - mobile network issue');
@@ -61,16 +74,23 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       // Token expired or invalid
-      console.log('Token expired or invalid');
-      // Clear user data
-      localStorage.removeItem('user');
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('safariUsername');
-      sessionStorage.removeItem('authToken');
+      console.log('Token expired or invalid - attempting to refresh authentication');
       
-      // Only redirect if we're not already on the login page
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+      // Don't immediately clear everything - let the auth context handle it
+      // Only clear if this is not an auth check request itself
+      if (!error.config.url.includes('/api/user') && !error.config.url.includes('/api/safari/auth/me')) {
+        console.log('Clearing authentication data due to 401 on non-auth endpoint');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('safariUsername');
+        sessionStorage.removeItem('authToken');
+        
+        // Only redirect if we're not already on the login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      } else {
+        console.log('401 on auth endpoint - letting auth context handle refresh');
       }
     }
 
@@ -80,6 +100,17 @@ api.interceptors.response.use(
       return Promise.reject({
         message: 'Network error. Please check your connection and try again.'
       });
+    }
+
+    // Retry logic for network errors (5xx, 0 status, etc.)
+    if (originalRequest && !originalRequest._retry && 
+        (error.response?.status >= 500 || error.response?.status === 0)) {
+      originalRequest._retry = true;
+      
+      console.log(`Retrying request: ${originalRequest.url}`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      
+      return api(originalRequest);
     }
 
     return Promise.reject(error);
