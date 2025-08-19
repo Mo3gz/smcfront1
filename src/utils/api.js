@@ -64,7 +64,14 @@ api.interceptors.response.use(
       console.log('Token expired or invalid');
       // Clear user data
       localStorage.removeItem('user');
-      // You can trigger a redirect to login here
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('safariUsername');
+      sessionStorage.removeItem('authToken');
+      
+      // Only redirect if we're not already on the login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
 
     if (error.response?.status === 0) {

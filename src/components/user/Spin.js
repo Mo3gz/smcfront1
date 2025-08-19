@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { RotateCcw, Gift, Zap, Shield, Heart } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { RotateCcw, Gift, Zap, Shield, Heart, TrendingUp, TrendingDown, Shuffle, Swords, Handshake } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/api';
@@ -7,12 +7,12 @@ import Confetti from 'react-confetti';
 
 // Move these above all hooks and state
 const spinTypes = [
-  { id: 'lucky', name: 'Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
-  { id: 'gamehelper', name: 'Game Helper', cost: 50, icon: Zap, color: '#ff6b6b' },
-  { id: 'challenge', name: 'Challenge', cost: 50, icon: Heart, color: '#4ecdc4' },
-  { id: 'random', name: 'Random', cost: 30, icon: RotateCcw, color: '#667eea' },
-  { id: 'hightier', name: 'High Tier', cost: 50, icon: Gift, color: '#ff9ff3' },
-  { id: 'lowtier', name: 'Low Tier', cost: 50, icon: RotateCcw, color: '#74b9ff' },
+  { id: 'lucky', name: 'Lucky Spin', cost: 50, icon: Shield, color: '#feca57' }, // clover (using Shield as clover)
+  { id: 'gamehelper', name: 'Game Helper', cost: 50, icon: Handshake, color: '#ff6b6b' }, // heart-handshake
+  { id: 'challenge', name: 'Challenge', cost: 50, icon: Swords, color: '#4ecdc4' }, // swords/codesandbox
+  { id: 'random', name: 'Random', cost: 30, icon: Shuffle, color: '#667eea' }, // shuffle
+  { id: 'hightier', name: 'High Tier', cost: 50, icon: TrendingUp, color: '#ff9ff3' }, // trending up
+  { id: 'lowtier', name: 'Low Tier', cost: 50, icon: TrendingDown, color: '#74b9ff' }, // trending low
 ];
 
 const Spin = ({ socket, userData, setUserData }) => {
@@ -41,29 +41,35 @@ const Spin = ({ socket, userData, setUserData }) => {
     setFinalCost(Math.max(0, Math.floor(baseCost * (1 - discount / 100))));
   }, [spinType, discount]);
 
-  // Validate promo code when it changes
+  // Validate promo code when it changes with debounce
   useEffect(() => {
     if (!promoCode) {
       setDiscount(0);
       setPromoValid(null);
       return;
     }
-    setCheckingPromo(true);
-    axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
-      .then(res => {
-        if (res.data.valid) {
-          setDiscount(res.data.discount);
-          setPromoValid(true);
-        } else {
+    
+    // Debounce the API call to prevent excessive requests
+    const timeoutId = setTimeout(() => {
+      setCheckingPromo(true);
+      axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
+        .then(res => {
+          if (res.data.valid) {
+            setDiscount(res.data.discount);
+            setPromoValid(true);
+          } else {
+            setDiscount(0);
+            setPromoValid(false);
+          }
+        })
+        .catch(() => {
           setDiscount(0);
           setPromoValid(false);
-        }
-      })
-      .catch(() => {
-        setDiscount(0);
-        setPromoValid(false);
-      })
-      .finally(() => setCheckingPromo(false));
+        })
+        .finally(() => setCheckingPromo(false));
+    }, 500); // Wait 500ms after user stops typing
+    
+    return () => clearTimeout(timeoutId);
   }, [promoCode]);
 
   // Listen for real-time user updates (coins, score changes)
@@ -180,11 +186,26 @@ const Spin = ({ socket, userData, setUserData }) => {
       const limitations = userData.teamSettings.spinLimitations || {};
       const counts = userData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
       
-      console.log('🔄 Setting spin limitations:', limitations);
-      console.log('🔄 Setting spin counts:', counts);
+      // Only update if the values are actually different to prevent infinite loops
+      setSpinLimitations(prev => {
+        const newLimitations = JSON.stringify(limitations);
+        const prevLimitations = JSON.stringify(prev);
+        if (newLimitations !== prevLimitations) {
+          console.log('🔄 Setting spin limitations:', limitations);
+          return limitations;
+        }
+        return prev;
+      });
       
-      setSpinLimitations(limitations);
-      setSpinCounts(counts);
+      setSpinCounts(prev => {
+        const newCounts = JSON.stringify(counts);
+        const prevCounts = JSON.stringify(prev);
+        if (newCounts !== prevCounts) {
+          console.log('🔄 Setting spin counts:', counts);
+          return counts;
+        }
+        return prev;
+      });
       
       console.log('🔄 Updated spinCounts state to:', counts);
     } else {
@@ -198,13 +219,28 @@ const Spin = ({ socket, userData, setUserData }) => {
         lowtier: { enabled: true, limit: 1 },
         random: { enabled: true, limit: 1 }
       };
-      setSpinLimitations(defaultLimitations);
-      setSpinCounts({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+      setSpinLimitations(prev => {
+        const newLimitations = JSON.stringify(defaultLimitations);
+        const prevLimitations = JSON.stringify(prev);
+        if (newLimitations !== prevLimitations) {
+          return defaultLimitations;
+        }
+        return prev;
+      });
+      setSpinCounts(prev => {
+        const defaultCounts = { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
+        const newCounts = JSON.stringify(defaultCounts);
+        const prevCounts = JSON.stringify(prev);
+        if (newCounts !== prevCounts) {
+          return defaultCounts;
+        }
+        return prev;
+      });
     }
-  }, [userData]);
+  }, [userData?.teamSettings]); // Only depend on teamSettings, not the entire userData object
 
-  // Function to check if a spin type is disabled
-  const isSpinDisabled = (spinId) => {
+  // Memoized function to check if a spin type is disabled
+  const isSpinDisabled = useCallback((spinId) => {
     const spinCategory = spinId === 'lucky' ? 'lucky' : 
                         spinId === 'gamehelper' ? 'gamehelper' :
                         spinId === 'challenge' ? 'challenge' :
@@ -215,29 +251,16 @@ const Spin = ({ socket, userData, setUserData }) => {
     const limitation = spinLimitations[spinCategory];
     const currentCount = spinCounts[spinCategory] || 0;
     
-    console.log(`🔍 Checking ${spinId} (${spinCategory}):`, {
-      spinLimitations,
-      limitation,
-      currentCount,
-      isDisabled: !limitation || !limitation.enabled || limitation.limit === 0 || currentCount >= limitation.limit
-    });
-    
     if (!limitation || !limitation.enabled || limitation.limit === 0) {
-      console.log(`❌ ${spinId} disabled:`, { 
-        noLimitation: !limitation, 
-        notEnabled: limitation && !limitation.enabled, 
-        limitZero: limitation && limitation.limit === 0 
-      });
       return true; // No limitation, disabled, or limit is 0
     }
     
     const reachedLimit = currentCount >= limitation.limit;
-    console.log(`✅ ${spinId} enabled:`, { currentCount, limit: limitation.limit, reachedLimit });
     return reachedLimit;
-  };
+  }, [spinLimitations, spinCounts]);
 
-  // Function to get spin status message
-  const getSpinStatusMessage = (spinId) => {
+  // Memoized function to get spin status message
+  const getSpinStatusMessage = useCallback((spinId) => {
     const spinCategory = spinId === 'lucky' ? 'lucky' : 
                         spinId === 'gamehelper' ? 'gamehelper' :
                         spinId === 'challenge' ? 'challenge' :
@@ -258,7 +281,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     }
     
     return `Available (${current}/${limit})`;
-  };
+  }, [spinLimitations, spinCounts]);
 
   const handleSpin = async () => {
     if (spinning) return;
@@ -398,11 +421,73 @@ const Spin = ({ socket, userData, setUserData }) => {
     }
   };
 
-  const getSpinIcon = (type) => {
+  const getSpinIcon = useCallback((type) => {
     const spinType = spinTypes.find(s => s.id === type);
     const IconComponent = spinType.icon;
     return <IconComponent size={24} />;
-  };
+  }, []);
+
+  // Memoized spin types rendering to prevent unnecessary re-renders
+  const memoizedSpinTypes = useMemo(() => {
+    return spinTypes.map((spin) => {
+      const isDisabled = isSpinDisabled(spin.id);
+      const statusMessage = getSpinStatusMessage(spin.id);
+      
+      return (
+        <div
+          key={spin.id}
+          className={`card-item ${spinType === spin.id ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
+          style={{
+            background: isDisabled ? '#f5f5f5' : (spinType === spin.id ? spin.color : 'rgba(255, 255, 255, 0.9)'),
+            color: isDisabled ? '#999' : (spinType === spin.id ? 'white' : '#333'),
+            cursor: isDisabled ? 'not-allowed' : 'pointer',
+            padding: '16px',
+            borderRadius: '12px',
+            textAlign: 'center',
+            border: spinType === spin.id ? '2px solid' + spin.color : '2px solid transparent',
+            opacity: isDisabled ? 0.6 : 1,
+            position: 'relative'
+          }}
+          onClick={() => !isDisabled && setSpinType(spin.id)}
+        >
+          {isDisabled && (
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              background: '#ff4757',
+              color: 'white',
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '10px',
+              fontWeight: 'bold'
+            }}>
+              OFFLINE
+            </div>
+          )}
+          <div style={{ marginBottom: '8px' }}>
+            {getSpinIcon(spin.id)}
+          </div>
+          <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
+            {spin.name}
+          </div>
+          <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>
+            {spin.cost} coins
+          </div>
+          {statusMessage && (
+            <div style={{ 
+              fontSize: '10px', 
+              opacity: 0.8,
+              color: isDisabled ? '#ff4757' : '#666',
+              fontWeight: 'bold'
+            }}>
+              {statusMessage}
+            </div>
+          )}
+        </div>
+      );
+    });
+  }, [spinTypes, spinType, isSpinDisabled, getSpinStatusMessage, getSpinIcon]);
 
   // MCQ handling
   const handleMcqAnswer = async (selectedAnswer) => {
@@ -481,64 +566,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         <div style={{ marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '16px', color: '#333' }}>Choose Spin Type</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-            {spinTypes.map((spin) => {
-              const isDisabled = isSpinDisabled(spin.id);
-              const statusMessage = getSpinStatusMessage(spin.id);
-              
-              return (
-                <div
-                  key={spin.id}
-                  className={`card-item ${spinType === spin.id ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
-                  style={{
-                    background: isDisabled ? '#f5f5f5' : (spinType === spin.id ? spin.color : 'rgba(255, 255, 255, 0.9)'),
-                    color: isDisabled ? '#999' : (spinType === spin.id ? 'white' : '#333'),
-                    cursor: isDisabled ? 'not-allowed' : 'pointer',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    textAlign: 'center',
-                    border: spinType === spin.id ? '2px solid' + spin.color : '2px solid transparent',
-                    opacity: isDisabled ? 0.6 : 1,
-                    position: 'relative'
-                  }}
-                  onClick={() => !isDisabled && setSpinType(spin.id)}
-                >
-                  {isDisabled && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px',
-                      background: '#ff4757',
-                      color: 'white',
-                      fontSize: '10px',
-                      padding: '2px 6px',
-                      borderRadius: '10px',
-                      fontWeight: 'bold'
-                    }}>
-                      OFFLINE
-                    </div>
-                  )}
-                  <div style={{ marginBottom: '8px' }}>
-                    {getSpinIcon(spin.id)}
-                  </div>
-                  <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
-                    {spin.name}
-                  </div>
-                  <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>
-                    {spin.cost} coins
-                  </div>
-                  {statusMessage && (
-                    <div style={{ 
-                      fontSize: '10px', 
-                      opacity: 0.8,
-                      color: isDisabled ? '#ff4757' : '#666',
-                      fontWeight: 'bold'
-                    }}>
-                      {statusMessage}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {memoizedSpinTypes}
           </div>
         </div>
 
