@@ -7,7 +7,6 @@ import Confetti from 'react-confetti';
 
 // Move these above all hooks and state
 const spinTypes = [
-  { id: 'regular', name: '🎯 Regular Spin', cost: 50, icon: Shield, color: '#feca57' },
   { id: 'lucky', name: '🎡 Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
   { id: 'gamehelper', name: '🛠 Game Helper', cost: 50, icon: Zap, color: '#ff6b6b' },
   { id: 'challenge', name: '⚔ Challenge', cost: 50, icon: Heart, color: '#4ecdc4' },
@@ -34,7 +33,7 @@ const Spin = ({ socket, userData, setUserData }) => {
   
   // Spin limitation states
   const [spinLimitations, setSpinLimitations] = useState({});
-  const [spinCounts, setSpinCounts] = useState({ regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+  const [spinCounts, setSpinCounts] = useState({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
 
   useEffect(() => {
     // Update final cost when spinType or discount changes
@@ -107,7 +106,7 @@ const Spin = ({ socket, userData, setUserData }) => {
               ...prev,
               teamSettings: {
                 ...prev.teamSettings,
-                spinCounts: { regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
+                spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
               }
             };
             console.log('🔄 Updated userData with reset spin counts:', updatedUserData);
@@ -115,7 +114,7 @@ const Spin = ({ socket, userData, setUserData }) => {
           });
           
           // Also directly update the local spinCounts state
-          setSpinCounts({ regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+          setSpinCounts({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
           console.log('🔄 Directly reset local spinCounts state');
         } else {
           console.log('📡 Spin reset event received but not for current user');
@@ -148,41 +147,42 @@ const Spin = ({ socket, userData, setUserData }) => {
         }
       });
 
-      // Listen for spin limitation status updates from backend
-      socket.on('spin-limitation-status', (data) => {
-        console.log('📡 Spin limitation status received:', data);
-        console.log('📡 Current userData ID:', userData?.id);
-        console.log('📡 Event user ID:', data.userId);
-        
-        if (data.userId === userData?.id) {
-          console.log('🔄 Spin limitation status for current user:', data);
-          console.log('🔄 All completed:', data.allCompleted);
-          console.log('🔄 Should reset:', data.shouldReset);
-          
-          // Update local states with real-time data from backend
-          setSpinLimitations(data.spinLimitations);
-          setSpinCounts(data.currentSpinCounts);
-          
-          // If backend says all limitations are completed, trigger manual reset
-          if (data.shouldReset && data.allCompleted) {
-            console.log('🎯 Backend indicates all spin limitations completed! Triggering manual reset...');
-            
-            // Call the manual reset endpoint
-            axios.post(`${API_BASE_URL}/api/spin/reset-when-completed`, {}, { withCredentials: true })
-              .then(response => {
-                console.log('✅ Manual reset triggered successfully:', response.data);
-                toast.success('🎉 All spin limitations completed! Counts have been reset.', {
-                  duration: 4000,
-                  position: 'top-center'
-                });
-              })
-              .catch(error => {
-                console.error('❌ Error triggering manual reset:', error);
-                toast.error('Failed to reset spin counts automatically');
-              });
-          }
-        }
-      });
+             // Listen for spin limitation status updates from backend
+       socket.on('spin-limitation-status', (data) => {
+         console.log('📡 Spin limitation status received:', data);
+         console.log('📡 Current userData ID:', userData?.id);
+         console.log('📡 Event user ID:', data.userId);
+         
+         if (data.userId === userData?.id) {
+           console.log('🔄 Spin limitation status for current user:', data);
+           console.log('🔄 Current spin type:', data.currentSpinType);
+           console.log('🔄 Should reset:', data.shouldReset);
+           console.log('🔄 Reset reason:', data.resetReason);
+           
+           // Update local states with real-time data from backend
+           setSpinLimitations(data.spinLimitations);
+           setSpinCounts(data.currentSpinCounts);
+           
+           // If backend says current spin type reached its limit, trigger manual reset
+           if (data.shouldReset) {
+             console.log('🎯 Backend indicates spin limit reached! Triggering manual reset...');
+             
+             // Call the manual reset endpoint
+             axios.post(`${API_BASE_URL}/api/spin/reset-when-completed`, {}, { withCredentials: true })
+               .then(response => {
+                 console.log('✅ Manual reset triggered successfully:', response.data);
+                 toast.success(`🎉 ${data.resetReason}! All spin counts have been reset.`, {
+                   duration: 4000,
+                   position: 'top-center'
+                 });
+               })
+               .catch(error => {
+                 console.error('❌ Error triggering manual reset:', error);
+                 toast.error('Failed to reset spin counts automatically');
+               });
+           }
+         }
+       });
 
       return () => {
         socket.off('user-update');
@@ -200,7 +200,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     
     if (userData?.teamSettings) {
       const limitations = userData.teamSettings.spinLimitations || {};
-      const counts = userData.teamSettings.spinCounts || { regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
+      const counts = userData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
       
       console.log('🔄 Setting spin limitations:', limitations);
       console.log('🔄 Setting spin counts:', counts);
@@ -213,7 +213,6 @@ const Spin = ({ socket, userData, setUserData }) => {
       console.log('⚠️ No teamSettings found in userData, using defaults');
       // Set default limitations if none exist
       const defaultLimitations = {
-        regular: { enabled: true, limit: 1 },
         lucky: { enabled: true, limit: 1 },
         gamehelper: { enabled: true, limit: 1 },
         challenge: { enabled: true, limit: 1 },
@@ -222,19 +221,18 @@ const Spin = ({ socket, userData, setUserData }) => {
         random: { enabled: true, limit: 1 }
       };
       setSpinLimitations(defaultLimitations);
-      setSpinCounts({ regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+      setSpinCounts({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
     }
   }, [userData]);
 
   // Function to check if a spin type is disabled
   const isSpinDisabled = (spinId) => {
-    const spinCategory = spinId === 'regular' ? 'regular' :
-                        spinId === 'lucky' ? 'lucky' : 
+    const spinCategory = spinId === 'lucky' ? 'lucky' : 
                         spinId === 'gamehelper' ? 'gamehelper' :
                         spinId === 'challenge' ? 'challenge' :
                         spinId === 'hightier' ? 'hightier' :
                         spinId === 'lowtier' ? 'lowtier' :
-                        spinId === 'random' ? 'random' : 'regular';
+                        spinId === 'random' ? 'random' : 'lucky';
     
     const limitation = spinLimitations[spinCategory];
     const currentCount = spinCounts[spinCategory] || 0;
@@ -262,13 +260,12 @@ const Spin = ({ socket, userData, setUserData }) => {
 
   // Function to get spin status message
   const getSpinStatusMessage = (spinId) => {
-    const spinCategory = spinId === 'regular' ? 'regular' :
-                        spinId === 'lucky' ? 'lucky' : 
+    const spinCategory = spinId === 'lucky' ? 'lucky' : 
                         spinId === 'gamehelper' ? 'gamehelper' :
                         spinId === 'challenge' ? 'challenge' :
                         spinId === 'hightier' ? 'hightier' :
                         spinId === 'lowtier' ? 'lowtier' :
-                        spinId === 'random' ? 'random' : 'regular';
+                        spinId === 'random' ? 'random' : 'lucky';
     
     const limitation = spinLimitations[spinCategory];
     if (!limitation || !limitation.enabled || limitation.limit === 0) {
