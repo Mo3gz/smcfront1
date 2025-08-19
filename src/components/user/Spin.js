@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { RotateCcw, Gift, Zap, Shield, Heart, TrendingUp, TrendingDown, Shuffle, Swords, Star, Target, Crown } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { RotateCcw, Gift, TrendingDown, Shuffle, Swords, Star, Target, Crown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/api';
@@ -178,13 +178,17 @@ const Spin = ({ socket, userData, setUserData }) => {
   }, [socket, userData?.id, setUserData]);
 
   // Update spin limitations and counts when userData changes
+  const userDataRef = useRef(userData);
+  userDataRef.current = userData;
+  
   useEffect(() => {
-    console.log('🔄 userData changed:', userData);
-    console.log('🔄 userData.teamSettings:', userData?.teamSettings);
+    const currentUserData = userDataRef.current;
+    console.log('🔄 userData changed:', currentUserData);
+    console.log('🔄 userData.teamSettings:', currentUserData?.teamSettings);
     
-    if (userData?.teamSettings) {
-      const limitations = userData.teamSettings.spinLimitations || {};
-      const counts = userData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
+    if (currentUserData?.teamSettings) {
+      const limitations = currentUserData.teamSettings.spinLimitations || {};
+      const counts = currentUserData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
       
       // Only update if the values are actually different to prevent infinite loops
       setSpinLimitations(prev => {
@@ -487,7 +491,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         </div>
       );
     });
-  }, [spinTypes, spinType, isSpinDisabled, getSpinStatusMessage, getSpinIcon]);
+  }, [spinType, isSpinDisabled, getSpinStatusMessage, getSpinIcon]);
 
   // MCQ handling
   const handleMcqAnswer = async (selectedAnswer) => {
