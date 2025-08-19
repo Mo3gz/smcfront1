@@ -1443,16 +1443,15 @@ const CountryManagement = ({ teams, socket }) => {
     }
   };
 
-  // Filter countries based on search, ownership filter, and 50 coins filter
+  // Filter countries based on search and ownership filter
   const filteredCountries = countries.filter(country => {
     const matchesSearch = country.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesOwnership = 
       filterOwnership === 'all' ||
       (filterOwnership === 'owned' && country.owner) ||
       (filterOwnership === 'unowned' && !country.owner);
-    const matchesFiftyCoins = !showFiftyCoinsOnly || country.cost === 50;
     
-    return matchesSearch && matchesOwnership && matchesFiftyCoins;
+    return matchesSearch && matchesOwnership;
   });
 
   if (loading) {
