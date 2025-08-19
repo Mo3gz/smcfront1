@@ -120,7 +120,7 @@ const AdminDashboard = ({ socket }) => {
       case 'teams':
         return <TeamManagement teams={teams} fetchTeams={fetchTeams} />;
       case 'countries':
-        return <CountryManagement teams={teams} />;
+        return <CountryManagement teams={teams} socket={socket} />;
       case 'games':
         return <GameManagement />;
       case 'statistics':
@@ -1205,12 +1205,13 @@ const TeamManagement = ({ teams, fetchTeams }) => {
 };
 
 // Country Management Component
-const CountryManagement = ({ teams }) => {
+const CountryManagement = ({ teams, socket }) => {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOwnership, setFilterOwnership] = useState('all'); // all, owned, unowned
   const [showFiftyCoinsOnly, setShowFiftyCoinsOnly] = useState(false);
+  const [fiftyCoinsCountriesHidden, setFiftyCoinsCountriesHidden] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [newOwnerId, setNewOwnerId] = useState('');
   
@@ -1258,6 +1259,21 @@ const CountryManagement = ({ teams }) => {
   useEffect(() => {
     fetchCountries();
   }, [fetchCountries]);
+
+  // Listen for global 50 coins visibility updates
+  useEffect(() => {
+    if (socket) {
+      socket.on('fifty-coins-countries-visibility-update', (data) => {
+        console.log('📡 Global 50 coins visibility update received:', data);
+        setFiftyCoinsCountriesHidden(data.hidden);
+        toast.info(`50 coins countries are now ${data.hidden ? 'hidden' : 'visible'} globally`);
+      });
+
+      return () => {
+        socket.off('fifty-coins-countries-visibility-update');
+      };
+    }
+  }, [socket]);
 
   const handleToggleVisibility = async (countryId, currentVisibility) => {
     try {
@@ -1413,6 +1429,21 @@ const CountryManagement = ({ teams }) => {
     }
   };
 
+  const handleToggleFiftyCoinsVisibility = async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/admin/countries/toggle-fifty-coins`, {
+        hidden: !fiftyCoinsCountriesHidden
+      }, { withCredentials: true });
+      
+      console.log('Global 50 coins visibility toggle response:', response.data);
+      setFiftyCoinsCountriesHidden(!fiftyCoinsCountriesHidden);
+      toast.success(response.data.message);
+    } catch (error) {
+      console.error('Error toggling 50 coins countries visibility:', error);
+      toast.error(error.response?.data?.error || 'Failed to toggle 50 coins countries visibility');
+    }
+  };
+
   // Filter countries based on search, ownership filter, and 50 coins filter
   const filteredCountries = countries.filter(country => {
     const matchesSearch = country.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -1501,10 +1532,10 @@ const CountryManagement = ({ teams }) => {
         </div>
         <div style={{ minWidth: '150px', display: 'flex', alignItems: 'end' }}>
           <button
-            onClick={() => setShowFiftyCoinsOnly(!showFiftyCoinsOnly)}
+            onClick={handleToggleFiftyCoinsVisibility}
             className="btn"
             style={{
-              backgroundColor: showFiftyCoinsOnly ? '#28a745' : '#6c757d',
+              backgroundColor: fiftyCoinsCountriesHidden ? '#dc3545' : '#28a745',
               color: 'white',
               padding: '10px 16px',
               fontSize: '14px',
@@ -1515,7 +1546,7 @@ const CountryManagement = ({ teams }) => {
               transition: 'background-color 0.2s'
             }}
           >
-            {showFiftyCoinsOnly ? 'Show All' : 'Show 50 Coins Only'}
+            {fiftyCoinsCountriesHidden ? 'Show 50 Coins Countries' : 'Hide 50 Coins Countries'}
           </button>
         </div>
       </div>

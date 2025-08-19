@@ -121,6 +121,15 @@ const MapView = ({ userData, setUserData, socket }) => {
         ));
       });
 
+      // Listen for global 50 coins countries visibility updates
+      socket.on('fifty-coins-countries-visibility-update', (data) => {
+        console.log('📡 Global 50 coins visibility update received:', data);
+        toast.info(`50 coins countries are now ${data.hidden ? 'hidden' : 'visible'}`, {
+          duration: 3000,
+          icon: data.hidden ? '👁️‍🗨️' : '👁️',
+        });
+      });
+
       // Listen for mining updates
       socket.on('user-update', (updatedUser) => {
         if (updatedUser.id === userData?.id) {
@@ -131,6 +140,7 @@ const MapView = ({ userData, setUserData, socket }) => {
       return () => {
         socket.off('countries-update');
         socket.off('country-visibility-update');
+        socket.off('fifty-coins-countries-visibility-update');
         socket.off('user-update');
       };
     }
