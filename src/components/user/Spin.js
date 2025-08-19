@@ -77,8 +77,13 @@ const Spin = ({ socket, userData, setUserData }) => {
       });
 
       socket.on('spin-counts-reset', (data) => {
+        console.log('📡 Spin counts reset socket event received:', data);
+        console.log('📡 Current userData ID:', userData?.id);
+        console.log('📡 Event user ID:', data.userId);
+        console.log('📡 IDs match?', data.userId === userData?.id);
+        
         if (data.userId === userData?.id) {
-          console.log('🔄 Spin counts reset event received:', data);
+          console.log('🔄 Spin counts reset event received for current user:', data);
           
           // Show a more prominent notification
           toast.success(data.message, {
@@ -111,18 +116,34 @@ const Spin = ({ socket, userData, setUserData }) => {
           // Also directly update the local spinCounts state
           setSpinCounts({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
           console.log('🔄 Directly reset local spinCounts state');
+        } else {
+          console.log('📡 Spin reset event received but not for current user');
         }
       });
 
       // Listen for team settings updates from admin
       socket.on('user-team-settings-updated', (data) => {
+        console.log('📡 Team settings update socket event received:', data);
+        console.log('📡 Current userData ID:', userData?.id);
+        console.log('📡 Event user ID:', data.userId);
+        
         if (data.userId === userData?.id) {
           console.log('🔄 Team settings updated via socket:', data.teamSettings);
+          console.log('🔄 New spin counts:', data.teamSettings?.spinCounts);
+          
           // Update user data with new team settings
           setUserData(prev => ({
             ...prev,
             teamSettings: data.teamSettings
           }));
+          
+          // Also update local spin counts if they exist
+          if (data.teamSettings?.spinCounts) {
+            setSpinCounts(data.teamSettings.spinCounts);
+            console.log('🔄 Updated local spinCounts from team settings:', data.teamSettings.spinCounts);
+          }
+        } else {
+          console.log('📡 Team settings update received but not for current user');
         }
       });
 
