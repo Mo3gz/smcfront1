@@ -85,31 +85,31 @@ const MapView = ({ userData, setUserData, socket }) => {
     }
   }, [userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Listen for real-time country updates
-  useEffect(() => {
-    if (socket) {
-      socket.on('countries-update', (updatedCountries) => {
-        console.log('Countries updated via socket:', updatedCountries);
-        setCountries(updatedCountries);
-        setLastUpdate(new Date());
-        
-        // Recalculate mining rate after countries update
-        setTimeout(() => {
-          recalculateMiningRate(updatedCountries);
-        }, 100);
-        
-        // Show a subtle notification for live updates (only for non-purchase updates)
-        if (updatedCountries.length > countries.length || updatedCountries.some(c => c.owner !== countries.find(oc => oc.id === c.id)?.owner)) {
-          toast.success('Map updated!', {
-            duration: 2000,
-            icon: '🗺️',
-            style: {
-              background: '#2196F3',
-              color: 'white',
-            },
+        // Listen for real-time country updates
+      useEffect(() => {
+        if (socket) {
+          socket.on('countries-update', (updatedCountries) => {
+            console.log('Countries updated via socket:', updatedCountries);
+            setCountries(updatedCountries);
+            setLastUpdate(new Date());
+            
+            // Recalculate mining rate after countries update
+            setTimeout(() => {
+              recalculateMiningRate(updatedCountries);
+            }, 100);
+            
+            // Show a subtle notification for live updates (only for non-purchase updates)
+            if (updatedCountries.length > countries.length || updatedCountries.some(c => c.owner !== countries.find(oc => oc.id === c.id)?.owner)) {
+              toast.success('Map updated!', {
+                duration: 2000,
+                icon: '🗺️',
+                style: {
+                  background: '#2196F3',
+                  color: 'white',
+                },
+              });
+            }
           });
-        }
-      });
 
       // Listen for country visibility updates
       socket.on('country-visibility-update', ({ countryId, visible }) => {
