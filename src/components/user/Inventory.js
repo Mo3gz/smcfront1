@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import api from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 
-const Inventory = ({ socket }) => {
+const Inventory = ({ socket, userData, setUserData }) => {
   const { user } = useAuth();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -167,13 +167,22 @@ const Inventory = ({ socket }) => {
         fetchAvailableCountries();
       });
 
+      // Listen for user updates to refresh user data (including balance)
+      socket.on('user-update', (updatedUser) => {
+        console.log('User updated via socket:', updatedUser);
+        if (updatedUser.id === user?.id && setUserData) {
+          setUserData(prev => ({ ...prev, ...updatedUser }));
+        }
+      });
+
       return () => {
         socket.off('inventory-update');
         socket.off('game-settings-update');
         socket.off('countries-update');
+        socket.off('user-update');
       };
     }
-  }, [socket, fetchInventory, fetchAvailableGames, fetchAvailableCountries]);
+  }, [socket, fetchInventory, fetchAvailableGames, fetchAvailableCountries, setUserData, user?.id]);
 
   const handleCardClick = (card) => {
     console.log('🎮 Card clicked:', card);

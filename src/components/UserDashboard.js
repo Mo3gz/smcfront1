@@ -128,7 +128,7 @@ const UserDashboard = ({ socket }) => {
       case 'scoreboard':
         return <Scoreboard socket={socket} />;
       case 'inventory':
-        return <Inventory socket={socket} />;
+        return <Inventory socket={socket} userData={userData} setUserData={setUserData} />;
       case 'spin':
         return <Spin socket={socket} userData={userData} setUserData={setUserData} />;
       case 'map':
