@@ -108,9 +108,12 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
       if (!token) return false;
       
+      console.log('🔄 Attempting token refresh...');
+      
       const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'x-auth-token': token,
           'Content-Type': 'application/json'
         },
         withCredentials: true
@@ -124,6 +127,9 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.log('🔄 Token refresh failed:', error.message);
+      // If refresh fails, clear tokens
+      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
     }
     return false;
   };

@@ -32,7 +32,7 @@ api.interceptors.request.use(
     
     // Add authentication token to all requests if available
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    if (token && !config.headers['Authorization']) {
+    if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
       config.headers['x-auth-token'] = token;
     }
@@ -77,7 +77,9 @@ api.interceptors.response.use(
       
       // Don't immediately clear everything - let the auth context handle it
       // Only clear if this is not an auth check request itself
-      if (!error.config.url.includes('/api/user') && !error.config.url.includes('/api/safari/auth/me')) {
+      if (!error.config.url.includes('/api/user') && 
+          !error.config.url.includes('/api/safari/auth/me') &&
+          !error.config.url.includes('/api/auth/refresh')) {
         console.log('Clearing authentication data due to 401 on non-auth endpoint');
         localStorage.removeItem('user');
         localStorage.removeItem('authToken');
