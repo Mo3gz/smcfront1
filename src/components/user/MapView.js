@@ -128,6 +128,9 @@ const MapView = ({ userData, setUserData, socket }) => {
           duration: 3000,
           icon: data.hidden ? '👁️‍🗨️' : '👁️',
         });
+        
+        // Refresh countries list to reflect the new visibility state
+        fetchCountries();
       });
 
       // Listen for mining updates

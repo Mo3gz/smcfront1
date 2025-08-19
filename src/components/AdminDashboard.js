@@ -1255,9 +1255,19 @@ const CountryManagement = ({ teams, socket }) => {
     }
   }, []);
 
+  const fetchFiftyCoinsVisibilityState = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/admin/countries/fifty-coins-visibility`, { withCredentials: true });
+      setFiftyCoinsCountriesHidden(response.data.hidden);
+    } catch (error) {
+      console.error('Error fetching 50 coins visibility state:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCountries();
-  }, [fetchCountries]);
+    fetchFiftyCoinsVisibilityState();
+  }, [fetchCountries, fetchFiftyCoinsVisibilityState]);
 
   // Listen for global 50 coins visibility updates
   useEffect(() => {
