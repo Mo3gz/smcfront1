@@ -1210,6 +1210,7 @@ const CountryManagement = ({ teams }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOwnership, setFilterOwnership] = useState('all'); // all, owned, unowned
+  const [showFiftyCoinsOnly, setShowFiftyCoinsOnly] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [newOwnerId, setNewOwnerId] = useState('');
   
@@ -1412,15 +1413,16 @@ const CountryManagement = ({ teams }) => {
     }
   };
 
-  // Filter countries based on search and ownership filter
+  // Filter countries based on search, ownership filter, and 50 coins filter
   const filteredCountries = countries.filter(country => {
     const matchesSearch = country.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesOwnership = 
       filterOwnership === 'all' ||
       (filterOwnership === 'owned' && country.owner) ||
       (filterOwnership === 'unowned' && !country.owner);
+    const matchesFiftyCoins = !showFiftyCoinsOnly || country.cost === 50;
     
-    return matchesSearch && matchesOwnership;
+    return matchesSearch && matchesOwnership && matchesFiftyCoins;
   });
 
   if (loading) {
@@ -1496,6 +1498,25 @@ const CountryManagement = ({ teams }) => {
             <option value="owned">Owned Only</option>
             <option value="unowned">Unowned Only</option>
           </select>
+        </div>
+        <div style={{ minWidth: '150px', display: 'flex', alignItems: 'end' }}>
+          <button
+            onClick={() => setShowFiftyCoinsOnly(!showFiftyCoinsOnly)}
+            className="btn"
+            style={{
+              backgroundColor: showFiftyCoinsOnly ? '#28a745' : '#6c757d',
+              color: 'white',
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            {showFiftyCoinsOnly ? 'Show All' : 'Show 50 Coins Only'}
+          </button>
         </div>
       </div>
 
