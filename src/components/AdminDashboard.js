@@ -110,7 +110,7 @@ const AdminDashboard = ({ socket }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'promocodes':
-        return <PromoCodes teams={teams} />;
+        return <PromoCodes teams={teams} socket={socket} />;
       case 'cards':
         return <CardManagement teams={teams} />;
       case 'notifications':
@@ -126,7 +126,7 @@ const AdminDashboard = ({ socket }) => {
       case 'statistics':
         return <StatisticsView />;
       default:
-        return <PromoCodes teams={teams} />;
+        return <PromoCodes teams={teams} socket={socket} />;
     }
   };
 
@@ -264,7 +264,7 @@ const allCards = {
 
 
 // Promo Codes Component
-const PromoCodes = ({ teams }) => {
+const PromoCodes = ({ teams, socket }) => {
   const [code, setCode] = useState('');
   const [teamId, setTeamId] = useState('');
   const [discount, setDiscount] = useState(10);
@@ -278,6 +278,26 @@ const PromoCodes = ({ teams }) => {
   useEffect(() => {
     fetchPromocodes();
   }, []);
+
+  // Listen for admin notifications about promocode usage
+  useEffect(() => {
+    if (socket) {
+      const handleAdminNotification = (notification) => {
+        // If it's a promo-code-used notification, refresh the promocodes list
+        if (notification.actionType === 'promo-code-used') {
+          console.log('🎫 Promocode used, refreshing promocodes list');
+          fetchPromocodes();
+          toast.success(`${notification.metadata?.teamName} used promo code "${notification.metadata?.promoCode}"`);
+        }
+      };
+
+      socket.on('admin-notification', handleAdminNotification);
+
+      return () => {
+        socket.off('admin-notification', handleAdminNotification);
+      };
+    }
+  }, [socket]);
 
   const fetchPromocodes = async () => {
     setLoading(true);
