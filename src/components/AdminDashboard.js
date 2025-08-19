@@ -268,6 +268,29 @@ const PromoCodes = ({ teams }) => {
   const [code, setCode] = useState('');
   const [teamId, setTeamId] = useState('');
   const [discount, setDiscount] = useState(10);
+  const [promocodes, setPromocodes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all'); // all, assigned, unassigned, used
+  const [editingPromo, setEditingPromo] = useState(null);
+
+  // Fetch promocodes on component mount
+  useEffect(() => {
+    fetchPromocodes();
+  }, []);
+
+  const fetchPromocodes = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/api/admin/promocodes', { withCredentials: true });
+      setPromocodes(response.data);
+    } catch (error) {
+      console.error('Fetch promocodes error:', error);
+      toast.error('Failed to fetch promocodes');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreatePromo = async (e) => {
     e.preventDefault();
@@ -283,66 +306,285 @@ const PromoCodes = ({ teams }) => {
       setCode('');
       setTeamId('');
       setDiscount(10);
+      fetchPromocodes(); // Refresh the list
     } catch (error) {
       console.error('Create promo error:', error.response?.status, error.response?.data);
       if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Authentication failed. Please log in again.');
       } else {
-        toast.error('Failed to create promo code');
+        toast.error(error.response?.data?.error || 'Failed to create promo code');
       }
     }
   };
 
+  const handleInitializePromocodes = async () => {
+    try {
+      const response = await api.post('/api/admin/promocodes/initialize', {}, { withCredentials: true });
+      toast.success(response.data.message);
+      fetchPromocodes(); // Refresh the list
+    } catch (error) {
+      console.error('Initialize promocodes error:', error);
+      toast.error('Failed to initialize promocodes');
+    }
+  };
+
+  const handleUpdatePromo = async (promoId, updates) => {
+    try {
+      await api.put(`/api/admin/promocodes/${promoId}`, updates, { withCredentials: true });
+      toast.success('Promocode updated successfully!');
+      setEditingPromo(null);
+      fetchPromocodes(); // Refresh the list
+    } catch (error) {
+      console.error('Update promocode error:', error);
+      toast.error(error.response?.data?.error || 'Failed to update promocode');
+    }
+  };
+
+  const handleAssignTeam = async (promoId, newTeamId) => {
+    await handleUpdatePromo(promoId, { teamId: newTeamId });
+  };
+
+  const handleUpdateDiscount = async (promoId, newDiscount) => {
+    await handleUpdatePromo(promoId, { discount: newDiscount });
+  };
+
+  // Filter promocodes based on search and status
+  const filteredPromocodes = promocodes.filter(promo => {
+    const matchesSearch = promo.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         promo.teamName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' ||
+                         (filterStatus === 'assigned' && promo.teamId) ||
+                         (filterStatus === 'unassigned' && !promo.teamId) ||
+                         (filterStatus === 'used' && promo.used);
+    
+    return matchesSearch && matchesStatus;
+  });
+
   return (
-    <div className="card">
-      <h3>Create Promo Code</h3>
-      <form onSubmit={handleCreatePromo}>
-        <div style={{ marginBottom: '16px' }}>
-          <label>Promo Code</label>
+    <div>
+      {/* Initialize Promocodes Section */}
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h3>Initialize Promocodes</h3>
+        <p style={{ marginBottom: '16px', color: '#666' }}>
+          Click the button below to initialize the system with the predefined list of promocodes.
+        </p>
+        <button 
+          onClick={handleInitializePromocodes} 
+          className="btn"
+          style={{ backgroundColor: '#28a745' }}
+        >
+          Initialize Promocodes
+        </button>
+      </div>
+
+      {/* Create New Promocode Section */}
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h3>Create New Promo Code</h3>
+        <form onSubmit={handleCreatePromo}>
+          <div style={{ marginBottom: '16px' }}>
+            <label>Promo Code</label>
+            <input
+              type="text"
+              className="input"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Enter promo code"
+              required
+            />
+          </div>
+          
+          <div style={{ marginBottom: '16px' }}>
+            <label>Team</label>
+            <select
+              className="input"
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              required
+            >
+              <option value="">Select a team</option>
+              {teams.map(team => (
+                <option key={team.id} value={team.id}>
+                  {team.teamName}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div style={{ marginBottom: '16px' }}>
+            <label>Discount (%)</label>
+            <input
+              type="number"
+              className="input"
+              value={discount}
+              onChange={(e) => setDiscount(Number(e.target.value))}
+              min="1"
+              max="100"
+              required
+            />
+          </div>
+          
+          <button type="submit" className="btn">
+            Create Promo Code
+          </button>
+        </form>
+      </div>
+
+      {/* Promocodes List Section */}
+      <div className="card">
+        <h3>Manage Promocodes</h3>
+        
+        {/* Search and Filter Controls */}
+        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <input
             type="text"
             className="input"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="Enter promo code"
-            required
+            placeholder="Search promocodes or teams..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: 1, minWidth: '200px' }}
           />
-        </div>
-        
-        <div style={{ marginBottom: '16px' }}>
-          <label>Team</label>
           <select
             className="input"
-            value={teamId}
-            onChange={(e) => setTeamId(e.target.value)}
-            required
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            style={{ minWidth: '150px' }}
           >
-            <option value="">Select a team</option>
-            {teams.map(team => (
-              <option key={team.id} value={team.id}>
-                {team.teamName}
-              </option>
-            ))}
+            <option value="all">All Promocodes</option>
+            <option value="assigned">Assigned</option>
+            <option value="unassigned">Unassigned</option>
+            <option value="used">Used</option>
           </select>
+          <button 
+            onClick={fetchPromocodes} 
+            className="btn"
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Refresh'}
+          </button>
         </div>
-        
-        <div style={{ marginBottom: '16px' }}>
-          <label>Discount (%)</label>
-          <input
-            type="number"
-            className="input"
-            value={discount}
-            onChange={(e) => setDiscount(Number(e.target.value))}
-            min="1"
-            max="100"
-            required
-          />
+
+        {/* Promocodes Table */}
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f8f9fa' }}>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Code</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Team</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Discount</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Status</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Created</th>
+                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPromocodes.map(promo => (
+                <tr key={promo.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                  <td style={{ padding: '12px' }}>
+                    <strong>{promo.code}</strong>
+                  </td>
+                  <td style={{ padding: '12px' }}>
+                    {editingPromo?.id === promo.id && editingPromo?.field === 'team' ? (
+                      <select
+                        className="input"
+                        value={editingPromo.value || promo.teamId || ''}
+                        onChange={(e) => setEditingPromo({ ...editingPromo, value: e.target.value })}
+                        style={{ width: '100%' }}
+                      >
+                        <option value="">Unassigned</option>
+                        {teams.map(team => (
+                          <option key={team.id} value={team.id}>
+                            {team.teamName}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span style={{ color: promo.teamId ? '#28a745' : '#6c757d' }}>
+                        {promo.teamName}
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ padding: '12px' }}>
+                    {editingPromo?.id === promo.id && editingPromo?.field === 'discount' ? (
+                      <input
+                        type="number"
+                        className="input"
+                        value={editingPromo.value || promo.discount}
+                        onChange={(e) => setEditingPromo({ ...editingPromo, value: Number(e.target.value) })}
+                        min="1"
+                        max="100"
+                        style={{ width: '80px' }}
+                      />
+                    ) : (
+                      <span>{promo.discount}%</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '12px' }}>
+                    <span style={{
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      backgroundColor: promo.used ? '#dc3545' : (promo.teamId ? '#28a745' : '#ffc107'),
+                      color: 'white'
+                    }}>
+                      {promo.used ? 'Used' : (promo.teamId ? 'Assigned' : 'Unassigned')}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px' }}>
+                    {new Date(promo.createdAt).toLocaleDateString()}
+                  </td>
+                  <td style={{ padding: '12px' }}>
+                    {editingPromo?.id === promo.id ? (
+                      <div style={{ display: 'flex', gap: '5px' }}>
+                        <button
+                          onClick={() => handleUpdatePromo(promo.id, { [editingPromo.field === 'team' ? 'teamId' : 'discount']: editingPromo.value })}
+                          className="btn"
+                          style={{ padding: '4px 8px', fontSize: '12px', backgroundColor: '#28a745' }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingPromo(null)}
+                          className="btn"
+                          style={{ padding: '4px 8px', fontSize: '12px', backgroundColor: '#6c757d' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '5px' }}>
+                        <button
+                          onClick={() => setEditingPromo({ id: promo.id, field: 'team', value: promo.teamId })}
+                          className="btn"
+                          style={{ padding: '4px 8px', fontSize: '12px' }}
+                          disabled={promo.used}
+                        >
+                          Edit Team
+                        </button>
+                        <button
+                          onClick={() => setEditingPromo({ id: promo.id, field: 'discount', value: promo.discount })}
+                          className="btn"
+                          style={{ padding: '4px 8px', fontSize: '12px' }}
+                          disabled={promo.used}
+                        >
+                          Edit %
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        
-        <button type="submit" className="btn">
-          Create Promo Code
-        </button>
-      </form>
+
+        {filteredPromocodes.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+            {loading ? 'Loading promocodes...' : 'No promocodes found'}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
