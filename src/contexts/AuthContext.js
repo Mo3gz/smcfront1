@@ -30,24 +30,49 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  // Check if user is authenticated - Enhanced for macOS/iOS
+  // Check if user is authenticated - Enhanced for Safari (iOS + macOS)
   const checkAuth = useCallback(async () => {
     try {
       console.log('🔍 Checking authentication...');
       
-      // Enhanced config for macOS/iOS compatibility
+      // Enhanced Safari detection for both iOS and macOS
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+      const isMacOS = /Mac OS X/.test(userAgent);
+      const isSafariOnIOS = isSafari && isIOS;
+      const isSafariOnMacOS = isSafari && isMacOS;
+      
+      console.log('🔍 Browser detection:', { 
+        isSafari, 
+        isIOS, 
+        isMacOS, 
+        isSafariOnIOS, 
+        isSafariOnMacOS, 
+        userAgent: userAgent 
+      });
+      
+      // Enhanced config for Safari (iOS + macOS) compatibility
       const config = {
         ...createAxiosConfig(),
         headers: {
           ...createAxiosConfig().headers,
-          // Add token from localStorage as fallback for iOS
+          // Add token from localStorage as fallback for Safari
           ...(localStorage.getItem('authToken') && {
             'x-auth-token': localStorage.getItem('authToken')
+          }),
+          // Add Authorization header for Safari
+          ...(localStorage.getItem('authToken') && {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           })
         }
       };
       
-      const response = await axios.get(`${API_BASE_URL}/api/user`, config);
+      // Use Safari-specific endpoint if detected
+      const endpoint = isSafari ? '/api/safari/auth/me' : '/api/user';
+      console.log('🔍 Using endpoint:', endpoint);
+      
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`, config);
       console.log('🔍 Auth check response:', response.data);
       
       // Handle different response formats
@@ -95,10 +120,19 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [checkAuth]);
 
-  // Enhanced login function with better error handling - macOS/iOS compatible
+  // Enhanced login function with better error handling - Safari (iOS + macOS) compatible
   const login = async (username, password) => {
     try {
       console.log('🔐 Attempting login for:', username);
+      
+      // Enhanced Safari detection
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+      const isMacOS = /Mac OS X/.test(userAgent);
+      
+      console.log('🔐 Browser detection for login:', { isSafari, isIOS, isMacOS });
+      
       const config = createAxiosConfig();
       const response = await axios.post(`${API_BASE_URL}/api/login`, {
         username,
@@ -121,10 +155,16 @@ export const AuthProvider = ({ children }) => {
       
       console.log('🔐 Processed user data:', userData);
       
-      // Store token in localStorage for macOS/iOS compatibility
+      // Store token in localStorage for Safari (iOS + macOS) compatibility
       if (response.data.token) {
         localStorage.setItem('authToken', response.data.token);
-        console.log('🔐 Token stored in localStorage for macOS/iOS compatibility');
+        console.log('🔐 Token stored in localStorage for Safari compatibility');
+        
+        // For Safari, also set the token in sessionStorage as backup
+        if (isSafari) {
+          sessionStorage.setItem('authToken', response.data.token);
+          console.log('🔐 Token also stored in sessionStorage for Safari');
+        }
       }
       
       // Set user in state and localStorage
@@ -160,10 +200,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function - Enhanced for macOS/iOS
+  // Logout function - Enhanced for Safari (iOS + macOS)
   const logout = async () => {
     try {
       console.log('🚪 Starting logout process...');
+      
+      // Enhanced Safari detection
+      const userAgent = navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+      const isMacOS = /Mac OS X/.test(userAgent);
+      
+      console.log('🚪 Browser detection for logout:', { isSafari, isIOS, isMacOS });
       
       // Call backend to clear cookie
       const config = createAxiosConfig();
@@ -182,16 +230,23 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('authToken');
       localStorage.removeItem('token');
       
-      // Clear sessionStorage
+      // Clear sessionStorage (especially important for Safari)
       sessionStorage.clear();
       
       // Clear any cached axios headers
       delete axios.defaults.headers.common['Authorization'];
+      delete axios.defaults.headers.common['x-auth-token'];
       
       console.log('✅ Frontend logout cleanup completed');
       
-      // Force a complete page reload to ensure clean state
-      window.location.reload();
+      // For Safari, force a complete page reload to ensure clean state
+      if (isSafari) {
+        console.log('🦁 Safari detected - forcing page reload');
+        window.location.reload();
+      } else {
+        // For other browsers, redirect to home
+        window.location.href = '/';
+      }
     }
   };
 
