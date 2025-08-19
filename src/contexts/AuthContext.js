@@ -134,25 +134,29 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  // Check if user is authenticated - Enhanced for Safari (iOS + macOS)
+  // Check if user is authenticated - Enhanced for all browsers
   const checkAuth = useCallback(async () => {
     try {
       console.log('🔍 Checking authentication...');
       
-      // Enhanced Safari detection for both iOS and macOS
+      // Enhanced browser detection
       const userAgent = navigator.userAgent;
       const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
       const isIOS = /iPad|iPhone|iPod/.test(userAgent);
       const isMacOS = /Mac OS X/.test(userAgent);
-      const isSafariOnIOS = isSafari && isIOS;
-      const isSafariOnMacOS = isSafari && isMacOS;
+      const isWindows = /Windows/.test(userAgent);
+      const isChrome = /Chrome/.test(userAgent);
+      const isFirefox = /Firefox/.test(userAgent);
+      const isEdge = /Edg/.test(userAgent);
       
       console.log('🔍 Browser detection:', { 
         isSafari, 
         isIOS, 
         isMacOS, 
-        isSafariOnIOS, 
-        isSafariOnMacOS, 
+        isWindows,
+        isChrome,
+        isFirefox,
+        isEdge,
         userAgent: userAgent 
       });
       
@@ -217,7 +221,9 @@ export const AuthProvider = ({ children }) => {
           return;
         }
       } else {
-        // For other browsers, use standard approach
+        // For other browsers (Windows, Chrome, Firefox, Edge), use standard approach
+        console.log('🖥️ Standard browser detected - using token approach');
+        
         const config = {
           ...createAxiosConfig(),
           headers: {
@@ -225,8 +231,17 @@ export const AuthProvider = ({ children }) => {
           }
         };
         
-        if (localStorage.getItem('authToken')) {
-          config.headers['x-auth-token'] = localStorage.getItem('authToken');
+        // Try multiple token sources for better compatibility
+        const token = localStorage.getItem('authToken') || 
+                     sessionStorage.getItem('authToken') ||
+                     localStorage.getItem('token');
+        
+        if (token) {
+          config.headers['x-auth-token'] = token;
+          config.headers['Authorization'] = `Bearer ${token}`;
+          console.log('🔍 Token found and added to headers for standard browser');
+        } else {
+          console.log('🔍 No token found in any storage for standard browser');
         }
         
         const response = await axios.get(`${API_BASE_URL}/api/user`, config);
@@ -295,18 +310,19 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [checkAuth]);
 
-  // Enhanced login function with better error handling - Safari (iOS + macOS) compatible
+  // Enhanced login function with better error handling - All browsers compatible
   const login = async (username, password) => {
     try {
       console.log('🔐 Attempting login for:', username);
       
-      // Enhanced Safari detection
+      // Enhanced browser detection
       const userAgent = navigator.userAgent;
       const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
       const isIOS = /iPad|iPhone|iPod/.test(userAgent);
       const isMacOS = /Mac OS X/.test(userAgent);
+      const isWindows = /Windows/.test(userAgent);
       
-      console.log('🔐 Browser detection for login:', { isSafari, isIOS, isMacOS });
+      console.log('🔐 Browser detection for login:', { isSafari, isIOS, isMacOS, isWindows });
       
       // Use Safari-specific endpoint if Safari is detected
       const endpoint = isSafari ? '/api/safari/login' : '/api/login';
@@ -334,20 +350,23 @@ export const AuthProvider = ({ children }) => {
       
       console.log('🔐 Processed user data:', userData);
       
-      // Store token in localStorage for Safari (iOS + macOS) compatibility
+      // Store token in multiple locations for better compatibility
       if (response.data.token) {
         localStorage.setItem('authToken', response.data.token);
-        console.log('🔐 Token stored in localStorage for Safari compatibility');
+        sessionStorage.setItem('authToken', response.data.token);
+        console.log('🔐 Token stored in localStorage and sessionStorage for compatibility');
         
-        // For Safari, also set the token in sessionStorage as backup
+        // For Safari, also store in multiple localStorage keys
         if (isSafari) {
-          sessionStorage.setItem('authToken', response.data.token);
-          console.log('🔐 Token also stored in sessionStorage for Safari');
-          
-          // Also store in multiple localStorage keys for Safari
           localStorage.setItem('token', response.data.token);
           localStorage.setItem('safariToken', response.data.token);
           console.log('🔐 Token stored in multiple localStorage keys for Safari');
+        }
+        
+        // For Windows browsers, ensure token is accessible
+        if (isWindows) {
+          localStorage.setItem('token', response.data.token);
+          console.log('🔐 Token stored in additional localStorage key for Windows');
         }
       }
       

@@ -79,7 +79,10 @@ api.interceptors.response.use(
       // Only clear if this is not an auth check request itself
       if (!error.config.url.includes('/api/user') && 
           !error.config.url.includes('/api/safari/auth/me') &&
-          !error.config.url.includes('/api/auth/refresh')) {
+          !error.config.url.includes('/api/auth/refresh') &&
+          !error.config.url.includes('/api/notifications') &&
+          !error.config.url.includes('/api/mining/info') &&
+          !error.config.url.includes('/api/spin')) {
         console.log('Clearing authentication data due to 401 on non-auth endpoint');
         localStorage.removeItem('user');
         localStorage.removeItem('authToken');
