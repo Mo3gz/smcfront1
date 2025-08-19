@@ -340,9 +340,15 @@ const Spin = ({ socket, userData, setUserData }) => {
 
           case 'instant_tax':
             // Border tax
-            toast.info(`You paid ${additionalData.taxAmount} coins in border tax for ${additionalData.ownedCountries} countries.`, {
-              duration: 4000,
-              position: 'top-center'
+            toast.error(`💰 You paid ${additionalData.taxAmount} coins in border tax for ${additionalData.ownedCountries} countries.`, {
+              duration: 6000,
+              position: 'top-center',
+              style: {
+                background: '#ff4757',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }
             });
             break;
 
@@ -375,7 +381,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             // MCQ challenge
             setMcqQuestion(additionalData.question);
             setMcqTimer(additionalData.timeLimit);
-            toast.success('Mystery Question Challenge! Answer within 10 seconds (+15 for correct, -10 for wrong). No card added to inventory.', {
+            toast.success('Mystery Question Challenge! Answer within 13 seconds (+100 for correct, no penalty for wrong). No card added to inventory.', {
               duration: 6000,
               position: 'top-center',
               style: {
@@ -383,6 +389,16 @@ const Spin = ({ socket, userData, setUserData }) => {
                 color: 'white'
               }
             });
+            // Animated scroll to MCQ question after a short delay
+            setTimeout(() => {
+              const mcqElement = document.querySelector('[data-mcq-question]');
+              if (mcqElement) {
+                mcqElement.scrollIntoView({ 
+                  behavior: 'smooth', 
+                  block: 'center' 
+                });
+              }
+            }, 500);
             break;
 
           case 'admin':
@@ -502,21 +518,24 @@ const Spin = ({ socket, userData, setUserData }) => {
       }, { withCredentials: true });
 
       if (response.data.correct) {
-        toast.success(`Correct! You earned ${response.data.reward} coins!`, {
-          duration: 4000,
+        toast.success(`🎉 Correct! You earned ${response.data.reward} coins!`, {
+          duration: 6000,
           position: 'top-center',
           style: {
             background: '#4CAF50',
-            color: 'white'
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
           }
         });
       } else {
-        toast.error(`Wrong answer! You lost ${Math.abs(response.data.reward)} coins. The correct answer was option ${response.data.correctAnswer + 1}.`, {
+        toast.info(`❌ Wrong answer! No penalty - the correct answer was option ${response.data.correctAnswer + 1}.`, {
           duration: 4000,
           position: 'top-center',
           style: {
-            background: '#f44336',
-            color: 'white'
+            background: '#ff9500',
+            color: 'white',
+            fontSize: '14px'
           }
         });
       }
@@ -674,13 +693,16 @@ const Spin = ({ socket, userData, setUserData }) => {
 
         {/* MCQ Question */}
         {mcqQuestion && (
-          <div style={{ 
-            marginTop: '24px', 
-            padding: '20px', 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-            borderRadius: '12px',
-            color: 'white'
-          }}>
+          <div 
+            data-mcq-question
+            style={{ 
+              marginTop: '24px', 
+              padding: '20px', 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+              borderRadius: '12px',
+              color: 'white'
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h4 style={{ margin: 0 }}>🕌 Spiritual Question</h4>
               <div style={{ 
