@@ -202,16 +202,16 @@ export const AuthProvider = ({ children }) => {
 
   // Logout function - Enhanced for Safari (iOS + macOS)
   const logout = async () => {
+    // Enhanced Safari detection - moved to top level for scope access
+    const userAgent = navigator.userAgent;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isMacOS = /Mac OS X/.test(userAgent);
+    
+    console.log('🚪 Browser detection for logout:', { isSafari, isIOS, isMacOS });
+    
     try {
       console.log('🚪 Starting logout process...');
-      
-      // Enhanced Safari detection
-      const userAgent = navigator.userAgent;
-      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
-      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-      const isMacOS = /Mac OS X/.test(userAgent);
-      
-      console.log('🚪 Browser detection for logout:', { isSafari, isIOS, isMacOS });
       
       // Call backend to clear cookie
       const config = createAxiosConfig();
