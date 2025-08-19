@@ -807,6 +807,21 @@ const TeamManagement = ({ teams, fetchTeams }) => {
             Enable All Spin Limits (1 each)
           </button>
           <button 
+            className="btn btn-warning"
+            onClick={() => handleUpdateAllTeams({ 
+              spinLimitations: {
+                lucky: { enabled: true, limit: 1 },
+                gamehelper: { enabled: true, limit: 1 },
+                challenge: { enabled: true, limit: 1 },
+                random: { enabled: true, limit: 1 },
+                hightier: { enabled: false, limit: 1 },
+                lowtier: { enabled: false, limit: 1 }
+              }
+            })}
+          >
+            Enable Core Spins (1 each, exclude High/Low Tier)
+          </button>
+          <button 
             className="btn btn-secondary"
             onClick={() => handleUpdateAllTeams({ 
               spinLimitations: {
