@@ -321,8 +321,9 @@ export const AuthProvider = ({ children }) => {
       const isIOS = /iPad|iPhone|iPod/.test(userAgent);
       const isMacOS = /Mac OS X/.test(userAgent);
       const isWindows = /Windows/.test(userAgent);
+      const isChrome = /Chrome/.test(userAgent);
       
-      console.log('🔐 Browser detection for login:', { isSafari, isIOS, isMacOS, isWindows });
+      console.log('🔐 Browser detection for login:', { isSafari, isIOS, isMacOS, isWindows, isChrome });
       
       // Use Safari-specific endpoint if Safari is detected
       const endpoint = isSafari ? '/api/safari/login' : '/api/login';
@@ -352,28 +353,26 @@ export const AuthProvider = ({ children }) => {
       
       // Store token in multiple locations for better compatibility
       if (response.data.token) {
+        // Store in all possible locations for maximum compatibility
         localStorage.setItem('authToken', response.data.token);
         sessionStorage.setItem('authToken', response.data.token);
-        console.log('🔐 Token stored in localStorage and sessionStorage for compatibility');
+        localStorage.setItem('token', response.data.token);
         
-        // For Safari, also store in multiple localStorage keys
+        console.log('🔐 Token stored in multiple locations for cross-browser compatibility');
+        
+        // For Safari, also store in Safari-specific keys
         if (isSafari) {
-          localStorage.setItem('token', response.data.token);
           localStorage.setItem('safariToken', response.data.token);
-          console.log('🔐 Token stored in multiple localStorage keys for Safari');
+          localStorage.setItem('safariUsername', username);
+          console.log('🔐 Safari-specific storage completed');
         }
         
-        // For Windows browsers, ensure token is accessible
-        if (isWindows) {
-          localStorage.setItem('token', response.data.token);
-          console.log('🔐 Token stored in additional localStorage key for Windows');
+        // For Windows Chrome, ensure immediate availability
+        if (isWindows && isChrome) {
+          // Force a small delay to ensure storage is complete
+          await new Promise(resolve => setTimeout(resolve, 50));
+          console.log('🔐 Windows Chrome token storage completed');
         }
-      }
-      
-      // For Safari, also store username for simple auth fallback
-      if (isSafari) {
-        localStorage.setItem('safariUsername', username);
-        console.log('🔐 Username stored for Safari simple auth fallback');
       }
       
       // Set user in state and localStorage

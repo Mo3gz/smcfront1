@@ -31,10 +31,15 @@ api.interceptors.request.use(
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
     
     // Add authentication token to all requests if available
-    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken') || 
+                  sessionStorage.getItem('authToken') || 
+                  localStorage.getItem('token');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
       config.headers['x-auth-token'] = token;
+      console.log('🔧 Token added to request:', token.substring(0, 20) + '...');
+    } else {
+      console.log('🔧 No token found for request');
     }
     
     // Safari-specific authentication (add username to all requests)
