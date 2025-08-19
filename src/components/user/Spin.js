@@ -10,9 +10,9 @@ const spinTypes = [
   { id: 'lucky', name: '🎡 Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
   { id: 'gamehelper', name: '🛠 Game Helper', cost: 50, icon: Zap, color: '#ff6b6b' },
   { id: 'challenge', name: '⚔ Challenge', cost: 50, icon: Heart, color: '#4ecdc4' },
+  { id: 'random', name: '🎲 Random', cost: 30, icon: RotateCcw, color: '#667eea' },
   { id: 'hightier', name: '🔥 High Tier', cost: 50, icon: Gift, color: '#ff9ff3' },
   { id: 'lowtier', name: '🥉 Low Tier', cost: 50, icon: RotateCcw, color: '#74b9ff' },
-  { id: 'random', name: '🎲 Random', cost: 30, icon: RotateCcw, color: '#667eea' }
 ];
 
 const Spin = ({ socket, userData, setUserData }) => {
@@ -728,9 +728,9 @@ const Spin = ({ socket, userData, setUserData }) => {
             <p><strong>🎡 Lucky Spin:</strong> Instant coins, gifts, and special actions</p>
             <p><strong>🛠 Game Helper:</strong> Strategic cards requiring game/team selection</p>
             <p><strong>⚔ Challenge:</strong> Skill-based challenges with timers</p>
+            <p><strong>🎲 Random:</strong> Get any type from Lucky, Game Helper, or Challenge</p>
             <p><strong>🔥 High Tier:</strong> Premium rewards and powerful effects</p>
             <p><strong>🥉 Low Tier:</strong> Basic rewards, affordable entry point</p>
-            <p><strong>🎲 Random:</strong> Get any type from Lucky, Game Helper, or Challenge</p>
           </div>
         </div>
       </div>
