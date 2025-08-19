@@ -509,13 +509,20 @@ const Spin = ({ socket, userData, setUserData }) => {
 
   // MCQ handling
   const handleMcqAnswer = async (selectedAnswer) => {
-    if (!mcqQuestion) return;
+    if (!mcqQuestion) {
+      console.error('❌ MCQ: No question available');
+      return;
+    }
+    
+    console.log('🔍 MCQ: Submitting answer:', { questionId: mcqQuestion.id, answer: selectedAnswer });
     
     try {
       const response = await api.post(`/api/mcq/answer`, {
         questionId: mcqQuestion.id,
         answer: selectedAnswer
       }, { withCredentials: true });
+
+      console.log('✅ MCQ: Answer submitted successfully:', response.data);
 
       if (response.data.correct) {
         toast.success(`🎉 Correct! You earned ${response.data.reward} coins!`, {
@@ -543,7 +550,10 @@ const Spin = ({ socket, userData, setUserData }) => {
       setMcqQuestion(null);
       setMcqTimer(null);
     } catch (error) {
-      toast.error('Failed to submit answer');
+      console.error('❌ MCQ: Error submitting answer:', error);
+      console.error('❌ MCQ: Error response:', error.response?.data);
+      console.error('❌ MCQ: Error status:', error.response?.status);
+      toast.error(`Failed to submit answer: ${error.response?.data?.error || error.message || 'Unknown error'}`);
     }
   };
 
