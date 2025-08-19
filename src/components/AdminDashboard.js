@@ -1210,7 +1210,6 @@ const CountryManagement = ({ teams, socket }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOwnership, setFilterOwnership] = useState('all'); // all, owned, unowned
-  const [showFiftyCoinsOnly, setShowFiftyCoinsOnly] = useState(false);
   const [fiftyCoinsCountriesHidden, setFiftyCoinsCountriesHidden] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [newOwnerId, setNewOwnerId] = useState('');
