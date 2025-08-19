@@ -340,13 +340,7 @@ const PromoCodes = ({ teams }) => {
     }
   };
 
-  const handleAssignTeam = async (promoId, newTeamId) => {
-    await handleUpdatePromo(promoId, { teamId: newTeamId });
-  };
 
-  const handleUpdateDiscount = async (promoId, newDiscount) => {
-    await handleUpdatePromo(promoId, { discount: newDiscount });
-  };
 
   // Filter promocodes based on search and status
   const filteredPromocodes = promocodes.filter(promo => {
