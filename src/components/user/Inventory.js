@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Zap, Shield, Heart } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { API_BASE_URL } from '../../utils/api';
 
 const Inventory = ({ socket }) => {
   const { user } = useAuth();
@@ -33,7 +32,7 @@ const Inventory = ({ socket }) => {
         }
       }
       
-      const response = await axios.get(`${API_BASE_URL}/api/inventory`, config);
+      const response = await api.get(`/api/inventory`, config);
       setInventory(response.data);
     } catch (error) {
       console.error('Error fetching inventory:', error);
@@ -44,7 +43,7 @@ const Inventory = ({ socket }) => {
 
   const fetchTeams = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
+      const response = await api.get(`/api/scoreboard`);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -68,7 +67,7 @@ const Inventory = ({ socket }) => {
         }
       }
       
-      const response = await axios.get(`${API_BASE_URL}/api/games/available`, config);
+      const response = await api.get(`/api/games/available`, config);
       console.log('🎮 Received available games:', response.data);
       console.log('🎮 Available games type:', typeof response.data);
       console.log('🎮 Available games length:', Array.isArray(response.data) ? response.data.length : 'Not an array');
@@ -153,7 +152,7 @@ const Inventory = ({ socket }) => {
     if (!selectedCard) return;
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/cards/use`, {
+      const response = await api.post(`/api/cards/use`, {
         cardId: selectedCard.id,
         selectedTeam,
         selectedGame,

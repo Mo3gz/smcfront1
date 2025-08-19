@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../utils/api';
+import api, { API_BASE_URL } from '../utils/api';
 
 const AuthContext = createContext();
 
@@ -29,8 +28,8 @@ export const AuthProvider = ({ children }) => {
     if (isSafari) {
       console.log('🦁 Setting up Safari API interceptor for global axios');
       
-      // Add request interceptor for Safari to global axios
-      const requestInterceptor = axios.interceptors.request.use(
+             // Add request interceptor for Safari to global axios
+       const requestInterceptor = api.interceptors.request.use(
         (config) => {
           const storedUsername = localStorage.getItem('safariUsername');
           if (storedUsername && !config.headers['x-username']) {
@@ -44,10 +43,10 @@ export const AuthProvider = ({ children }) => {
         }
       );
       
-      // Cleanup interceptor on unmount
-      return () => {
-        axios.interceptors.request.eject(requestInterceptor);
-      };
+             // Cleanup interceptor on unmount
+       return () => {
+         api.interceptors.request.eject(requestInterceptor);
+       };
     }
   }, []);
 
@@ -117,7 +116,7 @@ export const AuthProvider = ({ children }) => {
       
       console.log('🔄 Attempting token refresh...');
       
-      const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {}, {
+             const response = await api.post(`/api/auth/refresh`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'x-auth-token': token,
@@ -189,7 +188,7 @@ export const AuthProvider = ({ children }) => {
               }
             };
             
-            const simpleResponse = await axios.get(`${API_BASE_URL}/api/safari/simple-auth?username=${storedUsername}`, simpleConfig);
+                         const simpleResponse = await api.get(`/api/safari/simple-auth?username=${storedUsername}`, simpleConfig);
             console.log('🦁 Safari simple auth response:', simpleResponse.data);
             
             if (simpleResponse.data.id) {
@@ -224,7 +223,7 @@ export const AuthProvider = ({ children }) => {
           console.log('🔍 No Safari token found in any storage');
         }
         
-        const response = await axios.get(`${API_BASE_URL}/api/safari/auth/me`, config);
+                 const response = await api.get(`/api/safari/auth/me`, config);
         console.log('🔍 Safari auth check response:', response.data);
         
         if (response.data.id || response.data.username) {
@@ -265,7 +264,7 @@ export const AuthProvider = ({ children }) => {
            });
          }
         
-        const response = await axios.get(`${API_BASE_URL}/api/user`, config);
+                 const response = await api.get(`/api/user`, config);
         console.log('🔍 Standard auth check response:', response.data);
         
         // Handle different response formats
@@ -351,7 +350,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🔐 Using login endpoint:', endpoint);
       
       const config = createAxiosConfig();
-      const response = await axios.post(`${API_BASE_URL}${endpoint}`, {
+             const response = await api.post(`${endpoint}`, {
         username,
         password
       }, config);
@@ -447,7 +446,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🚪 Using logout endpoint:', logoutEndpoint);
       
       const config = createAxiosConfig();
-      await axios.post(`${API_BASE_URL}${logoutEndpoint}`, {}, config);
+             await api.post(`${logoutEndpoint}`, {}, config);
       
       console.log('✅ Backend logout successful');
     } catch (error) {
@@ -501,7 +500,7 @@ export const AuthProvider = ({ children }) => {
       });
       
       // Test the auth endpoint
-      const response = await axios.get(`${API_BASE_URL}/api/auth/test`, {
+             const response = await api.get(`/api/auth/test`, {
         headers: {
           'Authorization': `Bearer ${authToken || sessionToken || token}`,
           'x-auth-token': authToken || sessionToken || token
@@ -523,7 +522,7 @@ export const AuthProvider = ({ children }) => {
       const config = createAxiosConfig();
       let response;
       try {
-        response = await axios.get(`${API_BASE_URL}/api/admin/check`, config);
+                 response = await api.get(`/api/admin/check`, config);
       } catch (error) {
         // If 401 and we have a token in localStorage, try with token in header
         if (error.response?.status === 401) {
@@ -536,7 +535,7 @@ export const AuthProvider = ({ children }) => {
                 'x-auth-token': token
               }
             };
-            response = await axios.get(`${API_BASE_URL}/api/admin/check`, tokenConfig);
+                         response = await api.get(`/api/admin/check`, tokenConfig);
           } else {
             throw error;
           }

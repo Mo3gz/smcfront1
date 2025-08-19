@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { RotateCcw, Gift, TrendingDown, Shuffle, Swords, Star, HeartHandshake, Crown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/api';
+import api from '../../utils/api';
 import Confetti from 'react-confetti';
 
 // Move these above all hooks and state
@@ -52,7 +51,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     // Debounce the API call to prevent excessive requests
     const timeoutId = setTimeout(() => {
       setCheckingPromo(true);
-      axios.post(`${API_BASE_URL}/api/promocode/validate`, { code: promoCode }, { withCredentials: true })
+      api.post(`/api/promocode/validate`, { code: promoCode })
         .then(res => {
           if (res.data.valid) {
             setDiscount(res.data.discount);
@@ -300,7 +299,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     setSpeedBuyTimer(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/spin`, {
+      const response = await api.post(`/api/spin`, {
         spinType,
         promoCode: promoCode || undefined
       }, { withCredentials: true });
@@ -498,7 +497,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     if (!mcqQuestion) return;
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/mcq/answer`, {
+      const response = await api.post(`/api/mcq/answer`, {
         questionId: mcqQuestion.id,
         answer: selectedAnswer
       }, { withCredentials: true });

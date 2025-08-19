@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
-import { API_BASE_URL } from '../utils/api';
+import api from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const Notifications = ({ socket }) => {
@@ -27,7 +26,7 @@ const Notifications = ({ socket }) => {
         }
       }
       
-      const response = await axios.get(`${API_BASE_URL}/api/notifications`, config);
+      const response = await api.get(`/api/notifications`, config);
       setNotifications(response.data);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -108,7 +107,7 @@ const Notifications = ({ socket }) => {
         }
       }
       
-      axios.post(`${API_BASE_URL}/api/notifications/read-all`, {}, config).catch(() => {});
+      api.post(`/api/notifications/read-all`, {}, config).catch(() => {});
     }
   }, [isVisible, notifications.length]);
 

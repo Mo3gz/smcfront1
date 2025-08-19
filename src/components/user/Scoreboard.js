@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Medal, Award, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/api';
+import api from '../../utils/api';
 
 const Scoreboard = ({ socket }) => {
   const [scoreboard, setScoreboard] = useState([]);
@@ -13,7 +12,7 @@ const Scoreboard = ({ socket }) => {
 
   const fetchScoreboard = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/scoreboard`);
+      const response = await api.get(`/api/scoreboard`);
       setScoreboard(response.data);
     } catch (error) {
       console.error('Error fetching scoreboard:', error);

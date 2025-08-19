@@ -12,8 +12,7 @@ import {
   Gamepad2,
   BarChart3
 } from 'lucide-react';
-import axios from 'axios';
-import { API_BASE_URL } from '../utils/api';
+import api from '../utils/api';
 
 const AdminDashboard = ({ socket }) => {
   const { user, logout, checkAdminStatus } = useAuth();
@@ -26,7 +25,7 @@ const AdminDashboard = ({ socket }) => {
 
   const fetchTeams = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/admin/teams`, { withCredentials: true });
+      const response = await api.get(`/api/admin/teams`);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -35,7 +34,7 @@ const AdminDashboard = ({ socket }) => {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/admin/notifications`, { withCredentials: true });
+      const response = await api.get(`/api/admin/notifications`);
       setNotifications(response.data);
     } catch (error) {
       console.error('Error fetching notifications:', error.response?.status, error.response?.data);
@@ -273,7 +272,7 @@ const PromoCodes = ({ teams }) => {
     e.preventDefault();
     
     try {
-      await axios.post(`${API_BASE_URL}/api/admin/promocodes`, {
+      await api.post(`/api/admin/promocodes`, {
         code,
         teamId,
         discount
@@ -362,7 +361,7 @@ const CardManagement = ({ teams }) => {
   const handleGiveCard = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_BASE_URL}/api/admin/cards`, {
+      await api.post(`/api/admin/cards`, {
         teamId,
         cardName,
         cardType

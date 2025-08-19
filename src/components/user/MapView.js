@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Coins } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/api';
+import api from '../../utils/api';
 
 const MapView = ({ userData, setUserData, socket }) => {
   const [countries, setCountries] = useState([]);
@@ -25,7 +24,7 @@ const MapView = ({ userData, setUserData, socket }) => {
 
   const fetchCountries = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/countries`);
+      const response = await api.get(`/api/countries`);
       setCountries(response.data);
       
       // Recalculate mining rate based on owned countries
@@ -67,7 +66,7 @@ const MapView = ({ userData, setUserData, socket }) => {
           }
         }
         
-        const response = await axios.get(`${API_BASE_URL}/api/mining/info`, config);
+        const response = await api.get(`/api/mining/info`, config);
         if (response.data) {
           setUserData(prev => ({
             ...prev,
@@ -179,7 +178,7 @@ const MapView = ({ userData, setUserData, socket }) => {
         }
       }
       
-      const response = await axios.post(`${API_BASE_URL}/api/countries/buy`, {
+      const response = await api.post(`/api/countries/buy`, {
         countryId: country.id
       }, config);
       
@@ -212,7 +211,7 @@ const MapView = ({ userData, setUserData, socket }) => {
 
   const handleCollectCoins = async () => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/mining/collect`, {}, { withCredentials: true });
+      const response = await api.post(`/api/mining/collect`, {});
       
       // Update user data with new values
       setUserData(prev => ({
