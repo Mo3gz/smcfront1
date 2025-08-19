@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { RotateCcw, Gift, TrendingDown, Shuffle, Swords, Star, Heart, Crown } from 'lucide-react';
+import { RotateCcw, Gift, TrendingDown, Shuffle, Swords, Star, HeartHandshake, Crown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/api';
