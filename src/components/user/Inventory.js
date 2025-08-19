@@ -173,7 +173,7 @@ const Inventory = ({ socket }) => {
         socket.off('countries-update');
       };
     }
-  }, [socket, fetchInventory, fetchAvailableGames]);
+  }, [socket, fetchInventory, fetchAvailableGames, fetchAvailableCountries]);
 
   const handleCardClick = (card) => {
     console.log('🎮 Card clicked:', card);
