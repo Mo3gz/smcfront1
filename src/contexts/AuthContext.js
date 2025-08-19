@@ -21,14 +21,60 @@ export const AuthProvider = ({ children }) => {
     console.log('🔍 User state changed:', user);
   }, [user]);
 
-  // Simple axios configuration
-  const createAxiosConfig = () => ({
-    withCredentials: true,
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json',
+  // Safari API interceptor - automatically add username to all requests
+  useEffect(() => {
+    const userAgent = navigator.userAgent;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+    
+    if (isSafari) {
+      console.log('🦁 Setting up Safari API interceptor');
+      
+      // Add request interceptor for Safari
+      const requestInterceptor = axios.interceptors.request.use(
+        (config) => {
+          const storedUsername = localStorage.getItem('safariUsername');
+          if (storedUsername && !config.headers['x-username']) {
+            config.headers['x-username'] = storedUsername;
+            console.log('🦁 Safari interceptor added username to request:', storedUsername);
+          }
+          return config;
+        },
+        (error) => {
+          return Promise.reject(error);
+        }
+      );
+      
+      // Cleanup interceptor on unmount
+      return () => {
+        axios.interceptors.request.eject(requestInterceptor);
+      };
     }
-  });
+  }, []);
+
+  // Simple axios configuration
+  const createAxiosConfig = () => {
+    const config = {
+      withCredentials: true,
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    };
+    
+    // For Safari, add username to headers for all requests
+    const userAgent = navigator.userAgent;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+    
+    if (isSafari) {
+      const storedUsername = localStorage.getItem('safariUsername');
+      if (storedUsername) {
+        config.headers['x-username'] = storedUsername;
+        console.log('🦁 Adding Safari username to headers:', storedUsername);
+      }
+    }
+    
+    return config;
+  };
 
   // Check if user is authenticated - Enhanced for Safari (iOS + macOS)
   const checkAuth = useCallback(async () => {

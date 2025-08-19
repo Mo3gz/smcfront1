@@ -26,6 +26,19 @@ api.interceptors.request.use(
   (config) => {
     // Add mobile-specific headers
     config.headers['X-Requested-With'] = 'XMLHttpRequest';
+    
+    // Safari-specific authentication (add username to all requests)
+    const userAgent = navigator.userAgent;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+    
+    if (isSafari) {
+      const storedUsername = localStorage.getItem('safariUsername');
+      if (storedUsername && !config.headers['x-username']) {
+        config.headers['x-username'] = storedUsername;
+        console.log('🦁 Safari API interceptor added username to request:', storedUsername);
+      }
+    }
+    
     console.log('🔧 Making request to:', config.url);
     return config;
   },
