@@ -7,6 +7,7 @@ import Confetti from 'react-confetti';
 
 // Move these above all hooks and state
 const spinTypes = [
+  { id: 'regular', name: '🎯 Regular Spin', cost: 50, icon: Shield, color: '#feca57' },
   { id: 'lucky', name: '🎡 Lucky Spin', cost: 50, icon: Shield, color: '#feca57' },
   { id: 'gamehelper', name: '🛠 Game Helper', cost: 50, icon: Zap, color: '#ff6b6b' },
   { id: 'challenge', name: '⚔ Challenge', cost: 50, icon: Heart, color: '#4ecdc4' },
@@ -33,7 +34,7 @@ const Spin = ({ socket, userData, setUserData }) => {
   
   // Spin limitation states
   const [spinLimitations, setSpinLimitations] = useState({});
-  const [spinCounts, setSpinCounts] = useState({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+  const [spinCounts, setSpinCounts] = useState({ regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
 
   useEffect(() => {
     // Update final cost when spinType or discount changes
@@ -106,7 +107,7 @@ const Spin = ({ socket, userData, setUserData }) => {
               ...prev,
               teamSettings: {
                 ...prev.teamSettings,
-                spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
+                spinCounts: { regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
               }
             };
             console.log('🔄 Updated userData with reset spin counts:', updatedUserData);
@@ -114,7 +115,7 @@ const Spin = ({ socket, userData, setUserData }) => {
           });
           
           // Also directly update the local spinCounts state
-          setSpinCounts({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+          setSpinCounts({ regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
           console.log('🔄 Directly reset local spinCounts state');
         } else {
           console.log('📡 Spin reset event received but not for current user');
@@ -199,7 +200,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     
     if (userData?.teamSettings) {
       const limitations = userData.teamSettings.spinLimitations || {};
-      const counts = userData.teamSettings.spinCounts || { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
+      const counts = userData.teamSettings.spinCounts || { regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 };
       
       console.log('🔄 Setting spin limitations:', limitations);
       console.log('🔄 Setting spin counts:', counts);
@@ -212,6 +213,7 @@ const Spin = ({ socket, userData, setUserData }) => {
       console.log('⚠️ No teamSettings found in userData, using defaults');
       // Set default limitations if none exist
       const defaultLimitations = {
+        regular: { enabled: true, limit: 1 },
         lucky: { enabled: true, limit: 1 },
         gamehelper: { enabled: true, limit: 1 },
         challenge: { enabled: true, limit: 1 },
@@ -220,18 +222,19 @@ const Spin = ({ socket, userData, setUserData }) => {
         random: { enabled: true, limit: 1 }
       };
       setSpinLimitations(defaultLimitations);
-      setSpinCounts({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+      setSpinCounts({ regular: 0, lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
     }
   }, [userData]);
 
   // Function to check if a spin type is disabled
   const isSpinDisabled = (spinId) => {
-    const spinCategory = spinId === 'lucky' ? 'lucky' : 
+    const spinCategory = spinId === 'regular' ? 'regular' :
+                        spinId === 'lucky' ? 'lucky' : 
                         spinId === 'gamehelper' ? 'gamehelper' :
                         spinId === 'challenge' ? 'challenge' :
                         spinId === 'hightier' ? 'hightier' :
                         spinId === 'lowtier' ? 'lowtier' :
-                        spinId === 'random' ? 'random' : 'lucky';
+                        spinId === 'random' ? 'random' : 'regular';
     
     const limitation = spinLimitations[spinCategory];
     const currentCount = spinCounts[spinCategory] || 0;
@@ -259,12 +262,13 @@ const Spin = ({ socket, userData, setUserData }) => {
 
   // Function to get spin status message
   const getSpinStatusMessage = (spinId) => {
-    const spinCategory = spinId === 'lucky' ? 'lucky' : 
+    const spinCategory = spinId === 'regular' ? 'regular' :
+                        spinId === 'lucky' ? 'lucky' : 
                         spinId === 'gamehelper' ? 'gamehelper' :
                         spinId === 'challenge' ? 'challenge' :
                         spinId === 'hightier' ? 'hightier' :
                         spinId === 'lowtier' ? 'lowtier' :
-                        spinId === 'random' ? 'random' : 'lucky';
+                        spinId === 'random' ? 'random' : 'regular';
     
     const limitation = spinLimitations[spinCategory];
     if (!limitation || !limitation.enabled || limitation.limit === 0) {
