@@ -148,7 +148,7 @@ const AdminDashboard = ({ socket }) => {
       case 'games':
         return <GameManagement />;
               case 'matchups':
-          return <GameSchedule />;
+          return <AdminGameSchedule />;
       case 'statistics':
         return <StatisticsView />;
       default:
@@ -3488,6 +3488,441 @@ const SchedulesEditor = ({ schedules, onSave, onCancel }) => {
           ❌ Cancel
         </button>
       </div>
+    </div>
+  );
+};
+
+// Admin Game Schedule Management Component
+const AdminGameSchedule = () => {
+  const [gameSettings, setGameSettings] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [editingTeam, setEditingTeam] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSchedules, setEditingSchedules] = useState({});
+
+  const fetchGameSettings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/admin/game-settings');
+      setGameSettings(response.data);
+    } catch (error) {
+      console.error('Error fetching game settings:', error);
+      toast.error('Failed to fetch game settings');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGameSettings();
+  }, [fetchGameSettings]);
+
+  const handleSetActiveContentSet = async (contentSet) => {
+    try {
+      await api.post('/api/admin/active-content-set', { contentSet });
+      toast.success(`Active content set changed to ${contentSet.replace('contentSet', 'Set ')}`);
+      fetchGameSettings();
+    } catch (error) {
+      console.error('Error setting active content set:', error);
+      toast.error('Failed to set active content set');
+    }
+  };
+
+  const handleToggleGameScheduleVisibility = async () => {
+    try {
+      const newVisibility = !gameSettings.gameScheduleVisible;
+      await api.post('/api/admin/game-schedule-visibility', { visible: newVisibility });
+      toast.success(`Game schedule is now ${newVisibility ? 'visible' : 'hidden'}`);
+      fetchGameSettings();
+    } catch (error) {
+      console.error('Error toggling game schedule visibility:', error);
+      toast.error('Failed to toggle game schedule visibility');
+    }
+  };
+
+  const handleToggleSetVisibility = async (setName) => {
+    try {
+      const currentVisibleSets = gameSettings.visibleSets || [];
+      const newVisibleSets = currentVisibleSets.includes(setName)
+        ? currentVisibleSets.filter(set => set !== setName)
+        : [...currentVisibleSets, setName];
+      
+      await api.post('/api/admin/visible-sets', { sets: newVisibleSets });
+      toast.success(`${setName.replace('contentSet', 'Set ')} is now ${currentVisibleSets.includes(setName) ? 'hidden' : 'visible'}`);
+      fetchGameSettings();
+    } catch (error) {
+      console.error('Error toggling set visibility:', error);
+      toast.error('Failed to toggle set visibility');
+    }
+  };
+
+  const handleEditTeamSchedules = (teamName) => {
+    setEditingTeam(teamName);
+    setEditingSchedules(gameSettings.teamGameSchedules[teamName] || {});
+    setShowEditModal(true);
+  };
+
+  const handleSaveTeamSchedules = async () => {
+    try {
+      await api.post('/api/admin/team-game-schedules', {
+        schedules: { [editingTeam]: editingSchedules }
+      });
+      toast.success(`Schedules updated for ${editingTeam.replace('team', 'Team ')}`);
+      setShowEditModal(false);
+      setEditingTeam(null);
+      fetchGameSettings();
+    } catch (error) {
+      console.error('Error saving team schedules:', error);
+      toast.error('Failed to save team schedules');
+    }
+  };
+
+  const updateGame = (setName, gameIndex, field, value) => {
+    setEditingSchedules(prev => ({
+      ...prev,
+      [setName]: prev[setName].map((game, index) => 
+        index === gameIndex ? { ...game, [field]: value } : game
+      )
+    }));
+  };
+
+  const addGame = (setName) => {
+    setEditingSchedules(prev => ({
+      ...prev,
+      [setName]: [
+        ...(prev[setName] || []),
+        { shiftNumber: (prev[setName]?.length || 0) + 1, game: '', gamePlace: '' }
+      ]
+    }));
+  };
+
+  const removeGame = (setName, gameIndex) => {
+    setEditingSchedules(prev => ({
+      ...prev,
+      [setName]: prev[setName].filter((_, index) => index !== gameIndex)
+    }));
+  };
+
+  const reorderGames = (setName) => {
+    setEditingSchedules(prev => ({
+      ...prev,
+      [setName]: prev[setName].map((game, index) => ({
+        ...game,
+        shiftNumber: index + 1
+      }))
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div className="card">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div className="spinner"></div>
+          <p>Loading game schedule settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h3>Game Schedule Management</h3>
+          <p style={{ color: '#666', margin: 0 }}>
+            Manage game schedules, content sets, and visibility for all teams.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={handleToggleGameScheduleVisibility}
+            className="btn"
+            style={{
+              backgroundColor: gameSettings.gameScheduleVisible ? '#dc3545' : '#28a745',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            {gameSettings.gameScheduleVisible ? 'Hide Game Schedule' : 'Show Game Schedule'}
+          </button>
+        </div>
+      </div>
+
+      {/* Global Settings */}
+      <div style={{ marginBottom: '32px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+        <h4 style={{ marginBottom: '16px', color: '#4facfe' }}>Global Settings</h4>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          {/* Active Content Set */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+              Active Content Set
+            </label>
+            <select
+              className="input"
+              value={gameSettings.activeContentSet || 'contentSet1'}
+              onChange={(e) => handleSetActiveContentSet(e.target.value)}
+              style={{ width: '100%' }}
+            >
+              {gameSettings.availableSets?.map(set => (
+                <option key={set} value={set}>
+                  {set.replace('contentSet', 'Set ')}
+                </option>
+              ))}
+            </select>
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              Currently active: {gameSettings.activeContentSet?.replace('contentSet', 'Set ')}
+            </p>
+          </div>
+
+          {/* Set Visibility */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
+              Visible Content Sets
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {gameSettings.availableSets?.map(set => (
+                <label key={set} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={gameSettings.visibleSets?.includes(set) || false}
+                    onChange={() => handleToggleSetVisibility(set)}
+                  />
+                  <span>{set.replace('contentSet', 'Set ')}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Team Schedules */}
+      <div style={{ marginBottom: '24px' }}>
+        <h4 style={{ marginBottom: '16px', color: '#4facfe' }}>Team Schedules</h4>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          {gameSettings.availableTeams?.map(team => (
+            <div 
+              key={team}
+              style={{
+                padding: '16px',
+                border: '2px solid #e9ecef',
+                borderRadius: '8px',
+                background: 'white'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h5 style={{ margin: 0, color: '#333' }}>
+                  {team.replace('team', 'Team ')}
+                </h5>
+                <button
+                  onClick={() => handleEditTeamSchedules(team)}
+                  className="btn btn-primary"
+                  style={{ padding: '8px 16px', fontSize: '12px' }}
+                >
+                  ✏️ Edit Schedules
+                </button>
+              </div>
+              
+              {gameSettings.availableSets?.map(set => {
+                const schedule = gameSettings.teamGameSchedules?.[team]?.[set] || [];
+                const isVisible = gameSettings.visibleSets?.includes(set);
+                const isActive = gameSettings.activeContentSet === set;
+                
+                return (
+                  <div 
+                    key={set}
+                    style={{
+                      marginBottom: '12px',
+                      padding: '12px',
+                      border: '1px solid #dee2e6',
+                      borderRadius: '6px',
+                      background: isActive ? '#e3f2fd' : '#f8f9fa',
+                      borderLeft: `4px solid ${isActive ? '#2196f3' : (isVisible ? '#28a745' : '#dc3545')}`
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <strong style={{ color: isActive ? '#2196f3' : '#333' }}>
+                        {set.replace('contentSet', 'Set ')}
+                      </strong>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {isActive && (
+                          <span style={{
+                            padding: '2px 8px',
+                            backgroundColor: '#2196f3',
+                            color: 'white',
+                            fontSize: '10px',
+                            borderRadius: '12px'
+                          }}>
+                            ACTIVE
+                          </span>
+                        )}
+                        <span style={{
+                          padding: '2px 8px',
+                          backgroundColor: isVisible ? '#28a745' : '#dc3545',
+                          color: 'white',
+                          fontSize: '10px',
+                          borderRadius: '12px'
+                        }}>
+                          {isVisible ? 'VISIBLE' : 'HIDDEN'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      {schedule.length > 0 ? (
+                        <div>
+                          {schedule.slice(0, 2).map((game, index) => (
+                            <div key={index} style={{ marginBottom: '4px' }}>
+                              Shift {game.shiftNumber}: {game.game} at {game.gamePlace}
+                            </div>
+                          ))}
+                          {schedule.length > 2 && (
+                            <div style={{ color: '#999', fontStyle: 'italic' }}>
+                              +{schedule.length - 2} more games...
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ color: '#999', fontStyle: 'italic' }}>
+                          No games scheduled
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Edit Modal */}
+      {showEditModal && editingTeam && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '800px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3>Edit Schedules for {editingTeam.replace('team', 'Team ')}</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#666'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              {gameSettings.availableSets?.map(set => (
+                <div 
+                  key={set}
+                  style={{ 
+                    marginBottom: '24px',
+                    padding: '16px',
+                    border: '1px solid #ddd',
+                    borderRadius: '8px',
+                    background: '#fff'
+                  }}
+                >
+                  <h4 style={{ marginBottom: '16px', color: '#4facfe' }}>
+                    {set.replace('contentSet', 'Content Set ')}
+                  </h4>
+                  
+                  {editingSchedules[set] && editingSchedules[set].length > 0 && editingSchedules[set].map((game, gameIndex) => (
+                    <div 
+                      key={gameIndex}
+                      style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: '80px 1fr 1fr auto', 
+                        gap: '12px', 
+                        alignItems: 'center',
+                        marginBottom: '12px',
+                        padding: '12px',
+                        border: '1px solid #eee',
+                        borderRadius: '4px',
+                        background: '#f9f9f9'
+                      }}
+                    >
+                      <input
+                        type="number"
+                        placeholder="Shift #"
+                        value={game.shiftNumber || ''}
+                        onChange={(e) => updateGame(set, gameIndex, 'shiftNumber', parseInt(e.target.value) || 0)}
+                        style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Game"
+                        value={game.game || ''}
+                        onChange={(e) => updateGame(set, gameIndex, 'game', e.target.value)}
+                        style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Game Place"
+                        value={game.gamePlace || ''}
+                        onChange={(e) => updateGame(set, gameIndex, 'gamePlace', e.target.value)}
+                        style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                      />
+                      <button
+                        onClick={() => removeGame(set, gameIndex)}
+                        className="btn btn-danger"
+                        style={{ padding: '8px 12px' }}
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  ))}
+                  
+                  <button 
+                    onClick={() => addGame(set)} 
+                    className="btn btn-secondary"
+                    style={{ marginTop: '8px' }}
+                  >
+                    ➕ Add Game to {set.replace('contentSet', 'Content Set ')}
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowEditModal(false)} className="btn btn-secondary">
+                Cancel
+              </button>
+              <button onClick={handleSaveTeamSchedules} className="btn btn-success">
+                💾 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
