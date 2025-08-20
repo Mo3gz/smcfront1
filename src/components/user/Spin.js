@@ -302,10 +302,10 @@ const Spin = ({ socket, userData, setUserData }) => {
     
     // Get total cards for this spin type
     const spinTypes = {
-      lucky: 6,
+      lucky: 4,
       gamehelper: 4,
       challenge: 4,
-      hightier: 3,
+      hightier: 2,
       lowtier: 3,
       random: 0 // Random has no collection tracking
     };
