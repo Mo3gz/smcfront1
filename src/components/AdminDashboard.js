@@ -150,7 +150,15 @@ const AdminDashboard = ({ socket }) => {
         return <GameManagement />;
       case 'matchups':
         console.log('🎯 Rendering AdminGameSchedule component');
-        return <AdminGameSchedule />;
+        return (
+          <div style={{ padding: '20px', border: '2px solid red' }}>
+            <h3 style={{ color: 'red' }}>Debug: About to render AdminGameSchedule</h3>
+            <p>If you see this, the routing is working!</p>
+            <button onClick={() => alert('Button clicked!')}>Test Button</button>
+            <hr />
+            <AdminGameSchedule />
+          </div>
+        );
       case 'statistics':
         return <StatisticsView />;
       default:
@@ -3050,6 +3058,7 @@ const StatisticsView = () => {
 // Admin Game Schedule Management Component
 const AdminGameSchedule = () => {
   console.log('🚀 AdminGameSchedule component mounted');
+  
   const [gameSettings, setGameSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [editingTeam, setEditingTeam] = useState(null);
@@ -3190,6 +3199,8 @@ const AdminGameSchedule = () => {
     );
   }
 
+  console.log('🎨 About to render AdminGameSchedule JSX');
+  
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
