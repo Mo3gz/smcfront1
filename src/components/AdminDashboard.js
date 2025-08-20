@@ -3368,129 +3368,7 @@ const GameSchedule = () => {
 
 
 
-// Schedules Editor Component for Team Game Schedules
-const SchedulesEditor = ({ schedules, onSave, onCancel }) => {
-  const [editedSchedules, setEditedSchedules] = useState({...schedules});
 
-  const updateGame = (teamName, setName, gameIndex, field, value) => {
-    const updated = {...editedSchedules};
-    if (!updated[teamName]) updated[teamName] = {};
-    if (!updated[teamName][setName]) updated[teamName][setName] = [];
-    updated[teamName][setName][gameIndex] = { ...updated[teamName][setName][gameIndex], [field]: value };
-    setEditedSchedules(updated);
-  };
-
-  const addGame = (teamName, setName) => {
-    const updated = {...editedSchedules};
-    if (!updated[teamName]) updated[teamName] = {};
-    if (!updated[teamName][setName]) updated[teamName][setName] = [];
-    updated[teamName][setName].push({
-      shiftNumber: updated[teamName][setName].length + 1,
-      game: '',
-      gamePlace: ''
-    });
-    setEditedSchedules(updated);
-  };
-
-  const removeGame = (setName, gameIndex) => {
-    const updated = {...editedSchedules};
-    updated[setName].splice(gameIndex, 1);
-    // Reorder shift numbers
-    updated[setName] = updated[setName].map((game, index) => ({
-      ...game,
-      shiftNumber: index + 1
-    }));
-    setEditedSchedules(updated);
-  };
-
-  const handleSave = () => {
-    onSave(editedSchedules);
-  };
-
-  return (
-    <div>
-      {Object.entries(editedSchedules).map(([setName, schedule]) => (
-        <div 
-          key={setName}
-          style={{ 
-            marginBottom: '24px',
-            padding: '16px',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            background: '#fff'
-          }}
-        >
-          <h4 style={{ marginBottom: '16px', color: '#4facfe' }}>
-            {setName.replace('contentSet', 'Content Set ')}
-          </h4>
-          
-          {schedule && schedule.length > 0 && schedule.map((game, gameIndex) => (
-            <div 
-              key={gameIndex}
-              style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr 2fr 2fr auto', 
-                gap: '12px', 
-                alignItems: 'center',
-                marginBottom: '12px',
-                padding: '12px',
-                border: '1px solid #eee',
-                borderRadius: '4px',
-                background: '#f9f9f9'
-              }}
-            >
-              <input
-                type="number"
-                placeholder="Shift #"
-                value={game.shiftNumber || ''}
-                onChange={(e) => updateGame(setName, gameIndex, 'shiftNumber', parseInt(e.target.value) || 0)}
-                style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-              <input
-                type="text"
-                placeholder="Game"
-                value={game.game || ''}
-                onChange={(e) => updateGame(setName, gameIndex, 'game', e.target.value)}
-                style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-              <input
-                type="text"
-                placeholder="Game Place"
-                value={game.gamePlace || ''}
-                onChange={(e) => updateGame(setName, gameIndex, 'gamePlace', e.target.value)}
-                style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-              <button
-                onClick={() => removeGame(setName, gameIndex)}
-                className="btn btn-danger"
-                style={{ padding: '8px 12px' }}
-              >
-                ❌
-              </button>
-            </div>
-          ))}
-          
-          <button 
-            onClick={() => addGame(setName)} 
-            className="btn btn-secondary"
-            style={{ marginTop: '8px' }}
-          >
-            ➕ Add Game to {setName.replace('contentSet', 'Content Set ')}
-          </button>
-        </div>
-      ))}
-      
-      <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-        <button onClick={handleSave} className="btn btn-success">
-          💾 Save All Changes
-        </button>
-        <button onClick={onCancel} className="btn btn-danger">
-          ❌ Cancel
-        </button>
-      </div>
-    </div>
-  );
-};
 
 // Admin Game Schedule Management Component
 const AdminGameSchedule = () => {
@@ -3603,15 +3481,7 @@ const AdminGameSchedule = () => {
     }));
   };
 
-  const reorderGames = (setName) => {
-    setEditingSchedules(prev => ({
-      ...prev,
-      [setName]: prev[setName].map((game, index) => ({
-        ...game,
-        shiftNumber: index + 1
-      }))
-    }));
-  };
+
 
   if (loading) {
     return (
