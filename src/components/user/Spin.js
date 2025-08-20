@@ -341,7 +341,7 @@ const Spin = ({ socket, userData, setUserData }) => {
 
       // Simulate spin animation
       setTimeout(() => {
-        const { card, remainingCoins, actionType, additionalData, cardPoolReset, receivedCardsCount, totalCardsForType } = response.data;
+                 const { card, remainingCoins, actionType, additionalData } = response.data;
         
         // Always set spinning to false first
         setSpinning(false);
