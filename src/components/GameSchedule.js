@@ -8,7 +8,7 @@ const GameSchedule = () => {
   const { user } = useAuth();
   const [gameSchedule, setGameSchedule] = useState([]);
   const [activeContentSet, setActiveContentSet] = useState('');
-  const [userTeam, setUserTeam] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [scheduleVisible, setScheduleVisible] = useState(true);
 
@@ -53,7 +53,7 @@ const GameSchedule = () => {
       const response = await api.get(`/api/game-schedule?team=${userTeamKey}`);
       setGameSchedule(response.data.schedule || []);
       setActiveContentSet(response.data.activeContentSet || '');
-      setUserTeam(user.teamName);
+
       setScheduleVisible(response.data.visible !== false);
     } catch (error) {
       console.error('Error fetching game schedule:', error);
