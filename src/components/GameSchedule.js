@@ -40,7 +40,7 @@ const GameSchedule = () => {
   };
 
   // Fetch game schedule for user's team
-  const fetchGameSchedule = async () => {
+  const fetchGameSchedule = useCallback(async () => {
     try {
       if (!user || !user.teamName) {
         console.log('No user or teamName available');
@@ -59,7 +59,7 @@ const GameSchedule = () => {
       console.error('Error fetching game schedule:', error);
       toast.error('Failed to load game schedule');
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -71,7 +71,7 @@ const GameSchedule = () => {
     if (user) {
       loadData();
     }
-  }, [user]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, fetchGameSchedule]);
 
   if (loading) {
     return (
