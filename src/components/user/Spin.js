@@ -285,6 +285,32 @@ const Spin = ({ socket, userData, setUserData }) => {
     return `Available (${current}/${limit})`;
   }, [spinLimitations, spinCounts]);
 
+  // Memoized function to get card collection progress
+  const getCardCollectionProgress = useCallback((spinId) => {
+    const receivedCards = userData?.teamSettings?.receivedCards || {};
+    const receivedCardsForType = receivedCards[spinId] || [];
+    
+    // Get total cards for this spin type
+    const spinTypes = {
+      lucky: 6,
+      gamehelper: 4,
+      challenge: 4,
+      hightier: 3,
+      lowtier: 3,
+      random: 1
+    };
+    
+    const totalCards = spinTypes[spinId] || 0;
+    const collectedCards = receivedCardsForType.length;
+    
+    return {
+      collected: collectedCards,
+      total: totalCards,
+      remaining: totalCards - collectedCards,
+      percentage: totalCards > 0 ? Math.round((collectedCards / totalCards) * 100) : 0
+    };
+  }, [userData?.teamSettings?.receivedCards]);
+
   const handleSpin = async () => {
     if (spinning) return;
     if (finalCost > 0 && userData.coins < finalCost) {
@@ -305,7 +331,7 @@ const Spin = ({ socket, userData, setUserData }) => {
 
       // Simulate spin animation
       setTimeout(() => {
-        const { card, remainingCoins, actionType, additionalData } = response.data;
+        const { card, remainingCoins, actionType, additionalData, cardPoolReset, receivedCardsCount, totalCardsForType } = response.data;
         
         // Always set spinning to false first
         setSpinning(false);
@@ -320,6 +346,45 @@ const Spin = ({ socket, userData, setUserData }) => {
         setSpinResult(card);
         setShowResult(true);
         setPromoCode('');
+
+        // Show card collection progress notification
+        if (cardPoolReset) {
+          toast.success(`🎉 Card pool reset! You've collected all ${totalCardsForType} cards for ${spinType} spin!`, {
+            duration: 5000,
+            position: 'top-center',
+            style: {
+              background: 'linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%)',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }
+          });
+        } else if (receivedCardsCount !== undefined && totalCardsForType !== undefined) {
+          const remainingCards = totalCardsForType - receivedCardsCount - 1; // -1 for the card just received
+          if (remainingCards > 0) {
+            toast.info(`📊 Card Collection: ${receivedCardsCount + 1}/${totalCardsForType} cards collected for ${spinType} spin. ${remainingCards} unique cards remaining.`, {
+              duration: 4000,
+              position: 'top-center',
+              style: {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }
+            });
+          } else {
+            toast.success(`🎯 Last unique card collected for ${spinType} spin! Pool will reset on next spin.`, {
+              duration: 4000,
+              position: 'top-center',
+              style: {
+                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }
+            });
+          }
+        }
 
         // Handle different action types with appropriate messages
         switch(actionType) {
@@ -450,6 +515,7 @@ const Spin = ({ socket, userData, setUserData }) => {
     return spinTypes.map((spin) => {
       const isDisabled = isSpinDisabled(spin.id);
       const statusMessage = getSpinStatusMessage(spin.id);
+      const cardProgress = getCardCollectionProgress(spin.id);
       
       return (
         <div
@@ -492,6 +558,43 @@ const Spin = ({ socket, userData, setUserData }) => {
           <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>
             {spin.cost} coins
           </div>
+          
+          {/* Card Collection Progress */}
+          {cardProgress.total > 0 && (
+            <div style={{ 
+              fontSize: '10px', 
+              opacity: 0.8,
+              color: isDisabled ? '#999' : (spinType === spin.id ? 'white' : '#666'),
+              fontWeight: 'bold',
+              marginBottom: '4px'
+            }}>
+              {cardProgress.remaining === 1 ? '🎯' : '📊'} {cardProgress.collected}/{cardProgress.total} cards
+              {cardProgress.remaining === 1 && (
+                <span style={{ color: '#ff6b6b', fontWeight: 'bold' }}> (Last card!)</span>
+              )}
+            </div>
+          )}
+          
+          {/* Progress Bar */}
+          {cardProgress.total > 0 && (
+            <div style={{
+              width: '100%',
+              height: '4px',
+              background: isDisabled ? '#ddd' : 'rgba(0,0,0,0.1)',
+              borderRadius: '2px',
+              marginBottom: '4px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${cardProgress.percentage}%`,
+                height: '100%',
+                background: isDisabled ? '#999' : (spinType === spin.id ? 'white' : spin.color),
+                borderRadius: '2px',
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+          )}
+          
           {statusMessage && (
             <div style={{ 
               fontSize: '10px', 
