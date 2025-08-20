@@ -3014,27 +3014,46 @@ const StatisticsView = () => {
 
 // Matchups and Schedules Component
 const MatchupsAndSchedules = () => {
+  console.log('🏆 MatchupsAndSchedules component rendering');
+  
   const [loading, setLoading] = useState(true);
   const [matchups, setMatchups] = useState([]);
-  const [gameSchedules, setGameSchedules] = useState({});
+  const [gameSchedules, setGameSchedules] = useState({
+    contentSet1: [],
+    contentSet2: [],
+    contentSet3: [],
+    contentSet4: []
+  });
   const [activeContentSet, setActiveContentSet] = useState('contentSet1');
   const [gameScheduleVisible, setGameScheduleVisible] = useState(true);
   const [editingMatchups, setEditingMatchups] = useState(false);
   const [editingSchedules, setEditingSchedules] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Fetch game settings
+  // Fetch game settings with better error handling
   const fetchGameSettings = useCallback(async () => {
     try {
+      console.log('🔄 Fetching game settings...');
       setLoading(true);
+      setError(null);
+      
       const response = await api.get('/api/admin/game-settings');
+      console.log('✅ Game settings response:', response.data);
       const data = response.data;
       
       setMatchups(data.matchups || []);
-      setGameSchedules(data.gameSchedules || {});
+      setGameSchedules(data.gameSchedules || {
+        contentSet1: [],
+        contentSet2: [],
+        contentSet3: [],
+        contentSet4: []
+      });
       setActiveContentSet(data.activeContentSet || 'contentSet1');
       setGameScheduleVisible(data.gameScheduleVisible !== false);
+      console.log('✅ Game settings loaded successfully');
     } catch (error) {
-      console.error('Error fetching game settings:', error);
+      console.error('❌ Error fetching game settings:', error);
+      setError('Failed to load game settings. Please check your connection and try again.');
       toast.error('Failed to load game settings');
     } finally {
       setLoading(false);
@@ -3101,6 +3120,31 @@ const MatchupsAndSchedules = () => {
       <div style={{ textAlign: 'center', padding: '40px 20px' }}>
         <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 20px' }}></div>
         <h3>Loading Matchups & Schedules...</h3>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h2>🏆 Matchups & Schedules</h2>
+        <div style={{ 
+          marginTop: '20px', 
+          padding: '20px', 
+          border: '2px solid #ff6b6b', 
+          borderRadius: '8px',
+          background: '#fff5f5'
+        }}>
+          <h3 style={{ color: '#ff6b6b' }}>⚠️ Error</h3>
+          <p>{error}</p>
+          <button 
+            onClick={fetchGameSettings}
+            className="btn btn-primary"
+            style={{ marginTop: '16px' }}
+          >
+            🔄 Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -3189,24 +3233,30 @@ const MatchupsAndSchedules = () => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
             gap: '16px'
           }}>
-            {matchups.map((matchup) => (
-              <div 
-                key={matchup.id}
-                style={{ 
-                  padding: '16px', 
-                  border: '1px solid #ddd', 
-                  borderRadius: '8px',
-                  background: '#fff'
-                }}
-              >
-                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-                  {matchup.team1} vs {matchup.team2}
+            {matchups.length === 0 ? (
+              <p style={{ color: '#666', textAlign: 'center', gridColumn: '1 / -1' }}>
+                No team matchups configured yet. Click "Edit Matchups" to add some.
+              </p>
+            ) : (
+              matchups.map((matchup) => (
+                <div 
+                  key={matchup.id}
+                  style={{ 
+                    padding: '16px', 
+                    border: '1px solid #ddd', 
+                    borderRadius: '8px',
+                    background: '#fff'
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                    {matchup.team1} vs {matchup.team2}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>
+                    {matchup.date} at {matchup.time}
+                  </div>
                 </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>
-                  {matchup.date} at {matchup.time}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         )}
       </div>
@@ -3260,20 +3310,24 @@ const MatchupsAndSchedules = () => {
                   {setName.replace('contentSet', 'Content Set ')}
                   {activeContentSet === setName && ' (Active)'}
                 </div>
-                {schedule.map((game, index) => (
-                  <div 
-                    key={index}
-                    style={{ 
-                      padding: '8px 0', 
-                      borderBottom: index < schedule.length - 1 ? '1px solid #eee' : 'none'
-                    }}
-                  >
-                    <div style={{ fontWeight: '600' }}>Shift {game.shiftNumber}</div>
-                    <div style={{ fontSize: '14px', color: '#666' }}>
-                      {game.game} • {game.gamePlace}
+                {schedule && schedule.length > 0 ? (
+                  schedule.map((game, index) => (
+                    <div 
+                      key={index}
+                      style={{ 
+                        padding: '8px 0', 
+                        borderBottom: index < schedule.length - 1 ? '1px solid #eee' : 'none'
+                      }}
+                    >
+                      <div style={{ fontWeight: '600' }}>Shift {game.shiftNumber}</div>
+                      <div style={{ fontSize: '14px', color: '#666' }}>
+                        {game.game} • {game.gamePlace}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p style={{ color: '#666', fontSize: '14px' }}>No games scheduled for this content set.</p>
+                )}
               </div>
             ))}
           </div>
@@ -3433,7 +3487,7 @@ const SchedulesEditor = ({ schedules, onSave, onCancel }) => {
             {setName.replace('contentSet', 'Content Set ')}
           </h4>
           
-          {schedule.map((game, gameIndex) => (
+          {schedule && schedule.length > 0 && schedule.map((game, gameIndex) => (
             <div 
               key={gameIndex}
               style={{ 
@@ -3451,21 +3505,21 @@ const SchedulesEditor = ({ schedules, onSave, onCancel }) => {
               <input
                 type="number"
                 placeholder="Shift #"
-                value={game.shiftNumber}
-                onChange={(e) => updateGame(setName, gameIndex, 'shiftNumber', parseInt(e.target.value))}
+                value={game.shiftNumber || ''}
+                onChange={(e) => updateGame(setName, gameIndex, 'shiftNumber', parseInt(e.target.value) || 0)}
                 style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
               />
               <input
                 type="text"
                 placeholder="Game"
-                value={game.game}
+                value={game.game || ''}
                 onChange={(e) => updateGame(setName, gameIndex, 'game', e.target.value)}
                 style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
               />
               <input
                 type="text"
                 placeholder="Game Place"
-                value={game.gamePlace}
+                value={game.gamePlace || ''}
                 onChange={(e) => updateGame(setName, gameIndex, 'gamePlace', e.target.value)}
                 style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
               />
