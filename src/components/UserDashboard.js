@@ -144,7 +144,6 @@ const UserDashboard = ({ socket }) => {
     <div className="container">
       <div className="app-header">
         <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <img src={Logo} alt="Logo" style={{ height: 80, width: 80, objectFit: 'contain', borderRadius: 12 }} />
           <div>
             <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
               {userData?.teamName}
