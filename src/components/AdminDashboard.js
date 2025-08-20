@@ -96,6 +96,29 @@ const AdminDashboard = ({ socket }) => {
     }
   }, [socket, adminVerified, fetchNotifications, fetchTeams]);
 
+  // Check if navbar is scrollable and add visual indicator
+  useEffect(() => {
+    const checkNavbarScroll = () => {
+      const navContent = document.querySelector('.nav-content');
+      if (navContent) {
+        const isScrollable = navContent.scrollWidth > navContent.clientWidth;
+        navContent.classList.toggle('scrollable', isScrollable);
+      }
+    };
+
+    // Check on mount and resize
+    checkNavbarScroll();
+    window.addEventListener('resize', checkNavbarScroll);
+    
+    // Check after a short delay to ensure all content is loaded
+    const timeoutId = setTimeout(checkNavbarScroll, 100);
+    
+    return () => {
+      window.removeEventListener('resize', checkNavbarScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [activeTab]);
+
   const handleLogout = async () => {
     try {
       await logout();
