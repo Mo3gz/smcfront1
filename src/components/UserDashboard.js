@@ -8,7 +8,7 @@ import Spin from './user/Spin';
 import MapView from './user/MapView';
 import ProgramOfTheDay from './ProgramOfTheDay';
 import Notifications from './Notifications';
-import Logo from '../assets/Logo.png';
+
 import { API_BASE_URL } from '../utils/api';
 
 const UserDashboard = ({ socket }) => {
