@@ -132,6 +132,7 @@ const AdminDashboard = ({ socket }) => {
   };
 
   const renderContent = () => {
+    console.log('🔄 renderContent called with activeTab:', activeTab);
     switch (activeTab) {
       case 'promocodes':
         return <PromoCodes teams={teams} socket={socket} />;
@@ -147,8 +148,9 @@ const AdminDashboard = ({ socket }) => {
         return <CountryManagement teams={teams} socket={socket} />;
       case 'games':
         return <GameManagement />;
-              case 'matchups':
-          return <AdminGameSchedule />;
+      case 'matchups':
+        console.log('🎯 Rendering AdminGameSchedule component');
+        return <AdminGameSchedule />;
       case 'statistics':
         return <StatisticsView />;
       default:
@@ -258,7 +260,10 @@ const AdminDashboard = ({ socket }) => {
           </div>
           <div 
             className={`nav-item ${activeTab === 'matchups' ? 'active' : ''}`}
-            onClick={() => setActiveTab('matchups')}
+            onClick={() => {
+              console.log('🖱️ Clicked on Game Schedule tab');
+              setActiveTab('matchups');
+            }}
           >
             <Calendar className="nav-icon" />
             <span className="nav-text">Game Schedule</span>
@@ -3044,6 +3049,7 @@ const StatisticsView = () => {
 
 // Admin Game Schedule Management Component
 const AdminGameSchedule = () => {
+  console.log('🚀 AdminGameSchedule component mounted');
   const [gameSettings, setGameSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [editingTeam, setEditingTeam] = useState(null);
@@ -3052,11 +3058,13 @@ const AdminGameSchedule = () => {
 
   const fetchGameSettings = useCallback(async () => {
     try {
+      console.log('🔄 Fetching game settings...');
       setLoading(true);
       const response = await api.get('/api/admin/game-settings');
+      console.log('✅ Game settings response:', response.data);
       setGameSettings(response.data);
     } catch (error) {
-      console.error('Error fetching game settings:', error);
+      console.error('❌ Error fetching game settings:', error);
       toast.error('Failed to fetch game settings');
     } finally {
       setLoading(false);
@@ -3166,6 +3174,22 @@ const AdminGameSchedule = () => {
     );
   }
 
+  // Add safety check for gameSettings
+  if (!gameSettings || Object.keys(gameSettings).length === 0) {
+    console.log('⚠️ gameSettings is empty or undefined:', gameSettings);
+    return (
+      <div className="card">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <h3>⚠️ No Game Settings Available</h3>
+          <p style={{ color: '#666' }}>Unable to load game settings. Please try refreshing the page.</p>
+          <button onClick={fetchGameSettings} className="btn btn-primary" style={{ marginTop: '16px' }}>
+            🔄 Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -3174,6 +3198,8 @@ const AdminGameSchedule = () => {
           <p style={{ color: '#666', margin: 0 }}>
             Manage game schedules, content sets, and visibility for all teams.
           </p>
+          <p style={{ color: 'green', margin: '8px 0 0 0', fontSize: '12px' }}>✅ Component is rendering successfully!</p>
+          <p style={{ color: 'blue', margin: '4px 0 0 0', fontSize: '11px' }}>Debug: gameSettings keys: {Object.keys(gameSettings).join(', ')}</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
