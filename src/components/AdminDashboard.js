@@ -10,7 +10,8 @@ import {
   LogOut,
   Map,
   Gamepad2,
-  BarChart3
+  BarChart3,
+  Calendar
 } from 'lucide-react';
 import api, { API_BASE_URL } from '../utils/api';
 import axios from 'axios';
@@ -123,6 +124,8 @@ const AdminDashboard = ({ socket }) => {
         return <CountryManagement teams={teams} socket={socket} />;
       case 'games':
         return <GameManagement />;
+      case 'matchups':
+        return <MatchupsAndSchedules />;
       case 'statistics':
         return <StatisticsView />;
       default:
@@ -229,6 +232,13 @@ const AdminDashboard = ({ socket }) => {
           >
             <Gamepad2 className="nav-icon" />
             <span className="nav-text">Games</span>
+          </div>
+          <div 
+            className={`nav-item ${activeTab === 'matchups' ? 'active' : ''}`}
+            onClick={() => setActiveTab('matchups')}
+          >
+            <Calendar className="nav-icon" />
+            <span className="nav-text">Matchups</span>
           </div>
           <div 
             className={`nav-item ${activeTab === 'statistics' ? 'active' : ''}`}
@@ -2997,6 +3007,497 @@ const StatisticsView = () => {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Matchups and Schedules Component
+const MatchupsAndSchedules = () => {
+  const [gameSettings, setGameSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [matchups, setMatchups] = useState([]);
+  const [gameSchedules, setGameSchedules] = useState({});
+  const [activeContentSet, setActiveContentSet] = useState('contentSet1');
+  const [gameScheduleVisible, setGameScheduleVisible] = useState(true);
+  const [editingMatchups, setEditingMatchups] = useState(false);
+  const [editingSchedules, setEditingSchedules] = useState(false);
+
+  // Fetch game settings
+  const fetchGameSettings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/admin/game-settings');
+      const data = response.data;
+      
+      setMatchups(data.matchups || []);
+      setGameSchedules(data.gameSchedules || {});
+      setActiveContentSet(data.activeContentSet || 'contentSet1');
+      setGameScheduleVisible(data.gameScheduleVisible !== false);
+      setGameSettings(data);
+    } catch (error) {
+      console.error('Error fetching game settings:', error);
+      toast.error('Failed to load game settings');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGameSettings();
+  }, [fetchGameSettings]);
+
+  // Update matchups
+  const handleUpdateMatchups = async (newMatchups) => {
+    try {
+      await api.post('/api/admin/matchups', { matchups: newMatchups });
+      setMatchups(newMatchups);
+      setEditingMatchups(false);
+      toast.success('Team matchups updated successfully');
+    } catch (error) {
+      console.error('Error updating matchups:', error);
+      toast.error('Failed to update team matchups');
+    }
+  };
+
+  // Update game schedules
+  const handleUpdateSchedules = async (newSchedules) => {
+    try {
+      await api.post('/api/admin/game-schedules', { schedules: newSchedules });
+      setGameSchedules(newSchedules);
+      setEditingSchedules(false);
+      toast.success('Game schedules updated successfully');
+    } catch (error) {
+      console.error('Error updating schedules:', error);
+      toast.error('Failed to update game schedules');
+    }
+  };
+
+  // Set active content set
+  const handleSetActiveContentSet = async (contentSet) => {
+    try {
+      await api.post('/api/admin/active-content-set', { contentSet });
+      setActiveContentSet(contentSet);
+      toast.success(`Active content set changed to ${contentSet}`);
+    } catch (error) {
+      console.error('Error setting active content set:', error);
+      toast.error('Failed to set active content set');
+    }
+  };
+
+  // Toggle game schedule visibility
+  const handleToggleVisibility = async () => {
+    try {
+      const newVisibility = !gameScheduleVisible;
+      await api.post('/api/admin/game-schedule-visibility', { visible: newVisibility });
+      setGameScheduleVisible(newVisibility);
+      toast.success(`Game schedule ${newVisibility ? 'shown' : 'hidden'} successfully`);
+    } catch (error) {
+      console.error('Error toggling visibility:', error);
+      toast.error('Failed to toggle game schedule visibility');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 20px' }}></div>
+        <h3>Loading Matchups & Schedules...</h3>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h2 style={{ marginBottom: '24px', color: '#333' }}>🏆 Matchups & Schedules Management</h2>
+
+      {/* Game Schedule Visibility Control */}
+      <div style={{ 
+        marginBottom: '32px', 
+        padding: '20px', 
+        border: '2px solid #667eea', 
+        borderRadius: '12px',
+        background: '#f8f9ff'
+      }}>
+        <h3 style={{ marginBottom: '16px', color: '#667eea' }}>👁️ Game Schedule Visibility</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            onClick={handleToggleVisibility}
+            className={`btn ${gameScheduleVisible ? 'btn-success' : 'btn-danger'}`}
+            style={{ padding: '12px 24px' }}
+          >
+            {gameScheduleVisible ? '🟢 Visible' : '🔴 Hidden'}
+          </button>
+          <span style={{ color: '#666' }}>
+            Game schedule is currently {gameScheduleVisible ? 'visible' : 'hidden'} to users
+          </span>
+        </div>
+      </div>
+
+      {/* Active Content Set Selection */}
+      <div style={{ 
+        marginBottom: '32px', 
+        padding: '20px', 
+        border: '2px solid #4facfe', 
+        borderRadius: '12px',
+        background: '#f0f8ff'
+      }}>
+        <h3 style={{ marginBottom: '16px', color: '#4facfe' }}>🎯 Active Content Set</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+          {['contentSet1', 'contentSet2', 'contentSet3', 'contentSet4'].map((set) => (
+            <button
+              key={set}
+              onClick={() => handleSetActiveContentSet(set)}
+              className={`btn ${activeContentSet === set ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '10px 20px' }}
+            >
+              {activeContentSet === set ? '✅ ' : ''}{set.replace('contentSet', 'Set ')}
+            </button>
+          ))}
+        </div>
+        <p style={{ marginTop: '12px', color: '#666', fontSize: '14px' }}>
+          Currently showing: <strong>{activeContentSet.replace('contentSet', 'Content Set ')}</strong>
+        </p>
+      </div>
+
+      {/* Team Matchups */}
+      <div style={{ 
+        marginBottom: '32px', 
+        padding: '20px', 
+        border: '2px solid #ff6b6b', 
+        borderRadius: '12px',
+        background: '#fff5f5'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ color: '#ff6b6b' }}>🏆 Team Matchups</h3>
+          <button
+            onClick={() => setEditingMatchups(!editingMatchups)}
+            className="btn btn-primary"
+            style={{ padding: '8px 16px' }}
+          >
+            {editingMatchups ? 'Cancel' : 'Edit Matchups'}
+          </button>
+        </div>
+        
+        {editingMatchups ? (
+          <MatchupsEditor 
+            matchups={matchups} 
+            onSave={handleUpdateMatchups}
+            onCancel={() => setEditingMatchups(false)}
+          />
+        ) : (
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+            gap: '16px'
+          }}>
+            {matchups.map((matchup) => (
+              <div 
+                key={matchup.id}
+                style={{ 
+                  padding: '16px', 
+                  border: '1px solid #ddd', 
+                  borderRadius: '8px',
+                  background: '#fff'
+                }}
+              >
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                  {matchup.team1} vs {matchup.team2}
+                </div>
+                <div style={{ fontSize: '14px', color: '#666' }}>
+                  {matchup.date} at {matchup.time}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Game Schedules */}
+      <div style={{ 
+        padding: '20px', 
+        border: '2px solid #4facfe', 
+        borderRadius: '12px',
+        background: '#f0f8ff'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ color: '#4facfe' }}>📅 Game Schedules</h3>
+          <button
+            onClick={() => setEditingSchedules(!editingSchedules)}
+            className="btn btn-primary"
+            style={{ padding: '8px 16px' }}
+          >
+            {editingSchedules ? 'Cancel' : 'Edit Schedules'}
+          </button>
+        </div>
+        
+        {editingSchedules ? (
+          <SchedulesEditor 
+            schedules={gameSchedules} 
+            onSave={handleUpdateSchedules}
+            onCancel={() => setEditingSchedules(false)}
+          />
+        ) : (
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '16px'
+          }}>
+            {Object.entries(gameSchedules).map(([setName, schedule]) => (
+              <div 
+                key={setName}
+                style={{ 
+                  padding: '16px', 
+                  border: '1px solid #ddd', 
+                  borderRadius: '8px',
+                  background: '#fff',
+                  borderLeft: activeContentSet === setName ? '4px solid #4facfe' : '4px solid #ddd'
+                }}
+              >
+                <div style={{ 
+                  fontWeight: 'bold', 
+                  marginBottom: '12px',
+                  color: activeContentSet === setName ? '#4facfe' : '#333'
+                }}>
+                  {setName.replace('contentSet', 'Content Set ')}
+                  {activeContentSet === setName && ' (Active)'}
+                </div>
+                {schedule.map((game, index) => (
+                  <div 
+                    key={index}
+                    style={{ 
+                      padding: '8px 0', 
+                      borderBottom: index < schedule.length - 1 ? '1px solid #eee' : 'none'
+                    }}
+                  >
+                    <div style={{ fontWeight: '600' }}>Shift {game.shiftNumber}</div>
+                    <div style={{ fontSize: '14px', color: '#666' }}>
+                      {game.game} • {game.gamePlace}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Matchups Editor Component
+const MatchupsEditor = ({ matchups, onSave, onCancel }) => {
+  const [editedMatchups, setEditedMatchups] = useState([...matchups]);
+
+  const addMatchup = () => {
+    const newMatchup = {
+      id: Date.now(),
+      team1: '',
+      team2: '',
+      date: '',
+      time: ''
+    };
+    setEditedMatchups([...editedMatchups, newMatchup]);
+  };
+
+  const removeMatchup = (index) => {
+    setEditedMatchups(editedMatchups.filter((_, i) => i !== index));
+  };
+
+  const updateMatchup = (index, field, value) => {
+    const updated = [...editedMatchups];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditedMatchups(updated);
+  };
+
+  const handleSave = () => {
+    onSave(editedMatchups);
+  };
+
+  return (
+    <div>
+      {editedMatchups.map((matchup, index) => (
+        <div 
+          key={matchup.id}
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr 1fr 1fr auto', 
+            gap: '12px', 
+            alignItems: 'center',
+            marginBottom: '12px',
+            padding: '12px',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            background: '#fff'
+          }}
+        >
+          <input
+            type="text"
+            placeholder="Team 1"
+            value={matchup.team1}
+            onChange={(e) => updateMatchup(index, 'team1', e.target.value)}
+            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+          <input
+            type="text"
+            placeholder="Team 2"
+            value={matchup.team2}
+            onChange={(e) => updateMatchup(index, 'team2', e.target.value)}
+            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+          <input
+            type="date"
+            value={matchup.date}
+            onChange={(e) => updateMatchup(index, 'date', e.target.value)}
+            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+          <input
+            type="time"
+            value={matchup.time}
+            onChange={(e) => updateMatchup(index, 'time', e.target.value)}
+            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+          <button
+            onClick={() => removeMatchup(index)}
+            className="btn btn-danger"
+            style={{ padding: '8px 12px' }}
+          >
+            ❌
+          </button>
+        </div>
+      ))}
+      
+      <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+        <button onClick={addMatchup} className="btn btn-secondary">
+          ➕ Add Matchup
+        </button>
+        <button onClick={handleSave} className="btn btn-success">
+          💾 Save Changes
+        </button>
+        <button onClick={onCancel} className="btn btn-danger">
+          ❌ Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Schedules Editor Component
+const SchedulesEditor = ({ schedules, onSave, onCancel }) => {
+  const [editedSchedules, setEditedSchedules] = useState({...schedules});
+
+  const updateGame = (setName, gameIndex, field, value) => {
+    const updated = {...editedSchedules};
+    updated[setName][gameIndex] = { ...updated[setName][gameIndex], [field]: value };
+    setEditedSchedules(updated);
+  };
+
+  const addGame = (setName) => {
+    const updated = {...editedSchedules};
+    if (!updated[setName]) updated[setName] = [];
+    updated[setName].push({
+      shiftNumber: updated[setName].length + 1,
+      game: '',
+      gamePlace: ''
+    });
+    setEditedSchedules(updated);
+  };
+
+  const removeGame = (setName, gameIndex) => {
+    const updated = {...editedSchedules};
+    updated[setName].splice(gameIndex, 1);
+    // Reorder shift numbers
+    updated[setName] = updated[setName].map((game, index) => ({
+      ...game,
+      shiftNumber: index + 1
+    }));
+    setEditedSchedules(updated);
+  };
+
+  const handleSave = () => {
+    onSave(editedSchedules);
+  };
+
+  return (
+    <div>
+      {Object.entries(editedSchedules).map(([setName, schedule]) => (
+        <div 
+          key={setName}
+          style={{ 
+            marginBottom: '24px',
+            padding: '16px',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            background: '#fff'
+          }}
+        >
+          <h4 style={{ marginBottom: '16px', color: '#4facfe' }}>
+            {setName.replace('contentSet', 'Content Set ')}
+          </h4>
+          
+          {schedule.map((game, gameIndex) => (
+            <div 
+              key={gameIndex}
+              style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 2fr 2fr auto', 
+                gap: '12px', 
+                alignItems: 'center',
+                marginBottom: '12px',
+                padding: '12px',
+                border: '1px solid #eee',
+                borderRadius: '4px',
+                background: '#f9f9f9'
+              }}
+            >
+              <input
+                type="number"
+                placeholder="Shift #"
+                value={game.shiftNumber}
+                onChange={(e) => updateGame(setName, gameIndex, 'shiftNumber', parseInt(e.target.value))}
+                style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+              />
+              <input
+                type="text"
+                placeholder="Game"
+                value={game.game}
+                onChange={(e) => updateGame(setName, gameIndex, 'game', e.target.value)}
+                style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+              />
+              <input
+                type="text"
+                placeholder="Game Place"
+                value={game.gamePlace}
+                onChange={(e) => updateGame(setName, gameIndex, 'gamePlace', e.target.value)}
+                style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+              />
+              <button
+                onClick={() => removeGame(setName, gameIndex)}
+                className="btn btn-danger"
+                style={{ padding: '8px 12px' }}
+              >
+                ❌
+              </button>
+            </div>
+          ))}
+          
+          <button 
+            onClick={() => addGame(setName)} 
+            className="btn btn-secondary"
+            style={{ marginTop: '8px' }}
+          >
+            ➕ Add Game to {setName.replace('contentSet', 'Content Set ')}
+          </button>
+        </div>
+      ))}
+      
+      <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+        <button onClick={handleSave} className="btn btn-success">
+          💾 Save All Changes
+        </button>
+        <button onClick={onCancel} className="btn btn-danger">
+          ❌ Cancel
+        </button>
       </div>
     </div>
   );

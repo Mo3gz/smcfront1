@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { LogOut, Trophy, Package, RotateCcw, Map, Calendar } from 'lucide-react';
+import { LogOut, Trophy, Package, RotateCcw, Map, Calendar, Users } from 'lucide-react';
 import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
 import ProgramOfTheDay from './ProgramOfTheDay';
 import Notifications from './Notifications';
+import MatchupsAndSchedules from './MatchupsAndSchedules';
 
 import { API_BASE_URL } from '../utils/api';
 
@@ -135,6 +136,8 @@ const UserDashboard = ({ socket }) => {
         return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
       case 'program':
         return <ProgramOfTheDay />;
+      case 'matchups':
+        return <MatchupsAndSchedules />;
       default:
         return <Scoreboard socket={socket} />;
     }
@@ -242,6 +245,13 @@ const UserDashboard = ({ socket }) => {
           >
             <Calendar className="nav-icon" />
             <span className="nav-text">Program</span>
+          </div>
+          <div 
+            className={`nav-item ${activeTab === 'matchups' ? 'active' : ''}`}
+            onClick={() => setActiveTab('matchups')}
+          >
+            <Users className="nav-icon" />
+            <span className="nav-text">Matchups</span>
           </div>
         </div>
       </nav>
