@@ -357,46 +357,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         setShowResult(true);
         setPromoCode('');
 
-        // Show card collection progress notification (only for non-random spins)
-        if (spinType !== 'random') {
-          if (cardPoolReset) {
-            toast.success(`🎉 Card pool reset! You've collected all ${totalCardsForType} cards for ${spinType} spin!`, {
-              duration: 5000,
-              position: 'top-center',
-              style: {
-                background: 'linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%)',
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }
-            });
-          } else if (receivedCardsCount !== undefined && totalCardsForType !== undefined) {
-            const remainingCards = totalCardsForType - receivedCardsCount - 1; // -1 for the card just received
-            if (remainingCards > 0) {
-              toast.info(`📊 Card Collection: ${receivedCardsCount + 1}/${totalCardsForType} cards collected for ${spinType} spin. ${remainingCards} unique cards remaining.`, {
-                duration: 4000,
-                position: 'top-center',
-                style: {
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
-                }
-              });
-            } else {
-              toast.success(`🎯 Last unique card collected for ${spinType} spin! Pool will reset on next spin.`, {
-                duration: 4000,
-                position: 'top-center',
-                style: {
-                  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                  color: 'white',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }
-              });
-            }
-          }
-        }
+        // Card collection progress notifications suppressed as requested
 
         // Handle different action types with appropriate messages
         switch(actionType) {
