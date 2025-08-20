@@ -287,6 +287,16 @@ const Spin = ({ socket, userData, setUserData }) => {
 
   // Memoized function to get card collection progress
   const getCardCollectionProgress = useCallback((spinId) => {
+    // Random spin type has no card collection tracking
+    if (spinId === 'random') {
+      return {
+        collected: 0,
+        total: 0,
+        remaining: 0,
+        percentage: 0
+      };
+    }
+    
     const receivedCards = userData?.teamSettings?.receivedCards || {};
     const receivedCardsForType = receivedCards[spinId] || [];
     
@@ -297,7 +307,7 @@ const Spin = ({ socket, userData, setUserData }) => {
       challenge: 4,
       hightier: 3,
       lowtier: 3,
-      random: 1
+      random: 0 // Random has no collection tracking
     };
     
     const totalCards = spinTypes[spinId] || 0;
@@ -347,42 +357,44 @@ const Spin = ({ socket, userData, setUserData }) => {
         setShowResult(true);
         setPromoCode('');
 
-        // Show card collection progress notification
-        if (cardPoolReset) {
-          toast.success(`🎉 Card pool reset! You've collected all ${totalCardsForType} cards for ${spinType} spin!`, {
-            duration: 5000,
-            position: 'top-center',
-            style: {
-              background: 'linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%)',
-              color: 'white',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }
-          });
-        } else if (receivedCardsCount !== undefined && totalCardsForType !== undefined) {
-          const remainingCards = totalCardsForType - receivedCardsCount - 1; // -1 for the card just received
-          if (remainingCards > 0) {
-            toast.info(`📊 Card Collection: ${receivedCardsCount + 1}/${totalCardsForType} cards collected for ${spinType} spin. ${remainingCards} unique cards remaining.`, {
-              duration: 4000,
+        // Show card collection progress notification (only for non-random spins)
+        if (spinType !== 'random') {
+          if (cardPoolReset) {
+            toast.success(`🎉 Card pool reset! You've collected all ${totalCardsForType} cards for ${spinType} spin!`, {
+              duration: 5000,
               position: 'top-center',
               style: {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                fontSize: '14px',
-                fontWeight: 'bold'
-              }
-            });
-          } else {
-            toast.success(`🎯 Last unique card collected for ${spinType} spin! Pool will reset on next spin.`, {
-              duration: 4000,
-              position: 'top-center',
-              style: {
-                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                background: 'linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%)',
                 color: 'white',
                 fontSize: '16px',
                 fontWeight: 'bold'
               }
             });
+          } else if (receivedCardsCount !== undefined && totalCardsForType !== undefined) {
+            const remainingCards = totalCardsForType - receivedCardsCount - 1; // -1 for the card just received
+            if (remainingCards > 0) {
+              toast.info(`📊 Card Collection: ${receivedCardsCount + 1}/${totalCardsForType} cards collected for ${spinType} spin. ${remainingCards} unique cards remaining.`, {
+                duration: 4000,
+                position: 'top-center',
+                style: {
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }
+              });
+            } else {
+              toast.success(`🎯 Last unique card collected for ${spinType} spin! Pool will reset on next spin.`, {
+                duration: 4000,
+                position: 'top-center',
+                style: {
+                  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 'bold'
+                }
+              });
+            }
           }
         }
 
@@ -560,7 +572,7 @@ const Spin = ({ socket, userData, setUserData }) => {
           </div>
           
           {/* Card Collection Progress */}
-          {cardProgress.total > 0 && (
+          {cardProgress.total > 0 && spin.id !== 'random' && (
             <div style={{ 
               fontSize: '10px', 
               opacity: 0.8,
@@ -576,7 +588,7 @@ const Spin = ({ socket, userData, setUserData }) => {
           )}
           
           {/* Progress Bar */}
-          {cardProgress.total > 0 && (
+          {cardProgress.total > 0 && spin.id !== 'random' && (
             <div style={{
               width: '100%',
               height: '4px',
