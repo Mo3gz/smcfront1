@@ -608,7 +608,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         </div>
       );
     });
-  }, [spinType, isSpinDisabled, getSpinStatusMessage, getSpinIcon]);
+     }, [spinType, isSpinDisabled, getSpinStatusMessage, getSpinIcon, getCardCollectionProgress]);
 
   // MCQ handling
   const handleMcqAnswer = async (selectedAnswer) => {
