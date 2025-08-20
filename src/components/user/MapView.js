@@ -344,6 +344,12 @@ const MapView = ({ userData, setUserData, socket }) => {
               </div>
               <div className="mining-stat-label">Countries Owned</div>
             </div>
+            <div className="mining-stat-item">
+              <div className="mining-stat-value">
+                {userData?.totalMined || 0}
+              </div>
+              <div className="mining-stat-label">Total Mined</div>
+            </div>
           </div>
         </div>
 
