@@ -3014,7 +3014,6 @@ const StatisticsView = () => {
 
 // Matchups and Schedules Component
 const MatchupsAndSchedules = () => {
-  const [gameSettings, setGameSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [matchups, setMatchups] = useState([]);
   const [gameSchedules, setGameSchedules] = useState({});
@@ -3034,7 +3033,6 @@ const MatchupsAndSchedules = () => {
       setGameSchedules(data.gameSchedules || {});
       setActiveContentSet(data.activeContentSet || 'contentSet1');
       setGameScheduleVisible(data.gameScheduleVisible !== false);
-      setGameSettings(data);
     } catch (error) {
       console.error('Error fetching game settings:', error);
       toast.error('Failed to load game settings');
