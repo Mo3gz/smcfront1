@@ -8,6 +8,7 @@
   flex-direction: column;
   position: relative;
   overflow-x: hidden;
+  width: 100%;
 }
 
 /* App container */
@@ -25,6 +26,44 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Global content width constraints */
+.page-content > * {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure all direct children of page-content respect max-width */
+.page-content > div {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Prevent horizontal overflow on all content */
+.page-content,
+.page-content * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure tables and grids don't overflow */
+table,
+.grid,
+.flex {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Additional overflow protection for all content */
+* {
+  max-width: 100vw;
+}
+
+/* Ensure long text doesn't break layout */
+p, h1, h2, h3, h4, h5, h6, span, div {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 body {
@@ -121,6 +160,8 @@ body {
   padding: 8px 0;
   z-index: 1000;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* Improve navbar scrolling behavior */
@@ -273,6 +314,8 @@ body {
   padding: 20px 16px 120px 16px;
   overflow-y: auto;
   min-height: calc(100vh - 120px);
+  max-width: 100%;
+  width: 100%;
 }
 
 @media (max-width: 480px) {
@@ -507,6 +550,7 @@ body {
 @media (min-width: 768px) {
   .container {
     max-width: 768px;
+    margin: 0 auto;
   }
   
   .card-grid {
@@ -521,6 +565,21 @@ body {
 @media (min-width: 1024px) {
   .container {
     max-width: 1024px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
   }
 } 
 

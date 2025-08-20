@@ -3182,7 +3182,7 @@ const GameSchedule = () => {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ padding: '20px', maxWidth: '100%', width: '100%' }}>
       <h2 style={{ marginBottom: '24px', color: '#333' }}>📅 Game Schedule Management</h2>
 
       {/* Game Schedule Visibility Control */}
