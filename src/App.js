@@ -6,7 +6,6 @@ import Login from './components/Login';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
-import ThemeSelector from './components/ThemeSelector';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -82,12 +81,7 @@ function AppContent() {
   }
 
   if (!user) {
-    return (
-      <div>
-        <ThemeSelector />
-        <Login />
-      </div>
-    );
+    return <Login />;
   }
 
   // Debug admin routing
@@ -103,7 +97,6 @@ function AppContent() {
     <Router>
       <div className="app">
         <Toaster position="top-right" />
-        <ThemeSelector />
 
         <Routes>
           {/* Redirect / to the correct dashboard */}
