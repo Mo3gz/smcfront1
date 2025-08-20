@@ -376,19 +376,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             });
             break;
 
-          case 'instant_tax':
-            // Border tax
-            toast.error(`💰 You paid ${additionalData.taxAmount} coins in border tax for ${additionalData.ownedCountries} countries.`, {
-              duration: 6000,
-              position: 'top-center',
-              style: {
-                background: '#ff4757',
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }
-            });
-            break;
+
 
           case 'random_gift':
             // Random gift to another team
