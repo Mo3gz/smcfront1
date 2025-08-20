@@ -8,7 +8,7 @@ import Spin from './user/Spin';
 import MapView from './user/MapView';
 import ProgramOfTheDay from './ProgramOfTheDay';
 import Notifications from './Notifications';
-import MatchupsAndSchedules from './MatchupsAndSchedules';
+import GameSchedule from './GameSchedule';
 
 import { API_BASE_URL } from '../utils/api';
 
@@ -136,8 +136,8 @@ const UserDashboard = ({ socket }) => {
         return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
       case 'program':
         return <ProgramOfTheDay />;
-      case 'matchups':
-        return <MatchupsAndSchedules />;
+              case 'matchups':
+          return <GameSchedule />;
       default:
         return <Scoreboard socket={socket} />;
     }
@@ -251,7 +251,7 @@ const UserDashboard = ({ socket }) => {
             onClick={() => setActiveTab('matchups')}
           >
             <Users className="nav-icon" />
-            <span className="nav-text">Matchups</span>
+            <span className="nav-text">Game Schedule</span>
           </div>
         </div>
       </nav>

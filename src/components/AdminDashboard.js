@@ -124,8 +124,8 @@ const AdminDashboard = ({ socket }) => {
         return <CountryManagement teams={teams} socket={socket} />;
       case 'games':
         return <GameManagement />;
-      case 'matchups':
-        return <MatchupsAndSchedules />;
+              case 'matchups':
+          return <GameSchedule />;
       case 'statistics':
         return <StatisticsView />;
       default:
@@ -238,7 +238,7 @@ const AdminDashboard = ({ socket }) => {
             onClick={() => setActiveTab('matchups')}
           >
             <Calendar className="nav-icon" />
-            <span className="nav-text">Matchups</span>
+            <span className="nav-text">Game Schedule</span>
           </div>
           <div 
             className={`nav-item ${activeTab === 'statistics' ? 'active' : ''}`}
@@ -3012,12 +3012,11 @@ const StatisticsView = () => {
   );
 };
 
-// Matchups and Schedules Component
-const MatchupsAndSchedules = () => {
-  console.log('🏆 MatchupsAndSchedules component rendering');
+// Game Schedule Component
+const GameSchedule = () => {
+  console.log('📅 GameSchedule component rendering');
   
   const [loading, setLoading] = useState(true);
-  const [matchups, setMatchups] = useState([]);
   const [gameSchedules, setGameSchedules] = useState({
     contentSet1: [],
     contentSet2: [],
@@ -3026,7 +3025,6 @@ const MatchupsAndSchedules = () => {
   });
   const [activeContentSet, setActiveContentSet] = useState('contentSet1');
   const [gameScheduleVisible, setGameScheduleVisible] = useState(true);
-  const [editingMatchups, setEditingMatchups] = useState(false);
   const [editingSchedules, setEditingSchedules] = useState(false);
   const [error, setError] = useState(null);
 
@@ -3041,7 +3039,7 @@ const MatchupsAndSchedules = () => {
       console.log('✅ Game settings response:', response.data);
       const data = response.data;
       
-      setMatchups(data.matchups || []);
+
       setGameSchedules(data.gameSchedules || {
         contentSet1: [],
         contentSet2: [],
@@ -3064,18 +3062,7 @@ const MatchupsAndSchedules = () => {
     fetchGameSettings();
   }, [fetchGameSettings]);
 
-  // Update matchups
-  const handleUpdateMatchups = async (newMatchups) => {
-    try {
-      await api.post('/api/admin/matchups', { matchups: newMatchups });
-      setMatchups(newMatchups);
-      setEditingMatchups(false);
-      toast.success('Team matchups updated successfully');
-    } catch (error) {
-      console.error('Error updating matchups:', error);
-      toast.error('Failed to update team matchups');
-    }
-  };
+
 
   // Update game schedules
   const handleUpdateSchedules = async (newSchedules) => {
@@ -3151,7 +3138,7 @@ const MatchupsAndSchedules = () => {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '24px', color: '#333' }}>🏆 Matchups & Schedules Management</h2>
+      <h2 style={{ marginBottom: '24px', color: '#333' }}>📅 Game Schedule Management</h2>
 
       {/* Game Schedule Visibility Control */}
       <div style={{ 
@@ -3202,64 +3189,7 @@ const MatchupsAndSchedules = () => {
         </p>
       </div>
 
-      {/* Team Matchups */}
-      <div style={{ 
-        marginBottom: '32px', 
-        padding: '20px', 
-        border: '2px solid #ff6b6b', 
-        borderRadius: '12px',
-        background: '#fff5f5'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ color: '#ff6b6b' }}>🏆 Team Matchups</h3>
-          <button
-            onClick={() => setEditingMatchups(!editingMatchups)}
-            className="btn btn-primary"
-            style={{ padding: '8px 16px' }}
-          >
-            {editingMatchups ? 'Cancel' : 'Edit Matchups'}
-          </button>
-        </div>
-        
-        {editingMatchups ? (
-          <MatchupsEditor 
-            matchups={matchups} 
-            onSave={handleUpdateMatchups}
-            onCancel={() => setEditingMatchups(false)}
-          />
-        ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-            gap: '16px'
-          }}>
-            {matchups.length === 0 ? (
-              <p style={{ color: '#666', textAlign: 'center', gridColumn: '1 / -1' }}>
-                No team matchups configured yet. Click "Edit Matchups" to add some.
-              </p>
-            ) : (
-              matchups.map((matchup) => (
-                <div 
-                  key={matchup.id}
-                  style={{ 
-                    padding: '16px', 
-                    border: '1px solid #ddd', 
-                    borderRadius: '8px',
-                    background: '#fff'
-                  }}
-                >
-                  <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-                    {matchup.team1} vs {matchup.team2}
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#666' }}>
-                    {matchup.date} at {matchup.time}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
+
 
       {/* Game Schedules */}
       <div style={{ 
@@ -3337,102 +3267,7 @@ const MatchupsAndSchedules = () => {
   );
 };
 
-// Matchups Editor Component
-const MatchupsEditor = ({ matchups, onSave, onCancel }) => {
-  const [editedMatchups, setEditedMatchups] = useState([...matchups]);
 
-  const addMatchup = () => {
-    const newMatchup = {
-      id: Date.now(),
-      team1: '',
-      team2: '',
-      date: '',
-      time: ''
-    };
-    setEditedMatchups([...editedMatchups, newMatchup]);
-  };
-
-  const removeMatchup = (index) => {
-    setEditedMatchups(editedMatchups.filter((_, i) => i !== index));
-  };
-
-  const updateMatchup = (index, field, value) => {
-    const updated = [...editedMatchups];
-    updated[index] = { ...updated[index], [field]: value };
-    setEditedMatchups(updated);
-  };
-
-  const handleSave = () => {
-    onSave(editedMatchups);
-  };
-
-  return (
-    <div>
-      {editedMatchups.map((matchup, index) => (
-        <div 
-          key={matchup.id}
-          style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr 1fr 1fr auto', 
-            gap: '12px', 
-            alignItems: 'center',
-            marginBottom: '12px',
-            padding: '12px',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            background: '#fff'
-          }}
-        >
-          <input
-            type="text"
-            placeholder="Team 1"
-            value={matchup.team1}
-            onChange={(e) => updateMatchup(index, 'team1', e.target.value)}
-            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-          <input
-            type="text"
-            placeholder="Team 2"
-            value={matchup.team2}
-            onChange={(e) => updateMatchup(index, 'team2', e.target.value)}
-            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-          <input
-            type="date"
-            value={matchup.date}
-            onChange={(e) => updateMatchup(index, 'date', e.target.value)}
-            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-          <input
-            type="time"
-            value={matchup.time}
-            onChange={(e) => updateMatchup(index, 'time', e.target.value)}
-            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-          />
-          <button
-            onClick={() => removeMatchup(index)}
-            className="btn btn-danger"
-            style={{ padding: '8px 12px' }}
-          >
-            ❌
-          </button>
-        </div>
-      ))}
-      
-      <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-        <button onClick={addMatchup} className="btn btn-secondary">
-          ➕ Add Matchup
-        </button>
-        <button onClick={handleSave} className="btn btn-success">
-          💾 Save Changes
-        </button>
-        <button onClick={onCancel} className="btn btn-danger">
-          ❌ Cancel
-        </button>
-      </div>
-    </div>
-  );
-};
 
 // Schedules Editor Component
 const SchedulesEditor = ({ schedules, onSave, onCancel }) => {

@@ -1,32 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import api from '../utils/api';
-import { Calendar, Trophy, MapPin, Clock } from 'lucide-react';
+import { Calendar, MapPin } from 'lucide-react';
 
-const MatchupsAndSchedules = () => {
-  const [matchups, setMatchups] = useState([]);
+const GameSchedule = () => {
   const [gameSchedule, setGameSchedule] = useState([]);
   const [activeContentSet, setActiveContentSet] = useState('');
   const [loading, setLoading] = useState(true);
   const [scheduleVisible, setScheduleVisible] = useState(true);
-
-  // Fetch matchups
-  const fetchMatchups = async () => {
-    try {
-      const response = await api.get('/api/matchups');
-      setMatchups(response.data.matchups || []);
-      setActiveContentSet(response.data.activeContentSet || '');
-    } catch (error) {
-      console.error('Error fetching matchups:', error);
-      toast.error('Failed to load team matchups');
-    }
-  };
 
   // Fetch game schedule
   const fetchGameSchedule = async () => {
     try {
       const response = await api.get('/api/game-schedule');
       setGameSchedule(response.data.schedule || []);
+      setActiveContentSet(response.data.activeContentSet || '');
       setScheduleVisible(response.data.visible !== false);
     } catch (error) {
       console.error('Error fetching game schedule:', error);
@@ -37,7 +25,7 @@ const MatchupsAndSchedules = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchMatchups(), fetchGameSchedule()]);
+      await fetchGameSchedule();
       setLoading(false);
     };
     loadData();
@@ -47,7 +35,7 @@ const MatchupsAndSchedules = () => {
     return (
       <div style={{ textAlign: 'center', padding: '40px 20px' }}>
         <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 20px' }}></div>
-        <h3>Loading Matchups & Schedules...</h3>
+        <h3>Loading Game Schedule...</h3>
       </div>
     );
   }
@@ -55,77 +43,8 @@ const MatchupsAndSchedules = () => {
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <h2 style={{ marginBottom: '24px', color: '#333', textAlign: 'center' }}>
-        🏆 Team Matchups & Game Schedules
+        📅 Game Schedule
       </h2>
-
-      {/* Team Matchups Section */}
-      <div style={{ 
-        marginBottom: '32px', 
-        padding: '20px', 
-        border: '2px solid #ff6b6b', 
-        borderRadius: '12px',
-        background: '#fff5f5'
-      }}>
-        <h3 style={{ marginBottom: '16px', color: '#ff6b6b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Trophy size={24} />
-          Team Matchups
-        </h3>
-        
-        {matchups.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-            No team matchups available at the moment.
-          </div>
-        ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-            gap: '16px'
-          }}>
-            {matchups.map((matchup) => (
-              <div 
-                key={matchup.id}
-                style={{ 
-                  padding: '16px', 
-                  border: '1px solid #ddd', 
-                  borderRadius: '8px',
-                  background: '#fff',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}
-              >
-                <div style={{ 
-                  fontWeight: 'bold', 
-                  marginBottom: '8px', 
-                  fontSize: '18px',
-                  color: '#333'
-                }}>
-                  {matchup.team1} vs {matchup.team2}
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  fontSize: '14px', 
-                  color: '#666' 
-                }}>
-                  <Calendar size={16} />
-                  {matchup.date}
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  fontSize: '14px', 
-                  color: '#666',
-                  marginTop: '4px'
-                }}>
-                  <Clock size={16} />
-                  {matchup.time}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Game Schedule Section */}
       {scheduleVisible && (
@@ -231,4 +150,4 @@ const MatchupsAndSchedules = () => {
   );
 };
 
-export default MatchupsAndSchedules;
+export default GameSchedule;
