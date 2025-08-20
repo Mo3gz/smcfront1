@@ -3044,7 +3044,11 @@ const GameSchedule = () => {
     teamA: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
     teamB: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
     teamC: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
-    teamD: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] }
+    teamD: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+    teamE: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+    teamF: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+    teamG: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+    teamH: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] }
   });
   const [activeContentSet, setActiveContentSet] = useState('contentSet1');
   const [gameScheduleVisible, setGameScheduleVisible] = useState(true);
@@ -3068,7 +3072,11 @@ const GameSchedule = () => {
         teamA: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
         teamB: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
         teamC: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
-        teamD: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] }
+        teamD: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+        teamE: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+        teamF: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+        teamG: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+        teamH: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] }
       });
       setActiveContentSet(data.activeContentSet || 'contentSet1');
       setGameScheduleVisible(data.gameScheduleVisible !== false);
