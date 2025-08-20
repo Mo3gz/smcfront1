@@ -6,15 +6,19 @@ import { Calendar, MapPin } from 'lucide-react';
 const GameSchedule = () => {
   const [gameSchedule, setGameSchedule] = useState([]);
   const [activeContentSet, setActiveContentSet] = useState('');
+  const [selectedTeam, setSelectedTeam] = useState('teamA');
+  const [availableTeams, setAvailableTeams] = useState(['teamA', 'teamB', 'teamC', 'teamD']);
   const [loading, setLoading] = useState(true);
   const [scheduleVisible, setScheduleVisible] = useState(true);
 
-  // Fetch game schedule
-  const fetchGameSchedule = async () => {
+  // Fetch game schedule for selected team
+  const fetchGameSchedule = async (team = selectedTeam) => {
     try {
-      const response = await api.get('/api/game-schedule');
+      const response = await api.get(`/api/game-schedule?team=${team}`);
       setGameSchedule(response.data.schedule || []);
       setActiveContentSet(response.data.activeContentSet || '');
+      setSelectedTeam(response.data.selectedTeam || team);
+      setAvailableTeams(response.data.availableTeams || ['teamA', 'teamB', 'teamC', 'teamD']);
       setScheduleVisible(response.data.visible !== false);
     } catch (error) {
       console.error('Error fetching game schedule:', error);
@@ -29,6 +33,7 @@ const GameSchedule = () => {
       setLoading(false);
     };
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -45,6 +50,44 @@ const GameSchedule = () => {
       <h2 style={{ marginBottom: '24px', color: '#333', textAlign: 'center' }}>
         📅 Game Schedule
       </h2>
+
+      {/* Team Selector */}
+      <div style={{ 
+        marginBottom: '24px', 
+        padding: '20px', 
+        border: '2px solid #ff9f43', 
+        borderRadius: '12px',
+        background: '#fff8f0',
+        textAlign: 'center'
+      }}>
+        <h3 style={{ marginBottom: '16px', color: '#ff9f43' }}>🏅 Select Your Team</h3>
+        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          {availableTeams.map((team) => (
+            <button
+              key={team}
+              onClick={() => {
+                setSelectedTeam(team);
+                fetchGameSchedule(team);
+              }}
+              style={{
+                padding: '12px 24px',
+                border: selectedTeam === team ? '2px solid #ff9f43' : '2px solid #ddd',
+                borderRadius: '8px',
+                background: selectedTeam === team ? '#ff9f43' : '#fff',
+                color: selectedTeam === team ? '#fff' : '#333',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '16px'
+              }}
+            >
+              {selectedTeam === team ? '✅ ' : ''}{team.replace('team', 'Team ')}
+            </button>
+          ))}
+        </div>
+        <p style={{ marginTop: '12px', color: '#666', fontSize: '14px' }}>
+          Currently viewing: <strong>{selectedTeam.replace('team', 'Team ')}</strong>
+        </p>
+      </div>
 
       {/* Game Schedule Section */}
       {scheduleVisible && (

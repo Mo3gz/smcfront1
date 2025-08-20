@@ -3017,14 +3017,15 @@ const GameSchedule = () => {
   console.log('📅 GameSchedule component rendering');
   
   const [loading, setLoading] = useState(true);
-  const [gameSchedules, setGameSchedules] = useState({
-    contentSet1: [],
-    contentSet2: [],
-    contentSet3: [],
-    contentSet4: []
+  const [teamGameSchedules, setTeamGameSchedules] = useState({
+    teamA: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+    teamB: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+    teamC: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+    teamD: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] }
   });
   const [activeContentSet, setActiveContentSet] = useState('contentSet1');
   const [gameScheduleVisible, setGameScheduleVisible] = useState(true);
+  const [visibleSets, setVisibleSets] = useState(['contentSet1', 'contentSet2', 'contentSet3', 'contentSet4']);
   const [editingSchedules, setEditingSchedules] = useState(false);
   const [error, setError] = useState(null);
 
@@ -3040,14 +3041,15 @@ const GameSchedule = () => {
       const data = response.data;
       
 
-      setGameSchedules(data.gameSchedules || {
-        contentSet1: [],
-        contentSet2: [],
-        contentSet3: [],
-        contentSet4: []
+      setTeamGameSchedules(data.teamGameSchedules || {
+        teamA: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+        teamB: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+        teamC: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] },
+        teamD: { contentSet1: [], contentSet2: [], contentSet3: [], contentSet4: [] }
       });
       setActiveContentSet(data.activeContentSet || 'contentSet1');
       setGameScheduleVisible(data.gameScheduleVisible !== false);
+      setVisibleSets(data.visibleSets || ['contentSet1', 'contentSet2', 'contentSet3', 'contentSet4']);
       console.log('✅ Game settings loaded successfully');
     } catch (error) {
       console.error('❌ Error fetching game settings:', error);
@@ -3064,16 +3066,28 @@ const GameSchedule = () => {
 
 
 
-  // Update game schedules
+  // Update team game schedules
   const handleUpdateSchedules = async (newSchedules) => {
     try {
-      await api.post('/api/admin/game-schedules', { schedules: newSchedules });
-      setGameSchedules(newSchedules);
+      await api.post('/api/admin/team-game-schedules', { schedules: newSchedules });
+      setTeamGameSchedules(newSchedules);
       setEditingSchedules(false);
-      toast.success('Game schedules updated successfully');
+      toast.success('Team game schedules updated successfully');
     } catch (error) {
       console.error('Error updating schedules:', error);
-      toast.error('Failed to update game schedules');
+      toast.error('Failed to update team game schedules');
+    }
+  };
+
+  // Update visible sets
+  const handleUpdateVisibleSets = async (newVisibleSets) => {
+    try {
+      await api.post('/api/admin/visible-sets', { sets: newVisibleSets });
+      setVisibleSets(newVisibleSets);
+      toast.success('Visible sets updated successfully');
+    } catch (error) {
+      console.error('Error updating visible sets:', error);
+      toast.error('Failed to update visible sets');
     }
   };
 
@@ -3163,6 +3177,37 @@ const GameSchedule = () => {
         </div>
       </div>
 
+      {/* Visible Sets Control */}
+      <div style={{ 
+        marginBottom: '32px', 
+        padding: '20px', 
+        border: '2px solid #00c851', 
+        borderRadius: '12px',
+        background: '#f8fff8'
+      }}>
+        <h3 style={{ marginBottom: '16px', color: '#00c851' }}>👁️ Visible Sets Control</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+          {['contentSet1', 'contentSet2', 'contentSet3', 'contentSet4'].map((set) => (
+            <button
+              key={set}
+              onClick={() => {
+                const newVisibleSets = visibleSets.includes(set) 
+                  ? visibleSets.filter(s => s !== set)
+                  : [...visibleSets, set];
+                handleUpdateVisibleSets(newVisibleSets);
+              }}
+              className={`btn ${visibleSets.includes(set) ? 'btn-success' : 'btn-secondary'}`}
+              style={{ padding: '10px 20px' }}
+            >
+              {visibleSets.includes(set) ? '✅ ' : '❌ '}{set.replace('contentSet', 'Set ')}
+            </button>
+          ))}
+        </div>
+        <p style={{ color: '#666', fontSize: '14px' }}>
+          Visible sets: <strong>{visibleSets.length > 0 ? visibleSets.map(s => s.replace('contentSet', 'Set ')).join(', ') : 'None'}</strong>
+        </p>
+      </div>
+
       {/* Active Content Set Selection */}
       <div style={{ 
         marginBottom: '32px', 
@@ -3211,27 +3256,47 @@ const GameSchedule = () => {
         
         {editingSchedules ? (
           <SchedulesEditor 
-            schedules={gameSchedules} 
+            schedules={teamGameSchedules} 
             onSave={handleUpdateSchedules}
             onCancel={() => setEditingSchedules(false)}
           />
         ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-            gap: '16px'
-          }}>
-            {Object.entries(gameSchedules).map(([setName, schedule]) => (
+          <div>
+            {Object.entries(teamGameSchedules).map(([teamName, teamSchedules]) => (
               <div 
-                key={setName}
+                key={teamName}
                 style={{ 
-                  padding: '16px', 
-                  border: '1px solid #ddd', 
-                  borderRadius: '8px',
-                  background: '#fff',
-                  borderLeft: activeContentSet === setName ? '4px solid #4facfe' : '4px solid #ddd'
+                  marginBottom: '32px',
+                  padding: '20px',
+                  border: '2px solid #ff9f43',
+                  borderRadius: '12px',
+                  background: '#fff8f0'
                 }}
               >
+                <h3 style={{ 
+                  marginBottom: '20px', 
+                  color: '#ff9f43',
+                  textAlign: 'center'
+                }}>
+                  🏅 {teamName.replace('team', 'Team ')}
+                </h3>
+                
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                  gap: '16px'
+                }}>
+                  {Object.entries(teamSchedules).map(([setName, schedule]) => (
+                    <div 
+                      key={`${teamName}-${setName}`}
+                      style={{ 
+                        padding: '16px', 
+                        border: '1px solid #ddd', 
+                        borderRadius: '8px',
+                        background: '#fff',
+                        borderLeft: activeContentSet === setName ? '4px solid #4facfe' : '4px solid #ddd'
+                      }}
+                    >
                 <div style={{ 
                   fontWeight: 'bold', 
                   marginBottom: '12px',
@@ -3258,6 +3323,9 @@ const GameSchedule = () => {
                 ) : (
                   <p style={{ color: '#666', fontSize: '14px' }}>No games scheduled for this content set.</p>
                 )}
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -3269,21 +3337,24 @@ const GameSchedule = () => {
 
 
 
-// Schedules Editor Component
+// Schedules Editor Component for Team Game Schedules
 const SchedulesEditor = ({ schedules, onSave, onCancel }) => {
   const [editedSchedules, setEditedSchedules] = useState({...schedules});
 
-  const updateGame = (setName, gameIndex, field, value) => {
+  const updateGame = (teamName, setName, gameIndex, field, value) => {
     const updated = {...editedSchedules};
-    updated[setName][gameIndex] = { ...updated[setName][gameIndex], [field]: value };
+    if (!updated[teamName]) updated[teamName] = {};
+    if (!updated[teamName][setName]) updated[teamName][setName] = [];
+    updated[teamName][setName][gameIndex] = { ...updated[teamName][setName][gameIndex], [field]: value };
     setEditedSchedules(updated);
   };
 
-  const addGame = (setName) => {
+  const addGame = (teamName, setName) => {
     const updated = {...editedSchedules};
-    if (!updated[setName]) updated[setName] = [];
-    updated[setName].push({
-      shiftNumber: updated[setName].length + 1,
+    if (!updated[teamName]) updated[teamName] = {};
+    if (!updated[teamName][setName]) updated[teamName][setName] = [];
+    updated[teamName][setName].push({
+      shiftNumber: updated[teamName][setName].length + 1,
       game: '',
       gamePlace: ''
     });
