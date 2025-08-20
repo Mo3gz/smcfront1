@@ -6,7 +6,7 @@ import Scoreboard from './user/Scoreboard';
 import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
-import ProgramOfTheDay from './ProgramOfTheDay';
+
 import Notifications from './Notifications';
 import GameSchedule from './GameSchedule';
 
@@ -158,7 +158,10 @@ const UserDashboard = ({ socket }) => {
       case 'map':
         return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
       case 'program':
-        return <ProgramOfTheDay />;
+        return <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
+          <h3>Program of the Day</h3>
+          <p>Program information will be displayed here.</p>
+        </div>;
               case 'matchups':
           return <GameSchedule />;
       default:
@@ -168,34 +171,34 @@ const UserDashboard = ({ socket }) => {
 
   return (
     <div className="container">
-      <div className="app-header">
-        <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
-              {userData?.teamName}
-            </div>
-            <div style={{ fontSize: '12px', color: '#666' }}>
-              Team Member
-            </div>
-            {/* Socket connection indicator */}
-            <div style={{ 
-              fontSize: '10px', 
-              color: socketConnected ? '#4CAF50' : '#f44336',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              marginTop: '2px'
-            }}>
-              <div style={{ 
-                width: '6px', 
-                height: '6px', 
-                background: socketConnected ? '#4CAF50' : '#f44336', 
-                borderRadius: '50%',
-                animation: socketConnected ? 'pulse 2s infinite' : 'none'
-              }}></div>
-              {socketConnected ? 'Live' : 'Offline'}
-            </div>
-          </div>
+             <div className="app-header">
+         <div className="user-info" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+           <div style={{ textAlign: 'left' }}>
+             <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
+               {userData?.teamName}
+             </div>
+             <div style={{ fontSize: '12px', color: '#666' }}>
+               Team Member
+             </div>
+             {/* Socket connection indicator */}
+             <div style={{ 
+               fontSize: '10px', 
+               color: socketConnected ? '#4CAF50' : '#f44336',
+               display: 'flex',
+               alignItems: 'center',
+               gap: '4px',
+               marginTop: '2px'
+             }}>
+               <div style={{ 
+                 width: '6px', 
+                 height: '6px', 
+                 background: socketConnected ? '#4CAF50' : '#f44336', 
+                 borderRadius: '50%',
+                 animation: socketConnected ? 'pulse 2s infinite' : 'none'
+               }}></div>
+               {socketConnected ? 'Live' : 'Offline'}
+             </div>
+           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Notifications />
             <button 

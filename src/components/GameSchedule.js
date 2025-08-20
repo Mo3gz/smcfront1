@@ -88,32 +88,7 @@ const GameSchedule = () => {
         📅 Your Game Schedule
       </h2>
 
-      {/* User's Team Info */}
-      <div style={{ 
-        marginBottom: '24px', 
-        padding: '20px', 
-        border: '2px solid #4facfe', 
-        borderRadius: '12px',
-        background: '#f0f8ff',
-        textAlign: 'center'
-      }}>
-        <h3 style={{ marginBottom: '16px', color: '#4facfe' }}>🏅 Your Team</h3>
-        <div style={{ 
-          padding: '12px 24px',
-          border: '2px solid #4facfe',
-          borderRadius: '8px',
-          background: '#4facfe',
-          color: '#fff',
-          fontWeight: '600',
-          fontSize: '18px',
-          display: 'inline-block'
-        }}>
-          {userTeam || 'Loading...'}
-        </div>
-        <p style={{ marginTop: '12px', color: '#666', fontSize: '14px' }}>
-          Viewing your team's game schedule
-        </p>
-      </div>
+
 
       {/* Game Schedule Section */}
       {scheduleVisible && (
