@@ -1287,6 +1287,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
       // Top 4 teams get limit 1 for: Lucky, Game Helper, Challenge, High Tier, Random
       const top4Teams = sortedTeams.slice(0, 4);
       const top4Settings = {
+        scoreboardVisible: false, // Hide from scoreboard
         spinLimitations: {
           lucky: { enabled: true, limit: 1 },
           gamehelper: { enabled: true, limit: 1 },
@@ -1300,6 +1301,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
       // Last 4 teams get limit 2 for: Lucky, Game Helper, Challenge, Low Tier, Random
       const last4Teams = sortedTeams.slice(-4);
       const last4Settings = {
+        scoreboardVisible: false, // Hide from scoreboard
         spinLimitations: {
           lucky: { enabled: true, limit: 2 },
           gamehelper: { enabled: true, limit: 2 },
@@ -1313,6 +1315,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
       // Middle teams (if any) get default settings
       const middleTeams = sortedTeams.slice(4, -4);
       const middleSettings = {
+        scoreboardVisible: false, // Hide from scoreboard
         spinLimitations: {
           lucky: { enabled: true, limit: 1 },
           gamehelper: { enabled: true, limit: 1 },
@@ -1345,7 +1348,7 @@ const TeamManagement = ({ teams, fetchTeams }) => {
         await handleUpdateTeamSettings(team.id, middleSettings);
       }
 
-      toast.success(`🎯 Second day setup completed! Top 4 teams: limit 1, Last 4 teams: limit 2`);
+      toast.success(`🎯 Second day setup completed! All teams hidden from scoreboard. Top 4: limit 1, Last 4: limit 2`);
       fetchTeams(); // Refresh the teams data
     } catch (error) {
       console.error('❌ Error in second day setup:', error);
