@@ -315,15 +315,39 @@ const PromoCodes = ({ teams, socket }) => {
     fetchPromocodes();
   }, []);
 
-  // Listen for admin notifications about promocode usage
+  // Listen for admin notifications about promocode operations
   useEffect(() => {
     if (socket) {
       const handleAdminNotification = (notification) => {
-        // If it's a promo-code-used notification, refresh the promocodes list
+        // Handle different types of promocode notifications
         if (notification.actionType === 'promo-code-used') {
           console.log('🎫 Promocode used, refreshing promocodes list');
           fetchPromocodes();
           toast.success(`${notification.metadata?.teamName} used promo code "${notification.metadata?.promoCode}"`);
+        } else if (notification.actionType === 'promo-code-created') {
+          console.log('🎫 New promocode created, refreshing promocodes list');
+          fetchPromocodes();
+          toast.success(`Created promo code "${notification.metadata?.promoCode}" with ${notification.metadata?.discount}% discount for ${notification.metadata?.targetTeamName}`);
+        } else if (notification.actionType === 'promo-code-assigned') {
+          console.log('🎫 Promocode assigned, refreshing promocodes list');
+          fetchPromocodes();
+          toast.success(`Assigned promo code "${notification.metadata?.promoCode}" (${notification.metadata?.discount}%) to ${notification.metadata?.targetTeamName}`);
+        } else if (notification.actionType === 'promo-code-unassigned') {
+          console.log('🎫 Promocode unassigned, refreshing promocodes list');
+          fetchPromocodes();
+          toast.success(`Unassigned promo code "${notification.metadata?.promoCode}" from ${notification.metadata?.targetTeamName}`);
+        } else if (notification.actionType === 'promo-code-discount-changed') {
+          console.log('🎫 Promocode discount changed, refreshing promocodes list');
+          fetchPromocodes();
+          toast.success(`Changed promo code "${notification.metadata?.promoCode}" discount from ${notification.metadata?.oldDiscount}% to ${notification.metadata?.newDiscount}% for ${notification.metadata?.targetTeamName}`);
+        } else if (notification.actionType === 'promo-code-deleted') {
+          console.log('🎫 Promocode deleted, refreshing promocodes list');
+          fetchPromocodes();
+          toast.success(`Deleted promo code "${notification.metadata?.promoCode}" (${notification.metadata?.discount}%)`);
+        } else if (notification.actionType === 'promocodes-initialized') {
+          console.log('🎫 Promocodes initialized, refreshing promocodes list');
+          fetchPromocodes();
+          toast.success(`Initialized ${notification.metadata?.promocodesCount} new promocodes`);
         }
       };
 
@@ -384,6 +408,19 @@ const PromoCodes = ({ teams, socket }) => {
     } catch (error) {
       console.error('Update promocode error:', error);
       toast.error(error.response?.data?.error || 'Failed to update promocode');
+    }
+  };
+
+  const handleDeletePromo = async (promoId, promoCode) => {
+    if (window.confirm(`Are you sure you want to delete promo code "${promoCode}"? This action cannot be undone.`)) {
+      try {
+        await api.delete(`/api/admin/promocodes/${promoId}`);
+        toast.success('Promocode deleted successfully');
+        fetchPromocodes();
+      } catch (error) {
+        console.error('Delete promocode error:', error);
+        toast.error(error.response?.data?.error || 'Failed to delete promocode');
+      }
     }
   };
 
@@ -597,6 +634,18 @@ const PromoCodes = ({ teams, socket }) => {
                           disabled={promo.used}
                         >
                           Edit %
+                        </button>
+                        <button
+                          onClick={() => handleDeletePromo(promo.id, promo.code)}
+                          className="btn"
+                          style={{ 
+                            padding: '4px 8px', 
+                            fontSize: '12px',
+                            backgroundColor: '#dc3545',
+                            color: 'white'
+                          }}
+                        >
+                          Delete
                         </button>
                       </div>
                     )}
@@ -2528,9 +2577,22 @@ const GameManagement = ({ socket }) => {
 
     try {
       setAddingGame(true);
-      const response = await axios.post(`${API_BASE_URL}/api/admin/games/add`, {
+      
+      // Debug: Check authentication before making the request
+      console.log('🔍 Debug: Checking authentication before adding game...');
+      const authToken = localStorage.getItem('authToken');
+      const sessionToken = sessionStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
+      
+      console.log('🔍 Debug: Available tokens:', {
+        authToken: authToken ? authToken.substring(0, 20) + '...' : 'not found',
+        sessionToken: sessionToken ? sessionToken.substring(0, 20) + '...' : 'not found',
+        token: token ? token.substring(0, 20) + '...' : 'not found'
+      });
+      
+      const response = await api.post(`/api/admin/games/add`, {
         gameName: newGameName.trim()
-      }, { withCredentials: true });
+      });
       
       toast.success(response.data.message || 'Game added successfully');
       setNewGameName('');
@@ -2538,6 +2600,8 @@ const GameManagement = ({ socket }) => {
       fetchGameSettings(); // Refresh the settings
     } catch (error) {
       console.error('Error adding game:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       toast.error(error.response?.data?.error || 'Failed to add game');
     } finally {
       setAddingGame(false);
@@ -2557,12 +2621,26 @@ const GameManagement = ({ socket }) => {
     }
 
     try {
+      // Debug: Check authentication before making the request
+      console.log('🔍 Debug: Checking authentication before deleting game...');
+      const authToken = localStorage.getItem('authToken');
+      const sessionToken = sessionStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
+      
+      console.log('🔍 Debug: Available tokens:', {
+        authToken: authToken ? authToken.substring(0, 20) + '...' : 'not found',
+        sessionToken: sessionToken ? sessionToken.substring(0, 20) + '...' : 'not found',
+        token: token ? token.substring(0, 20) + '...' : 'not found'
+      });
+      
       const response = await api.delete(`/api/admin/games/${gameId}`);
       
       toast.success(response.data.message || 'Game deleted successfully');
       fetchGameSettings(); // Refresh the settings
     } catch (error) {
       console.error('Error deleting game:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       toast.error(error.response?.data?.error || 'Failed to delete game');
     }
   };
@@ -2605,7 +2683,7 @@ const GameManagement = ({ socket }) => {
             onClick={async () => {
               if (window.confirm('Reset all games to default settings? This will enable games 1-12.')) {
                 try {
-                  const response = await axios.post(`${API_BASE_URL}/api/admin/games/reset`, {}, { withCredentials: true });
+                  const response = await api.post(`/api/admin/games/reset`, {});
                   toast.success(response.data.message || 'Game settings reset to defaults');
                   fetchGameSettings(); // Refresh the settings
                 } catch (error) {
@@ -2624,6 +2702,29 @@ const GameManagement = ({ socket }) => {
             }}
           >
             Reset Defaults
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🧪 Testing admin authentication...');
+                const response = await api.get('/api/admin/check');
+                console.log('✅ Admin check successful:', response.data);
+                toast.success('Admin authentication is working!');
+              } catch (error) {
+                console.error('❌ Admin check failed:', error.response?.data);
+                toast.error(`Admin check failed: ${error.response?.data?.error || error.message}`);
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#17a2b8',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Test Auth
           </button>
         </div>
       </div>
