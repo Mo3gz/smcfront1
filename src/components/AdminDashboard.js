@@ -2953,16 +2953,30 @@ const AdminGameSchedule = () => {
     
     setEditingTeam(teamName);
     const currentSchedules = gameSettings.teamGameSchedules?.[teamName] || {};
-    console.log('🔧 Setting editing schedules to:', currentSchedules);
-    setEditingSchedules(currentSchedules);
+    
+    // Ensure all content sets exist in the editing schedules
+    const defaultSets = gameSettings.availableSets || ['contentSet1', 'contentSet2', 'contentSet3', 'contentSet4'];
+    const completeSchedules = {};
+    defaultSets.forEach(set => {
+      completeSchedules[set] = currentSchedules[set] || [];
+    });
+    
+    console.log('🔧 Setting editing schedules to:', completeSchedules);
+    setEditingSchedules(completeSchedules);
     setShowEditModal(true);
   };
 
   const handleSaveTeamSchedules = async () => {
     try {
-      await api.post('/api/admin/team-game-schedules', {
+      console.log('💾 Saving team schedules for:', editingTeam);
+      console.log('💾 Editing schedules to save:', editingSchedules);
+      
+      const requestData = {
         schedules: { [editingTeam]: editingSchedules }
-      });
+      };
+      console.log('💾 Request data:', requestData);
+      
+      await api.post('/api/admin/team-game-schedules', requestData);
       toast.success(`Schedules updated for ${editingTeam.replace('team', 'Team ')}`);
       setShowEditModal(false);
       setEditingTeam(null);
@@ -2976,7 +2990,7 @@ const AdminGameSchedule = () => {
   const updateGame = (setName, gameIndex, field, value) => {
     setEditingSchedules(prev => ({
       ...prev,
-      [setName]: prev[setName].map((game, index) => 
+      [setName]: (prev[setName] || []).map((game, index) => 
         index === gameIndex ? { ...game, [field]: value } : game
       )
     }));
@@ -2995,7 +3009,7 @@ const AdminGameSchedule = () => {
   const removeGame = (setName, gameIndex) => {
     setEditingSchedules(prev => ({
       ...prev,
-      [setName]: prev[setName].filter((_, index) => index !== gameIndex)
+      [setName]: (prev[setName] || []).filter((_, index) => index !== gameIndex)
     }));
   };
 
@@ -3271,7 +3285,7 @@ const AdminGameSchedule = () => {
                     {set.replace('contentSet', 'Content Set ')}
                   </h4>
                   
-                  {editingSchedules[set] && editingSchedules[set].length > 0 && editingSchedules[set].map((game, gameIndex) => (
+                  {(editingSchedules[set] || []).length > 0 ? (editingSchedules[set] || []).map((game, gameIndex) => (
                     <div 
                       key={gameIndex}
                       style={{ 
@@ -3315,7 +3329,19 @@ const AdminGameSchedule = () => {
                         ❌
                       </button>
                     </div>
-                  ))}
+                  )) : (
+                    <div style={{ 
+                      padding: '12px', 
+                      textAlign: 'center', 
+                      color: '#666', 
+                      fontStyle: 'italic',
+                      border: '1px dashed #ddd',
+                      borderRadius: '4px',
+                      background: '#f9f9f9'
+                    }}>
+                      No games in this content set. Click "Add Game" to get started.
+                    </div>
+                  )}
                   
                   <button 
                     onClick={() => addGame(set)} 
