@@ -3013,7 +3013,16 @@ const AdminGameSchedule = () => {
       setLoading(true);
       const response = await api.get('/api/admin/game-settings');
       console.log('✅ Game settings response:', response.data);
-      setGameSettings(response.data);
+      
+      // Extract the teamGameSchedules from the response and merge with other settings
+      const { teamGameSchedules, ...otherSettings } = response.data;
+      const processedSettings = {
+        ...otherSettings,
+        teamGameSchedules: teamGameSchedules || {}
+      };
+      
+      console.log('🔧 Processed settings:', processedSettings);
+      setGameSettings(processedSettings);
     } catch (error) {
       console.error('❌ Error fetching game settings:', error);
       toast.error('Failed to fetch game settings');
@@ -3061,6 +3070,7 @@ const AdminGameSchedule = () => {
     console.log('🔧 Editing team schedules for:', teamName);
     console.log('🔧 Current gameSettings:', gameSettings);
     console.log('🔧 Team schedules:', gameSettings.teamGameSchedules?.[teamName]);
+    console.log('🔧 Available sets:', gameSettings.availableSets);
     
     setEditingTeam(teamName);
     const currentSchedules = gameSettings.teamGameSchedules?.[teamName] || {};
@@ -3072,7 +3082,8 @@ const AdminGameSchedule = () => {
       completeSchedules[set] = currentSchedules[set] || [];
     });
     
-    console.log('🔧 Setting editing schedules to:', completeSchedules);
+    console.log('🔧 Current schedules for team:', currentSchedules);
+    console.log('🔧 Complete schedules to edit:', completeSchedules);
     setEditingSchedules(completeSchedules);
     setShowEditModal(true);
   };
@@ -3179,6 +3190,32 @@ const AdminGameSchedule = () => {
             }}
           >
             {gameSettings.gameScheduleVisible ? 'Hide Game Schedule' : 'Show Game Schedule'}
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                console.log('🔄 Initializing default team schedules...');
+                const response = await api.post('/api/admin/team-game-schedules', {
+                  schedules: gameSettings.teamGameSchedules || {}
+                });
+                console.log('✅ Default schedules initialized:', response.data);
+                toast.success('Default team schedules initialized successfully!');
+                fetchGameSettings();
+              } catch (error) {
+                console.error('❌ Error initializing default schedules:', error);
+                toast.error('Failed to initialize default schedules');
+              }
+            }}
+            className="btn"
+            style={{
+              backgroundColor: '#17a2b8',
+              color: 'white',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Initialize Default Schedules
           </button>
         </div>
       </div>
