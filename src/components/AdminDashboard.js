@@ -147,7 +147,7 @@ const AdminDashboard = ({ socket }) => {
       case 'countries':
         return <CountryManagement teams={teams} socket={socket} />;
       case 'games':
-        return <GameManagement />;
+        return <GameManagement socket={socket} />;
       case 'matchups':
         console.log('🎯 Rendering AdminGameSchedule component');
         return <AdminGameSchedule />;
@@ -2464,6 +2464,10 @@ const GameManagement = ({ socket }) => {
     fetchGameSettings();
   }, [fetchGameSettings]);
 
+  useEffect(() => {
+    fetchContentSets();
+  }, [fetchContentSets]);
+
   const handleToggleGame = async (gameId, currentStatus) => {
     try {
       // Get current game data
@@ -2721,6 +2725,74 @@ const GameManagement = ({ socket }) => {
         </div>
         
 
+      </div>
+
+      {/* Active Content Set Management */}
+      <div style={{ marginTop: '32px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #dee2e6' }}>
+        <h4 style={{ margin: '0 0 16px 0', color: '#333' }}>Active Content Set Management</h4>
+        <p style={{ color: '#666', marginBottom: '16px', fontSize: '14px' }}>
+          Control which content set is currently active for all users. Changes will be broadcast to all connected users in real-time.
+        </p>
+        
+        {contentSetsLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <div className="spinner" style={{ width: '20px', height: '20px', margin: '0 auto 10px' }}></div>
+            <p style={{ fontSize: '14px', color: '#666' }}>Loading content sets...</p>
+          </div>
+        ) : (
+          <div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
+                Current Active Set:
+              </label>
+              <div style={{ 
+                padding: '12px', 
+                backgroundColor: '#e9ecef', 
+                borderRadius: '4px', 
+                fontWeight: '600',
+                color: '#495057'
+              }}>
+                {activeContentSet || 'Default'}
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
+                Available Content Sets:
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                {availableContentSets.map((contentSet) => (
+                  <button
+                    key={contentSet.id}
+                    onClick={() => handleChangeActiveContent(contentSet.id)}
+                    className="btn"
+                    style={{
+                      backgroundColor: activeContentSet === contentSet.id ? '#28a745' : '#6c757d',
+                      color: 'white',
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: activeContentSet === contentSet.id ? 'default' : 'pointer',
+                      opacity: activeContentSet === contentSet.id ? '0.8' : '1'
+                    }}
+                    disabled={activeContentSet === contentSet.id}
+                  >
+                    {contentSet.name}
+                    {activeContentSet === contentSet.id && ' ✓'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div style={{ padding: '12px', backgroundColor: '#d1ecf1', borderRadius: '4px', border: '1px solid #bee5eb' }}>
+              <p style={{ margin: 0, fontSize: '14px', color: '#0c5460' }}>
+                <strong>Note:</strong> When you change the active content set, all connected users will receive a real-time notification and their content will update automatically.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Game Modal */}
