@@ -215,8 +215,8 @@ const Inventory = ({ socket, userData, setUserData }) => {
             color: 'white'
           }
         });
-      } else if (selectedCard.name === "Borrow coins to buy a country" && response.data.success) {
-        toast.success(`Successfully purchased ${response.data.purchasedCountry.name} for ${response.data.purchasedCountry.cost} coins! New balance: ${response.data.newBalance} coins`, {
+      } else if (selectedCard.name === "Borrow kaizen to buy a country" && response.data.success) {
+        toast.success(`Successfully purchased ${response.data.purchasedCountry.name} for ${response.data.purchasedCountry.cost} kaizen! New balance: ${response.data.newBalance} kaizen`, {
           duration: 6000,
           position: 'top-center',
           style: {
@@ -305,7 +305,7 @@ const Inventory = ({ socket, userData, setUserData }) => {
 
   // Helper function to check if card requires country selection
   const requiresCountrySelection = (cardName) => {
-    return cardName === "Borrow coins to buy a country";
+    return cardName === "Borrow kaizen to buy a country";
   };
 
   if (loading) {
@@ -462,12 +462,12 @@ const Inventory = ({ socket, userData, setUserData }) => {
                   <option value="">Choose a country...</option>
                   {availableCountries.map((country) => (
                     <option key={country.id} value={country.id}>
-                      {country.name} - {country.cost} coins
+                      {country.name} - {country.cost} kaizen
                     </option>
                   ))}
                 </select>
                 <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  Available countries: {availableCountries.length} | Your balance can go down to -200 coins
+                  Available countries: {availableCountries.length} | Your balance can go down to -200 kaizen
                 </div>
               </div>
             )}

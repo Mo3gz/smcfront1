@@ -216,8 +216,8 @@ const UserDashboard = ({ socket }) => {
         <div className="user-info">
           <div className="mining-stats">
             <div className="mining-stat-item">
-              <div className="mining-stat-value">{userData?.coins || 0}</div>
-              <div className="mining-stat-label">Coins</div>
+                      <div className="mining-stat-value">{userData?.coins || 0}</div>
+        <div className="mining-stat-label">Kaizen</div>
             </div>
             <div className="mining-stat-item">
               <div className="mining-stat-value">{userData?.score || 0}</div>
@@ -227,7 +227,7 @@ const UserDashboard = ({ socket }) => {
               <div className="mining-stat-value">
                 {userData?.miningRate || 0}
               </div>
-              <div className="mining-stat-label">Mining Rate (coins/hr)</div>
+              <div className="mining-stat-label">Mining Rate (kaizen/hr)</div>
             </div>
           </div>
         </div>

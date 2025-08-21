@@ -70,7 +70,7 @@ const Scoreboard = ({ socket }) => {
             } else if (change.type === 'coins') {
               const icon = change.difference > 0 ? '💰' : '💸';
               const color = change.difference > 0 ? '#4CAF50' : '#f44336';
-              toast.success(`${icon} ${change.teamName}: ${change.difference > 0 ? '+' : ''}${change.difference} coins`, {
+              toast.success(`${icon} ${change.teamName}: ${change.difference > 0 ? '+' : ''}${change.difference} kaizen`, {
                 duration: 3000,
                 style: {
                   background: color,
@@ -243,7 +243,7 @@ const Scoreboard = ({ socket }) => {
                   {getChangeIcon(team)}
                 </div>
                 <div className="scoreboard-stats">
-                  Score: {team.score} • Coins: {team.coins}
+                  Score: {team.score} • Kaizen: {team.coins}
                 </div>
               </div>
               <div style={{ fontSize: '18px', fontWeight: '700', color: '#667eea' }}>

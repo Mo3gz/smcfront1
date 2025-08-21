@@ -123,7 +123,7 @@ const MapView = ({ userData, setUserData, socket }) => {
       // Listen for global 50 coins countries visibility updates
       socket.on('fifty-coins-countries-visibility-update', (data) => {
         console.log('📡 Global 50 coins visibility update received:', data);
-        toast.info(`50 coins countries are now ${data.hidden ? 'hidden' : 'visible'}`, {
+        toast.info(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'}`, {
           duration: 3000,
           icon: data.hidden ? '👁️‍🗨️' : '👁️',
         });
@@ -154,7 +154,7 @@ const MapView = ({ userData, setUserData, socket }) => {
       return;
     }
     if (userData.coins < country.cost) {
-      toast.error('Insufficient coins!');
+              toast.error('Insufficient kaizen!');
       return;
     }
     setConfirmModal({ open: true, country });
@@ -236,12 +236,12 @@ const MapView = ({ userData, setUserData, socket }) => {
       
       // Show detailed breakdown in toast
       const breakdown = response.data.countriesWithEarnings?.map(c => 
-        `${c.countryName}: ${c.earned} coins`
+        `${c.countryName}: ${c.earned} kaizen`
       ).join(', ');
       
-      toast.success(`Successfully mined ${response.data.earned} coins! ${breakdown ? `(${breakdown})` : ''}`);
+              toast.success(`Successfully mined ${response.data.earned} kaizen! ${breakdown ? `(${breakdown})` : ''}`);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to collect coins');
+              toast.error(error.response?.data?.error || 'Failed to collect kaizen');
     }
   };
 
@@ -360,7 +360,7 @@ const MapView = ({ userData, setUserData, socket }) => {
             onClick={handleCollectCoins}
             disabled={countries.filter(c => c.owner === userData?.id).length === 0}
           >
-            ⛏️ Collect Coins
+            ⛏️ Collect Kaizen
           </button>
           {userData?.lastMined && (
             <div className="last-collected">
@@ -397,7 +397,7 @@ const MapView = ({ userData, setUserData, socket }) => {
                 ) : (
                   <>
                     <Coins size={14} style={{ marginRight: '4px' }} />
-                    {country.cost} coins
+                    {country.cost} kaizen
                   </>
                 )}
               </div>
@@ -430,7 +430,7 @@ const MapView = ({ userData, setUserData, socket }) => {
               {/* Show mining rate more prominently for owned countries */}
               {country.owner === userData?.id && (
                 <div className="mining-rate-owned">
-                  +{country.miningRate || 0} coins/hr
+                  +{country.miningRate || 0} kaizen/hr
                 </div>
               )}
             </div>
@@ -440,7 +440,7 @@ const MapView = ({ userData, setUserData, socket }) => {
         <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(102, 126, 234, 0.1)', borderRadius: '12px' }}>
           <h4 style={{ color: '#667eea', marginBottom: '12px' }}>How it works</h4>
           <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
-            <p><strong>Buy Countries:</strong> Spend coins to own countries and gain their score points</p>
+            <p><strong>Buy Countries:</strong> Spend kaizen to own countries and gain their score points</p>
             <p><strong>Score Boost:</strong> Each country gives you bonus points for the scoreboard</p>
             <p><strong>Exclusive:</strong> Once owned, a country cannot be bought by other teams</p>
             <p><strong>Strategy:</strong> Choose wisely - expensive countries give more points!</p>
@@ -471,7 +471,7 @@ const MapView = ({ userData, setUserData, socket }) => {
           }}>
             <h3 style={{ marginBottom: 16 }}>Confirm Purchase</h3>
             <p style={{ marginBottom: 24 }}>
-              Are you sure you want to buy <b>{confirmModal.country.name}</b> for <b>{confirmModal.country.cost} coins</b>?
+              Are you sure you want to buy <b>{confirmModal.country.name}</b> for <b>{confirmModal.country.cost} kaizen</b>?
             </p>
             <button
               className="btn"

@@ -324,7 +324,7 @@ const Spin = ({ socket, userData, setUserData }) => {
   const handleSpin = async () => {
     if (spinning) return;
     if (finalCost > 0 && userData.coins < finalCost) {
-      toast.error('Insufficient coins!');
+              toast.error('Insufficient kaizen!');
       return;
     }
 
@@ -364,7 +364,7 @@ const Spin = ({ socket, userData, setUserData }) => {
           case 'instant':
             // Instant coin changes
             const coinChange = card.coinChange || 0;
-            toast.success(`${card.name}! ${coinChange > 0 ? '+' : ''}${coinChange} coins instantly!`, {
+            toast.success(`${card.name}! ${coinChange > 0 ? '+' : ''}${coinChange} kaizen instantly!`, {
               duration: 4000,
               position: 'top-center',
               style: {
@@ -380,7 +380,7 @@ const Spin = ({ socket, userData, setUserData }) => {
 
           case 'random_gift':
             // Random gift to another team
-            toast.success(`You gifted 50 coins to ${additionalData.giftedTeam}!`, {
+            toast.success(`You gifted 50 kaizen to ${additionalData.giftedTeam}!`, {
               duration: 4000,
               position: 'top-center',
               style: {
@@ -517,7 +517,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             {spin.name}
           </div>
           <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>
-            {spin.cost} coins
+            {spin.cost} kaizen
           </div>
           
           {/* Card Collection Progress */}
@@ -589,7 +589,7 @@ const Spin = ({ socket, userData, setUserData }) => {
       console.log('✅ MCQ: Answer submitted successfully:', response.data);
 
       if (response.data.correct) {
-        toast.success(`🎉 Correct! You earned ${response.data.reward} coins!`, {
+        toast.success(`🎉 Correct! You earned ${response.data.reward} kaizen!`, {
           duration: 6000,
           position: 'top-center',
           style: {
@@ -692,7 +692,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         </div>
         {/* Show price after discount */}
         <div style={{ marginBottom: '16px', fontWeight: 600, fontSize: 16 }}>
-          Price after discount: {finalCost === 0 ? 'Free!' : `${finalCost} coins`}
+          Price after discount: {finalCost === 0 ? 'Free!' : `${finalCost} kaizen`}
         </div>
 
 
@@ -833,7 +833,7 @@ const Spin = ({ socket, userData, setUserData }) => {
             <h4 style={{ margin: '0 0 12px 0' }}>⚡ Speed Buy Challenge</h4>
             <p style={{ fontSize: '16px', margin: '0 0 8px 0' }}>
               Buy a country within {Math.floor(speedBuyTimer / 60)}:{(speedBuyTimer % 60).toString().padStart(2, '0')} 
-              for +50 coins reward!
+              for +50 kaizen reward!
             </p>
             <div style={{ 
               fontSize: '24px', 
@@ -852,7 +852,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(102, 126, 234, 0.1)', borderRadius: '12px' }}>
           <h4 style={{ color: '#667eea', marginBottom: '12px' }}>Spin Information</h4>
           <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
-            <p><strong>Lucky Spin:</strong> Instant coins, gifts, and special actions</p>
+            <p><strong>Lucky Spin:</strong> Instant kaizen, gifts, and special actions</p>
             <p><strong>Game Helper:</strong> Strategic cards requiring game/team selection</p>
             <p><strong>Challenge:</strong> Skill-based challenges with timers</p>
             <p><strong>Random:</strong> Get any type from Lucky, Game Helper, or Challenge</p>
