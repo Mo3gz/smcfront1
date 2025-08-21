@@ -1273,6 +1273,86 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     }
   };
 
+  const handleSecondDaySetup = async () => {
+    try {
+      if (!teams || teams.length === 0) {
+        toast.error('No teams available for setup');
+        return;
+      }
+
+      // Sort teams by score in descending order
+      const sortedTeams = [...teams].sort((a, b) => (b.score || 0) - (a.score || 0));
+      console.log('🎯 Second day setup - Teams sorted by score:', sortedTeams.map(t => ({ teamName: t.teamName, score: t.score })));
+
+      // Top 4 teams get limit 1 for: Lucky, Game Helper, Challenge, High Tier, Random
+      const top4Teams = sortedTeams.slice(0, 4);
+      const top4Settings = {
+        spinLimitations: {
+          lucky: { enabled: true, limit: 1 },
+          gamehelper: { enabled: true, limit: 1 },
+          challenge: { enabled: true, limit: 1 },
+          hightier: { enabled: true, limit: 1 },
+          lowtier: { enabled: false, limit: 1 },
+          random: { enabled: true, limit: 1 }
+        }
+      };
+
+      // Last 4 teams get limit 2 for: Lucky, Game Helper, Challenge, Low Tier, Random
+      const last4Teams = sortedTeams.slice(-4);
+      const last4Settings = {
+        spinLimitations: {
+          lucky: { enabled: true, limit: 2 },
+          gamehelper: { enabled: true, limit: 2 },
+          challenge: { enabled: true, limit: 2 },
+          hightier: { enabled: false, limit: 1 },
+          lowtier: { enabled: true, limit: 2 },
+          random: { enabled: true, limit: 2 }
+        }
+      };
+
+      // Middle teams (if any) get default settings
+      const middleTeams = sortedTeams.slice(4, -4);
+      const middleSettings = {
+        spinLimitations: {
+          lucky: { enabled: true, limit: 1 },
+          gamehelper: { enabled: true, limit: 1 },
+          challenge: { enabled: true, limit: 1 },
+          hightier: { enabled: true, limit: 1 },
+          lowtier: { enabled: true, limit: 1 },
+          random: { enabled: true, limit: 1 }
+        }
+      };
+
+      console.log('🎯 Applying settings to teams:');
+      console.log('🏆 Top 4 teams (limit 1):', top4Teams.map(t => t.teamName));
+      console.log('🥉 Last 4 teams (limit 2):', last4Teams.map(t => t.teamName));
+      if (middleTeams.length > 0) {
+        console.log('📊 Middle teams (default):', middleTeams.map(t => t.teamName));
+      }
+
+      // Update top 4 teams
+      for (const team of top4Teams) {
+        await handleUpdateTeamSettings(team.id, top4Settings);
+      }
+
+      // Update last 4 teams
+      for (const team of last4Teams) {
+        await handleUpdateTeamSettings(team.id, last4Settings);
+      }
+
+      // Update middle teams
+      for (const team of middleTeams) {
+        await handleUpdateTeamSettings(team.id, middleSettings);
+      }
+
+      toast.success(`🎯 Second day setup completed! Top 4 teams: limit 1, Last 4 teams: limit 2`);
+      fetchTeams(); // Refresh the teams data
+    } catch (error) {
+      console.error('❌ Error in second day setup:', error);
+      toast.error('Failed to complete second day setup');
+    }
+  };
+
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -1355,6 +1435,22 @@ const TeamManagement = ({ teams, fetchTeams }) => {
             })}
           >
             Disable All Spin Limits
+          </button>
+          <button 
+            className="btn btn-success"
+            onClick={handleSecondDaySetup}
+            style={{
+              backgroundColor: '#059669',
+              color: 'white',
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '14px'
+            }}
+          >
+            🎯 Second Day
           </button>
         </div>
       </div>
