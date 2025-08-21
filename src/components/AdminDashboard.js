@@ -670,22 +670,22 @@ const CardManagement = ({ teams }) => {
           </label>
         </div>
         {!sendToAll && (
-          <div style={{ marginBottom: '16px' }}>
-            <label>Team</label>
-            <select
-              className="input"
-              value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
-              required
-            >
-              <option value="">Select a team</option>
-              {teams.map(team => (
-                <option key={team.id} value={team.id}>
-                  {team.teamName}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div style={{ marginBottom: '16px' }}>
+          <label>Team</label>
+          <select
+            className="input"
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
+            required
+          >
+            <option value="">Select a team</option>
+            {teams.map(team => (
+              <option key={team.id} value={team.id}>
+                {team.teamName}
+              </option>
+            ))}
+          </select>
+        </div>
         )}
         <div style={{ marginBottom: '16px' }}>
           <label>Card Type</label>
@@ -723,8 +723,8 @@ const CardManagement = ({ teams }) => {
             {selectedCard.requiresGameSelection && (
               <div style={{ color: '#ff6b35', marginTop: '4px' }}>
                 ⚠️ Requires game selection
-              </div>
-            )}
+          </div>
+        )}
             {selectedCard.requiresTeamSelection && (
               <div style={{ color: '#ff6b35', marginTop: '4px' }}>
                 ⚠️ Requires team selection
@@ -2280,7 +2280,7 @@ const CountryManagement = ({ teams, socket }) => {
                 <h4 style={{ marginBottom: '16px' }}>Manage: {selectedUser.teamName}</h4>
                 
                         {/* Kaizen Management */}
-        <form onSubmit={handleUpdateUserCoins} style={{ marginBottom: '24px' }}>
+                <form onSubmit={handleUpdateUserCoins} style={{ marginBottom: '24px' }}>
           <h5 style={{ marginBottom: '12px' }}>Update Kaizen</h5>
                   <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
                     <select
@@ -2940,21 +2940,7 @@ const AdminGameSchedule = () => {
     }
   };
 
-  const handleToggleSetVisibility = async (setName) => {
-    try {
-      const currentVisibleSets = gameSettings.visibleSets || [];
-      const newVisibleSets = currentVisibleSets.includes(setName)
-        ? currentVisibleSets.filter(set => set !== setName)
-        : [...currentVisibleSets, setName];
-      
-      await api.post('/api/admin/visible-sets', { sets: newVisibleSets });
-      toast.success(`${setName.replace('contentSet', 'Set ')} is now ${currentVisibleSets.includes(setName) ? 'hidden' : 'visible'}`);
-      fetchGameSettings();
-    } catch (error) {
-      console.error('Error toggling set visibility:', error);
-      toast.error('Failed to toggle set visibility');
-    }
-  };
+
 
   const handleEditTeamSchedules = (teamName) => {
     setEditingTeam(teamName);
@@ -3089,24 +3075,7 @@ const AdminGameSchedule = () => {
             </p>
           </div>
 
-          {/* Set Visibility */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>
-              Visible Content Sets
-            </label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {gameSettings.availableSets?.map(set => (
-                <label key={set} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input
-                    type="checkbox"
-                    checked={gameSettings.visibleSets?.includes(set) || false}
-                    onChange={() => handleToggleSetVisibility(set)}
-                  />
-                  <span>{set.replace('contentSet', 'Set ')}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+
         </div>
       </div>
 
