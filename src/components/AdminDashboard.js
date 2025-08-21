@@ -139,7 +139,7 @@ const AdminDashboard = ({ socket }) => {
       case 'notifications':
         return <AdminNotifications notifications={notifications} />;
       case 'scoreboard':
-        return <AdminScoreboard teams={teams} />;
+        return <AdminScoreboard teams={teams} fetchTeams={fetchTeams} />;
       case 'teams':
         return <TeamManagement teams={teams} fetchTeams={fetchTeams} />;
       case 'countries':
@@ -1008,10 +1008,59 @@ const AdminNotifications = ({ notifications }) => {
 };
 
 // Admin Scoreboard Component
-const AdminScoreboard = ({ teams }) => {
+const AdminScoreboard = ({ teams, fetchTeams }) => {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      console.log('🔄 Refreshing scoreboard data...');
+      await fetchTeams();
+      toast.success('Scoreboard refreshed successfully!');
+    } catch (error) {
+      console.error('❌ Error refreshing scoreboard:', error);
+      toast.error('Failed to refresh scoreboard');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <div className="card">
-      <h3>Team Scoreboard</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h3 style={{ margin: 0 }}>Team Scoreboard</h3>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="btn"
+          style={{
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            padding: '10px 20px',
+            fontSize: '14px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: refreshing ? 'not-allowed' : 'pointer',
+            opacity: refreshing ? 0.7 : 1,
+            transition: 'all 0.3s ease'
+          }}
+          title="Refresh scoreboard to ensure scores are correct"
+        >
+          {refreshing ? (
+            <>
+              <div className="spinner" style={{ width: '16px', height: '16px', border: '2px solid #ffffff3d', borderTop: '2px solid white' }}></div>
+              Refreshing...
+            </>
+          ) : (
+            <>
+              🔄 Refresh Scores
+            </>
+          )}
+        </button>
+      </div>
+      
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -1019,7 +1068,7 @@ const AdminScoreboard = ({ teams }) => {
               <th style={{ padding: '12px', textAlign: 'left' }}>Rank</th>
               <th style={{ padding: '12px', textAlign: 'left' }}>Team</th>
               <th style={{ padding: '12px', textAlign: 'right' }}>Score</th>
-                              <th style={{ padding: '12px', textAlign: 'right' }}>Kaizen</th>
+              <th style={{ padding: '12px', textAlign: 'right' }}>Kaizen</th>
             </tr>
           </thead>
           <tbody>
@@ -1033,6 +1082,26 @@ const AdminScoreboard = ({ teams }) => {
             ))}
           </tbody>
         </table>
+      </div>
+      
+      <div style={{ 
+        marginTop: '20px', 
+        padding: '16px', 
+        backgroundColor: '#f8f9fa', 
+        borderRadius: '8px',
+        fontSize: '14px',
+        color: '#666'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '16px' }}>ℹ️</span>
+          <strong>Scoreboard Information</strong>
+        </div>
+        <ul style={{ margin: 0, paddingLeft: '20px' }}>
+          <li>Click "Refresh Scores" to ensure all team scores and kaizen are up-to-date</li>
+          <li>Scores are automatically updated when teams complete activities</li>
+          <li>Kaizen amounts reflect current team balances</li>
+          <li>Rankings are calculated based on total scores</li>
+        </ul>
       </div>
     </div>
   );
