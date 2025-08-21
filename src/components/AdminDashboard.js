@@ -847,9 +847,63 @@ const AdminNotifications = ({ notifications }) => {
     }
   };
 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  // Fetch initial notification status
+  useEffect(() => {
+    const fetchNotificationStatus = async () => {
+      try {
+        const response = await api.get('/api/admin/notifications/status');
+        setNotificationsEnabled(response.data.enabled);
+      } catch (error) {
+        console.error('Error fetching notification status:', error);
+      }
+    };
+
+    fetchNotificationStatus();
+  }, []);
+
+  const handleToggleNotifications = async () => {
+    try {
+      const newState = !notificationsEnabled;
+      setNotificationsEnabled(newState);
+      
+      // Save to database
+      await api.post('/api/admin/notifications/toggle', {
+        enabled: newState
+      });
+      
+      toast.success(`Notifications ${newState ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      toast.error('Failed to toggle notifications');
+      // Revert state on error
+      setNotificationsEnabled(!notificationsEnabled);
+    }
+  };
+
   return (
     <div className="card">
-      <h3>Admin Notifications</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h3 style={{ margin: 0 }}>Admin Notifications</h3>
+        <button
+          onClick={handleToggleNotifications}
+          className="btn"
+          style={{
+            backgroundColor: notificationsEnabled ? '#dc3545' : '#28a745',
+            color: 'white',
+            padding: '8px 16px',
+            fontSize: '14px',
+            fontWeight: '600',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          {notificationsEnabled ? '🔕 Disable' : '🔔 Enable'}
+        </button>
+      </div>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
         {filterOptions.map(opt => {
           const isActive = filter === opt.value;
