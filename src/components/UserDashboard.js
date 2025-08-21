@@ -9,6 +9,7 @@ import MapView from './user/MapView';
 
 import Notifications from './Notifications';
 import GameSchedule from './GameSchedule';
+import ProgramSchedule from './ProgramSchedule';
 
 import api from '../utils/api';
 
@@ -161,10 +162,7 @@ const UserDashboard = ({ socket }) => {
       case 'map':
         return <MapView userData={userData} setUserData={setUserData} socket={socket} />;
       case 'program':
-        return <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
-          <h3>Program of the Day</h3>
-          <p>Program information will be displayed here.</p>
-        </div>;
+        return <ProgramSchedule />;
               case 'matchups':
           return <GameSchedule />;
       default:
@@ -231,10 +229,6 @@ const UserDashboard = ({ socket }) => {
                 {userData?.miningRate || 0}
               </div>
               <div className="mining-stat-label">Mining Rate (kaizen/hr)</div>
-              {/* Debug info */}
-              <div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>
-                Debug: {JSON.stringify({ miningRate: userData?.miningRate, hasUserData: !!userData })}
-              </div>
             </div>
           </div>
         </div>
