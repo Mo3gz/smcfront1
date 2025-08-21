@@ -1356,6 +1356,26 @@ const TeamManagement = ({ teams, fetchTeams }) => {
     }
   };
 
+  const handleResetAllSpinCards = async () => {
+    try {
+      if (!teams || teams.length === 0) {
+        toast.error('No teams available to reset spin cards');
+        return;
+      }
+
+      // Reset spin card counts for all teams
+      for (const team of teams) {
+        await handleUpdateTeamSettings(team.id, { resetSpinCounts: true });
+      }
+
+      toast.success(`🔄 All spin cards reset for ${teams.length} teams!`);
+      fetchTeams(); // Refresh the teams data
+    } catch (error) {
+      console.error('❌ Error resetting spin cards:', error);
+      toast.error('Failed to reset spin cards');
+    }
+  };
+
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -1438,6 +1458,23 @@ const TeamManagement = ({ teams, fetchTeams }) => {
             })}
           >
             Disable All Spin Limits
+          </button>
+          <button 
+            className="btn btn-info"
+            onClick={handleResetAllSpinCards}
+            style={{
+              backgroundColor: '#0891b2',
+              color: 'white',
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🔄 Reset All Spin Cards
           </button>
           <button 
             className="btn btn-success"
