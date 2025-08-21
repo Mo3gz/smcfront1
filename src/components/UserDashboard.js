@@ -10,7 +10,7 @@ import MapView from './user/MapView';
 import Notifications from './Notifications';
 import GameSchedule from './GameSchedule';
 
-import { API_BASE_URL } from '../utils/api';
+import api from '../utils/api';
 
 const UserDashboard = ({ socket }) => {
   const { user, logout } = useAuth();
@@ -93,27 +93,29 @@ const UserDashboard = ({ socket }) => {
     const fetchUserData = async () => {
       try {
         // Fetch mining information
-        const miningResponse = await fetch(`${API_BASE_URL}/api/mining/info`, {
-          credentials: 'include',
-        });
-        
-        if (miningResponse.ok) {
-          const miningData = await miningResponse.json();
+        try {
+          console.log('🔍 Fetching mining info...');
+          const miningResponse = await api.get('/api/mining/info');
+          const miningData = miningResponse.data;
+          console.log('📊 Mining info received:', miningData);
+          
           setUserData(prev => ({
             ...prev,
             miningRate: miningData.miningRate,
             totalMined: miningData.totalMined,
             lastMined: miningData.lastMined
           }));
+          
+          console.log('✅ Mining rate set to:', miningData.miningRate);
+        } catch (error) {
+          console.error('❌ Error fetching mining info:', error);
+          console.error('❌ Error details:', error.response?.data);
         }
 
         // Fetch user's team settings
-        const userResponse = await fetch(`${API_BASE_URL}/api/user`, {
-          credentials: 'include',
-        });
-        
-        if (userResponse.ok) {
-          const userProfile = await userResponse.json();
+        try {
+          const userResponse = await api.get('/api/user');
+          const userProfile = userResponse.data;
           console.log('🔄 Fetched user profile:', userProfile);
           setUserData(prev => ({
             ...prev,
@@ -122,15 +124,16 @@ const UserDashboard = ({ socket }) => {
               scoreboardVisible: true,
               spinLimitations: {
                 lucky: { enabled: false, limit: 1 },
-                gamehelper: { enabled: false, limit: 1 },
                 challenge: { enabled: false, limit: 1 },
                 hightier: { enabled: false, limit: 1 },
                 lowtier: { enabled: false, limit: 1 },
                 random: { enabled: false, limit: 1 }
               },
-              spinCounts: { lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
+              spinCounts: { lucky: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 }
             }
           }));
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -228,6 +231,10 @@ const UserDashboard = ({ socket }) => {
                 {userData?.miningRate || 0}
               </div>
               <div className="mining-stat-label">Mining Rate (kaizen/hr)</div>
+              {/* Debug info */}
+              <div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>
+                Debug: {JSON.stringify({ miningRate: userData?.miningRate, hasUserData: !!userData })}
+              </div>
             </div>
           </div>
         </div>
