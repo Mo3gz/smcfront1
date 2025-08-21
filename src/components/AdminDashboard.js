@@ -767,7 +767,7 @@ const AdminNotifications = ({ notifications }) => {
     filteredNotifications = notifications.filter(n => n.recipientType === 'admin');
   } else if (filter === 'spins') {
     filteredNotifications = notifications.filter(n => 
-      (n.type === 'spin' || n.type === 'admin-spin') && n.recipientType === 'admin'
+      (n.type === 'spin' || n.type === 'admin-spin' || n.type === 'mcq-answer' || n.type === 'spin-with-promo' || n.type === 'speed-buy-started' || n.type === 'speed-buy-completed') && n.recipientType === 'admin'
     );
   } else if (filter === 'admin-action') {
     filteredNotifications = notifications.filter(n => n.type === 'admin-action');
@@ -785,6 +785,10 @@ const AdminNotifications = ({ notifications }) => {
         return { bg: '#e6f7ff', color: '#1890ff', text: 'Admin Action' };
       case 'spin':
       case 'admin-spin':
+      case 'mcq-answer':
+      case 'spin-with-promo':
+      case 'speed-buy-started':
+      case 'speed-buy-completed':
         return { bg: '#f6ffed', color: '#52c41a', text: 'Spin' };
       case 'card-used':
         return { bg: '#fff7e6', color: '#fa8c16', text: 'Card Used' };
@@ -2943,8 +2947,14 @@ const AdminGameSchedule = () => {
 
 
   const handleEditTeamSchedules = (teamName) => {
+    console.log('🔧 Editing team schedules for:', teamName);
+    console.log('🔧 Current gameSettings:', gameSettings);
+    console.log('🔧 Team schedules:', gameSettings.teamGameSchedules?.[teamName]);
+    
     setEditingTeam(teamName);
-    setEditingSchedules(gameSettings.teamGameSchedules[teamName] || {});
+    const currentSchedules = gameSettings.teamGameSchedules?.[teamName] || {};
+    console.log('🔧 Setting editing schedules to:', currentSchedules);
+    setEditingSchedules(currentSchedules);
     setShowEditModal(true);
   };
 
@@ -3228,6 +3238,9 @@ const AdminGameSchedule = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3>Edit Schedules for {editingTeam.replace('team', 'Team ')}</h3>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                Debug: {JSON.stringify(editingSchedules).substring(0, 100)}...
+              </div>
               <button
                 onClick={() => setShowEditModal(false)}
                 style={{
