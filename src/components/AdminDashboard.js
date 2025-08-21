@@ -72,7 +72,48 @@ const AdminDashboard = ({ socket }) => {
     if (socket && adminVerified) {
       socket.on('admin-notification', (notification) => {
         fetchNotifications(); // Only fetch from backend, don't add directly
-        toast(`New notification from ${notification.teamName}`);
+        
+        // Handle specific notification types with custom messages
+        if (notification.actionType === 'coins-adjusted') {
+          const operation = notification.metadata?.operation;
+          const teamName = notification.metadata?.targetTeamName;
+          const coinsAdded = notification.metadata?.coinsAdded;
+          const coinsSubtracted = notification.metadata?.coinsSubtracted;
+          const coinsSet = notification.metadata?.coinsSet;
+          const previousBalance = notification.metadata?.previousBalance;
+          const newBalance = notification.metadata?.newBalance;
+          
+          let message = '';
+          if (operation === 'add') {
+            message = `💰 Added ${coinsAdded} kaizen to ${teamName}. Balance: ${previousBalance} → ${newBalance}`;
+          } else if (operation === 'subtract') {
+            message = `💰 Subtracted ${coinsSubtracted} kaizen from ${teamName}. Balance: ${previousBalance} → ${newBalance}`;
+          } else if (operation === 'set') {
+            message = `💰 Set ${teamName} kaizen to ${coinsSet}. Previous: ${previousBalance}`;
+          }
+          toast.success(message);
+        } else if (notification.actionType === 'score-adjusted') {
+          const operation = notification.metadata?.operation;
+          const teamName = notification.metadata?.targetTeamName;
+          const pointsAdded = notification.metadata?.pointsAdded;
+          const pointsSubtracted = notification.metadata?.pointsSubtracted;
+          const pointsSet = notification.metadata?.pointsSet;
+          const previousScore = notification.metadata?.previousScore;
+          const newScore = notification.metadata?.newScore;
+          
+          let message = '';
+          if (operation === 'add') {
+            message = `🏆 Added ${pointsAdded} points to ${teamName}. Score: ${previousScore} → ${newScore}`;
+          } else if (operation === 'subtract') {
+            message = `🏆 Subtracted ${pointsSubtracted} points from ${teamName}. Score: ${previousScore} → ${newScore}`;
+          } else if (operation === 'set') {
+            message = `🏆 Set ${teamName} score to ${pointsSet}. Previous: ${previousScore}`;
+          }
+          toast.success(message);
+        } else {
+          // Default notification message
+          toast(`New notification from ${notification.teamName || 'Admin'}`);
+        }
       });
       
       // Listen for team settings updates
@@ -347,6 +388,46 @@ const PromoCodes = ({ teams, socket }) => {
           console.log('🎫 Promocodes initialized, refreshing promocodes list');
           fetchPromocodes();
           toast.success(`Initialized ${notification.metadata?.promocodesCount} new promocodes`);
+        } else if (notification.actionType === 'coins-adjusted') {
+          console.log('💰 Coins adjusted, refreshing teams list');
+          fetchTeams();
+          const operation = notification.metadata?.operation;
+          const teamName = notification.metadata?.targetTeamName;
+          const coinsAdded = notification.metadata?.coinsAdded;
+          const coinsSubtracted = notification.metadata?.coinsSubtracted;
+          const coinsSet = notification.metadata?.coinsSet;
+          const previousBalance = notification.metadata?.previousBalance;
+          const newBalance = notification.metadata?.newBalance;
+          
+          let message = '';
+          if (operation === 'add') {
+            message = `Added ${coinsAdded} kaizen to ${teamName}. Balance: ${previousBalance} → ${newBalance}`;
+          } else if (operation === 'subtract') {
+            message = `Subtracted ${coinsSubtracted} kaizen from ${teamName}. Balance: ${previousBalance} → ${newBalance}`;
+          } else if (operation === 'set') {
+            message = `Set ${teamName} kaizen to ${coinsSet}. Previous: ${previousBalance}`;
+          }
+          toast.success(message);
+        } else if (notification.actionType === 'score-adjusted') {
+          console.log('🏆 Score adjusted, refreshing teams list');
+          fetchTeams();
+          const operation = notification.metadata?.operation;
+          const teamName = notification.metadata?.targetTeamName;
+          const pointsAdded = notification.metadata?.pointsAdded;
+          const pointsSubtracted = notification.metadata?.pointsSubtracted;
+          const pointsSet = notification.metadata?.pointsSet;
+          const previousScore = notification.metadata?.previousScore;
+          const newScore = notification.metadata?.newScore;
+          
+          let message = '';
+          if (operation === 'add') {
+            message = `Added ${pointsAdded} points to ${teamName}. Score: ${previousScore} → ${newScore}`;
+          } else if (operation === 'subtract') {
+            message = `Subtracted ${pointsSubtracted} points from ${teamName}. Score: ${previousScore} → ${newScore}`;
+          } else if (operation === 'set') {
+            message = `Set ${teamName} score to ${pointsSet}. Previous: ${previousScore}`;
+          }
+          toast.success(message);
         }
       };
 
@@ -796,6 +877,8 @@ const AdminNotifications = ({ notifications, fetchNotifications }) => {
   const filterOptions = [
     { label: 'All', value: 'all' },
     { label: 'Admin Actions', value: 'admin-action' },
+    { label: 'Coins Adjusted', value: 'coins-adjusted' },
+    { label: 'Score Adjusted', value: 'score-adjusted' },
     { label: 'Spins', value: 'spins' },
     { label: 'Cards', value: 'card-used' },
     { label: 'Countries', value: 'country-bought' }
@@ -853,7 +936,41 @@ const AdminNotifications = ({ notifications, fetchNotifications }) => {
   // Format notification message based on action type
   const formatNotificationMessage = (notification) => {
     if (notification.type === 'admin-action') {
-      // For admin actions, we already have a formatted message
+      // For admin actions, format based on action type
+      if (notification.actionType === 'coins-adjusted') {
+        const operation = notification.metadata?.operation;
+        const teamName = notification.metadata?.targetTeamName;
+        const coinsAdded = notification.metadata?.coinsAdded;
+        const coinsSubtracted = notification.metadata?.coinsSubtracted;
+        const coinsSet = notification.metadata?.coinsSet;
+        const previousBalance = notification.metadata?.previousBalance;
+        const newBalance = notification.metadata?.newBalance;
+        
+        if (operation === 'add') {
+          return `💰 Admin added ${coinsAdded} kaizen to ${teamName}. Balance changed from ${previousBalance} to ${newBalance}`;
+        } else if (operation === 'subtract') {
+          return `💰 Admin subtracted ${coinsSubtracted} kaizen from ${teamName}. Balance changed from ${previousBalance} to ${newBalance}`;
+        } else if (operation === 'set') {
+          return `💰 Admin set ${teamName} kaizen to ${coinsSet}. Previous balance was ${previousBalance}`;
+        }
+      } else if (notification.actionType === 'score-adjusted') {
+        const operation = notification.metadata?.operation;
+        const teamName = notification.metadata?.targetTeamName;
+        const pointsAdded = notification.metadata?.pointsAdded;
+        const pointsSubtracted = notification.metadata?.pointsSubtracted;
+        const pointsSet = notification.metadata?.pointsSet;
+        const previousScore = notification.metadata?.previousScore;
+        const newScore = notification.metadata?.newScore;
+        
+        if (operation === 'add') {
+          return `🏆 Admin added ${pointsAdded} points to ${teamName}. Score changed from ${previousScore} to ${newScore}`;
+        } else if (operation === 'subtract') {
+          return `🏆 Admin subtracted ${pointsSubtracted} points from ${teamName}. Score changed from ${previousScore} to ${newScore}`;
+        } else if (operation === 'set') {
+          return `🏆 Admin set ${teamName} score to ${pointsSet}. Previous score was ${previousScore}`;
+        }
+      }
+      // For other admin actions, use the existing message
       return notification.message;
     }
     // For other notification types, use the existing format
@@ -870,6 +987,14 @@ const AdminNotifications = ({ notifications, fetchNotifications }) => {
     );
   } else if (filter === 'admin-action') {
     filteredNotifications = notifications.filter(n => n.type === 'admin-action');
+  } else if (filter === 'coins-adjusted') {
+    filteredNotifications = notifications.filter(n => 
+      n.type === 'admin-action' && n.actionType === 'coins-adjusted' && n.recipientType === 'admin'
+    );
+  } else if (filter === 'score-adjusted') {
+    filteredNotifications = notifications.filter(n => 
+      n.type === 'admin-action' && n.actionType === 'score-adjusted' && n.recipientType === 'admin'
+    );
   } else {
     filteredNotifications = notifications.filter(n => n.type === filter && n.recipientType === 'admin');
   }
@@ -1022,6 +1147,36 @@ const AdminNotifications = ({ notifications, fetchNotifications }) => {
                         height: '24px'
                       }}>
                         Team: {notification.metadata.targetTeamName}
+                      </span>
+                    )}
+                    {isAdminAction && notification.actionType === 'coins-adjusted' && (
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        color: '#059669',
+                        background: '#d1fae5',
+                        borderRadius: '12px',
+                        padding: '2px 10px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        height: '24px'
+                      }}>
+                        💰 {notification.metadata?.operation?.toUpperCase()}
+                      </span>
+                    )}
+                    {isAdminAction && notification.actionType === 'score-adjusted' && (
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        color: '#dc2626',
+                        background: '#fee2e2',
+                        borderRadius: '12px',
+                        padding: '2px 10px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        height: '24px'
+                      }}>
+                        🏆 {notification.metadata?.operation?.toUpperCase()}
                       </span>
                     )}
                   </div>
@@ -2041,7 +2196,21 @@ const CountryManagement = ({ teams, socket }) => {
         operation: userOperation
       });
       
-      toast.success(response.data.message);
+      const operation = response.data.operation;
+      const oldCoins = response.data.oldCoins;
+      const newCoins = response.data.newCoins;
+      const teamName = selectedUser.teamName;
+      
+      let successMessage = '';
+      if (operation === 'add') {
+        successMessage = `💰 Added ${userCoins} kaizen to ${teamName}. Balance: ${oldCoins} → ${newCoins}`;
+      } else if (operation === 'subtract') {
+        successMessage = `💰 Subtracted ${userCoins} kaizen from ${teamName}. Balance: ${oldCoins} → ${newCoins}`;
+      } else if (operation === 'set') {
+        successMessage = `💰 Set ${teamName} kaizen to ${userCoins}. Previous: ${oldCoins}`;
+      }
+      
+      toast.success(successMessage);
       setUserCoins('');
       setShowUserModal(false);
       setSelectedUser(null);
@@ -2061,7 +2230,21 @@ const CountryManagement = ({ teams, socket }) => {
         operation: userOperation
       });
       
-      toast.success(response.data.message);
+      const operation = response.data.operation;
+      const oldScore = response.data.oldScore;
+      const newScore = response.data.newScore;
+      const teamName = selectedUser.teamName;
+      
+      let successMessage = '';
+      if (operation === 'add') {
+        successMessage = `🏆 Added ${userScore} points to ${teamName}. Score: ${oldScore} → ${newScore}`;
+      } else if (operation === 'subtract') {
+        successMessage = `🏆 Subtracted ${userScore} points from ${teamName}. Score: ${oldScore} → ${newScore}`;
+      } else if (operation === 'set') {
+        successMessage = `🏆 Set ${teamName} score to ${userScore}. Previous: ${oldScore}`;
+      }
+      
+      toast.success(successMessage);
       setUserScore('');
       setShowUserModal(false);
       setSelectedUser(null);
