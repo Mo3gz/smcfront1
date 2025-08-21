@@ -151,8 +151,7 @@ const AdminDashboard = ({ socket }) => {
       case 'matchups':
         console.log('🎯 Rendering AdminGameSchedule component');
         return <AdminGameSchedule />;
-      case 'statistics':
-        return <StatisticsView />;
+
       default:
         return <PromoCodes teams={teams} socket={socket} />;
     }
@@ -268,13 +267,7 @@ const AdminDashboard = ({ socket }) => {
             <Calendar className="nav-icon" />
             <span className="nav-text">Game Schedule</span>
           </div>
-          <div 
-            className={`nav-item ${activeTab === 'statistics' ? 'active' : ''}`}
-            onClick={() => setActiveTab('statistics')}
-          >
-            <BarChart3 className="nav-icon" />
-            <span className="nav-text">Statistics</span>
-          </div>
+
         </div>
       </nav>
     </div>
@@ -283,20 +276,26 @@ const AdminDashboard = ({ socket }) => {
 
 // Add the card list at the top of the file (copy from backend getCardsByType)
 const allCards = {
-  luck: [
-    { name: "i`amphoteric", type: 'luck', effect: '+150 Kaizen instantly' },
-    { name: "Everything Against Me", type: 'luck', effect: 'Instantly lose 75 Kaizen' },
-    { name: 'el-7aramy', type: 'luck', effect: 'Btsr2 100 coin men ay khema, w law et3raft birg3o el double' }
+  lucky: [
+    { name: "Borrow kaizen to buy a country", type: 'lucky', effect: 'Balance may go negative, limit -200', actionType: 'admin', requiresTeamSelection: false },
+    { name: "Game Protection", type: 'lucky', effect: 'Protection for selected game', actionType: 'admin', requiresGameSelection: true }
   ],
-  attack: [
-    { name: 'wesh-le-wesh', type: 'attack', effect: '1v1 battle' },
-    { name: 'ana-el-7aramy', type: 'attack', effect: 'Btakhod 100 kaizen men ay khema mnghir ay challenge' },
-    { name: 'ana-w-bas', type: 'attack', effect: 'Bt3mel risk 3ala haga' }
+  gamehelper: [
+    { name: "Secret Info", type: 'gamehelper', effect: 'Choose game: Instantly reveals opponent & game details', actionType: 'admin', requiresGameSelection: true },
+    { name: "Robin Hood", type: 'gamehelper', effect: 'Choose game & team: Steal 100 coins from them, If they won', actionType: 'admin', requiresGameSelection: true, requiresTeamSelection: true },
+    { name: "Avenger", type: 'gamehelper', effect: 'Choose game & team: Alliance proposal (+100 each if accepted)', actionType: 'admin', requiresGameSelection: true, requiresTeamSelection: true },
+    { name: "Betrayal", type: 'gamehelper', effect: 'Choose game: Counter alliance betrayals (+100 if betrayed & win)', actionType: 'admin', requiresGameSelection: true }
   ],
-  alliance: [
-    { name: 'el-nadala', type: 'alliance', effect: 'Bt3mel t7alof w tlghih f ay wa2t w takhod el kaizen 3ady' },
-    { name: 'el-sohab', type: 'alliance', effect: 'Bt3mel t7alof 3ady' },
-    { name: 'el-melok', type: 'alliance', effect: 'Btst5dm el khema el taniaa y3melo el challenges makanak' }
+  challenge: [
+    { name: "Speed Buy", type: 'challenge', effect: '10 minutes to buy a country (+50 reward)', actionType: 'speed_buy' },
+    { name: "Freeze Player", type: 'challenge', effect: 'Choose game: Judger decides: Freeze one player from your team (+75 coins to you)', actionType: 'admin', requiresGameSelection: true},
+    { name: "Silent Game", type: 'challenge', effect: 'Choose game: Judge decides result (+150 or -100)', actionType: 'admin', requiresGameSelection: true }
+  ],
+  hightier: [
+    { name: "Flip the Fate", type: 'hightier', effect: 'Choose game: If tied → +100 Bonus, If lost → -50 Penalty', actionType: 'admin', requiresGameSelection: true}
+  ],
+  lowtier: [
+    { name: "Victory Multiplier", type: 'lowtier', effect: 'Choose a game: If your team wins, you earn x1.5 coins', actionType: 'admin', requiresGameSelection: true}
   ]
 };
 
@@ -645,26 +644,30 @@ const PromoCodes = ({ teams, socket }) => {
 const CardManagement = ({ teams }) => {
   const [teamId, setTeamId] = useState('');
   const [cardName, setCardName] = useState('');
-  const [cardType, setCardType] = useState('luck');
+  const [cardType, setCardType] = useState('lucky');
+  const [sendToAll, setSendToAll] = useState(false);
   // Find the selected card object for effect display
-  const selectedCard = allCards[cardType].find(card => card.name === cardName);
+  const selectedCard = allCards[cardType]?.find(card => card.name === cardName);
   const cardTypes = [
-    { value: 'luck', label: 'Luck Card' },
-    { value: 'attack', label: 'Attack Card' },
-    { value: 'alliance', label: 'Alliance Card' }
+    { value: 'lucky', label: 'Lucky Card' },
+    { value: 'gamehelper', label: 'Game Helper Card' },
+    { value: 'challenge', label: 'Challenge Card' },
+    { value: 'hightier', label: 'High Tier Card' },
+    { value: 'lowtier', label: 'Low Tier Card' }
   ];
   const handleGiveCard = async (e) => {
     e.preventDefault();
     try {
       await api.post(`/api/admin/cards`, {
-        teamId,
+        teamId: sendToAll ? 'all' : teamId,
         cardName,
         cardType
       }, { withCredentials: true });
-      toast.success('Card given successfully!');
+      toast.success(sendToAll ? 'Card sent to all teams successfully!' : 'Card given successfully!');
       setTeamId('');
       setCardName('');
-      setCardType('luck');
+      setCardType('lucky');
+      setSendToAll(false);
     } catch (error) {
       console.error('Give card error:', error.response?.status, error.response?.data);
       if (error.response?.status === 401 || error.response?.status === 403) {
@@ -679,21 +682,34 @@ const CardManagement = ({ teams }) => {
       <h3>Give Card to Team</h3>
       <form onSubmit={handleGiveCard}>
         <div style={{ marginBottom: '16px' }}>
-          <label>Team</label>
-          <select
-            className="input"
-            value={teamId}
-            onChange={(e) => setTeamId(e.target.value)}
-            required
-          >
-            <option value="">Select a team</option>
-            {teams.map(team => (
-              <option key={team.id} value={team.id}>
-                {team.teamName}
-              </option>
-            ))}
-          </select>
+          <label>
+            <input
+              type="checkbox"
+              checked={sendToAll}
+              onChange={(e) => setSendToAll(e.target.checked)}
+              style={{ marginRight: '8px' }}
+            />
+            Send to All Teams
+          </label>
         </div>
+        {!sendToAll && (
+          <div style={{ marginBottom: '16px' }}>
+            <label>Team</label>
+            <select
+              className="input"
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              required
+            >
+              <option value="">Select a team</option>
+              {teams.map(team => (
+                <option key={team.id} value={team.id}>
+                  {team.teamName}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div style={{ marginBottom: '16px' }}>
           <label>Card Type</label>
           <select
@@ -719,7 +735,7 @@ const CardManagement = ({ teams }) => {
             disabled={!cardType}
           >
             <option value="">Select a card</option>
-            {allCards[cardType].map(card => (
+            {allCards[cardType]?.map(card => (
               <option key={card.name} value={card.name}>{card.name}</option>
             ))}
           </select>
@@ -727,10 +743,20 @@ const CardManagement = ({ teams }) => {
         {selectedCard && (
           <div style={{ marginBottom: '16px', color: '#666', fontStyle: 'italic', fontSize: '14px' }}>
             <strong>Effect:</strong> {selectedCard.effect}
+            {selectedCard.requiresGameSelection && (
+              <div style={{ color: '#ff6b35', marginTop: '4px' }}>
+                ⚠️ Requires game selection
+              </div>
+            )}
+            {selectedCard.requiresTeamSelection && (
+              <div style={{ color: '#ff6b35', marginTop: '4px' }}>
+                ⚠️ Requires team selection
+              </div>
+            )}
           </div>
         )}
-        <button type="submit" className="btn" disabled={!teamId || !cardName || !cardType}>
-          Give Card
+        <button type="submit" className="btn" disabled={(!sendToAll && !teamId) || !cardName || !cardType}>
+          {sendToAll ? 'Send Card to All Teams' : 'Give Card'}
         </button>
       </form>
     </div>
@@ -2539,9 +2565,7 @@ const GameManagement = ({ socket }) => {
     }
 
     try {
-      const response = await axios.delete(`${API_BASE_URL}/api/admin/games/${gameId}`, { 
-        withCredentials: true 
-      });
+      const response = await api.delete(`/api/admin/games/${gameId}`);
       
       toast.success(response.data.message || 'Game deleted successfully');
       fetchGameSettings(); // Refresh the settings
