@@ -209,62 +209,7 @@ const MapView = ({ userData, setUserData, socket }) => {
     }
   };
 
-  const handleCollectCoins = async () => {
-    try {
-      const response = await api.post(`/api/mining/collect`, {});
-      
-      // Update user data with new values
-      setUserData(prev => ({
-        ...prev,
-        coins: response.data.newCoins,
-        totalMined: response.data.totalMined,
-        lastMined: new Date().toISOString() // Update lastMined for display
-      }));
-      
-      // Update countries list to reflect new lastMined timestamps
-      if (response.data.countriesWithEarnings) {
-        setCountries(prev =>
-          prev.map(country => {
-            const earningCountry = response.data.countriesWithEarnings.find(c => c.countryId === country.id);
-            if (earningCountry) {
-              return { ...country, lastMined: new Date().toISOString() };
-            }
-            return country;
-          })
-        );
-      }
-      
-      // Show only total amount in toast
-      toast.success(`Successfully mined ${response.data.earned} kaizen!`);
-    } catch (error) {
-              toast.error(error.response?.data?.error || 'Failed to collect kaizen');
-    }
-  };
 
-  // Calculate next collection time
-  const getNextCollectionTime = () => {
-    if (!userData?.lastMined || !userData?.miningRate) return null;
-    
-    const lastMined = new Date(userData.lastMined);
-    const now = new Date();
-    const elapsedMinutes = Math.floor((now - lastMined) / (1000 * 60));
-    
-    // Calculate minutes until next collection
-    // miningRate is per hour, so we need 60 minutes to earn 1 coin
-    const minutesPerCoin = 60 / userData.miningRate;
-    const minutesUntilNext = Math.max(0, minutesPerCoin - elapsedMinutes);
-    
-    if (minutesUntilNext === 0) return 'Ready to collect!';
-    
-    const hours = Math.floor(minutesUntilNext / 60);
-    const minutes = minutesUntilNext % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m until next collection`;
-    } else {
-      return `${minutes}m until next collection`;
-    }
-  };
 
   const getCountryColor = (country) => {
     if (country.owner === userData.id) {
