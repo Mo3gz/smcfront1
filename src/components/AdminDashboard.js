@@ -72,7 +72,7 @@ const AdminDashboard = ({ socket }) => {
     if (socket && adminVerified) {
       socket.on('admin-notification', (notification) => {
         fetchNotifications(); // Only fetch from backend, don't add directly
-        toast.info(`New notification from ${notification.teamName}`);
+        toast(`New notification from ${notification.teamName}`);
       });
       
       // Listen for team settings updates
@@ -1639,7 +1639,7 @@ const CountryManagement = ({ teams, socket }) => {
       socket.on('fifty-coins-countries-visibility-update', (data) => {
         console.log('📡 Global 50 coins visibility update received:', data);
         setFiftyCoinsCountriesHidden(data.hidden);
-        toast.info(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'} globally`);
+        toast(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'} globally`);
       });
 
       return () => {

@@ -123,7 +123,7 @@ const MapView = ({ userData, setUserData, socket }) => {
       // Listen for global 50 coins countries visibility updates
       socket.on('fifty-coins-countries-visibility-update', (data) => {
         console.log('📡 Global 50 coins visibility update received:', data);
-        toast.info(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'}`, {
+        toast(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'}`, {
           duration: 3000,
           icon: data.hidden ? '👁️‍🗨️' : '👁️',
         });

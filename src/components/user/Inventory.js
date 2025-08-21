@@ -153,7 +153,7 @@ const Inventory = ({ socket, userData, setUserData }) => {
           setAvailableGames(enabledGameIds);
           
           // Show notification about game changes
-          toast.info(`Game settings updated. ${enabledGameIds.length} games now available.`, {
+          toast(`Game settings updated. ${enabledGameIds.length} games now available.`, {
             duration: 3000,
             position: 'top-center',
             style: {
