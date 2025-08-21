@@ -152,7 +152,7 @@ const AdminDashboard = ({ socket }) => {
         console.log('🎯 Rendering AdminGameSchedule component');
         return (
           <div style={{ padding: '20px', border: '2px solid red' }}>
-            <h3 style={{ color: 'red' }}>Debug: About to render AdminGameSchedule</h3>
+    
             <p>If you see this, the routing is working!</p>
             <button onClick={() => alert('Button clicked!')}>Test Button</button>
             <hr />
@@ -1112,16 +1112,16 @@ const TeamManagement = ({ teams, fetchTeams }) => {
             className="btn btn-warning"
             onClick={() => handleUpdateAllTeams({ 
               spinLimitations: {
-                lucky: { enabled: true, limit: 1 },
-                gamehelper: { enabled: true, limit: 1 },
-                challenge: { enabled: true, limit: 1 },
-                random: { enabled: true, limit: 1 },
+                lucky: { enabled: true, limit: 2 },
+                gamehelper: { enabled: true, limit: 2 },
+                challenge: { enabled: true, limit: 2 },
+                random: { enabled: true, limit: 2 },
                 hightier: { enabled: false, limit: 1 },
                 lowtier: { enabled: false, limit: 1 }
               }
             })}
           >
-            Enable Core Spins (1 each, exclude High/Low Tier)
+            Enable Core Spins (2 spins, exclude High/Low Tier)
           </button>
           <button 
             className="btn btn-secondary"
@@ -3086,24 +3086,30 @@ const AdminGameSchedule = () => {
 
   const handleSetActiveContentSet = async (contentSet) => {
     try {
-      await api.post('/api/admin/active-content-set', { contentSet });
+      console.log('🔄 Setting active content set to:', contentSet);
+      const response = await api.post('/api/admin/active-content-set', { contentSet });
+      console.log('✅ Active content set response:', response.data);
       toast.success(`Active content set changed to ${contentSet.replace('contentSet', 'Set ')}`);
       fetchGameSettings();
     } catch (error) {
-      console.error('Error setting active content set:', error);
-      toast.error('Failed to set active content set');
+      console.error('❌ Error setting active content set:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to set active content set';
+      toast.error(`Failed to set active content set: ${errorMessage}`);
     }
   };
 
   const handleToggleGameScheduleVisibility = async () => {
     try {
       const newVisibility = !gameSettings.gameScheduleVisible;
-      await api.post('/api/admin/game-schedule-visibility', { visible: newVisibility });
+      console.log('🔄 Toggling game schedule visibility to:', newVisibility);
+      const response = await api.post('/api/admin/game-schedule-visibility', { visible: newVisibility });
+      console.log('✅ Game schedule visibility response:', response.data);
       toast.success(`Game schedule is now ${newVisibility ? 'visible' : 'hidden'}`);
       fetchGameSettings();
     } catch (error) {
-      console.error('Error toggling game schedule visibility:', error);
-      toast.error('Failed to toggle game schedule visibility');
+      console.error('❌ Error toggling game schedule visibility:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to toggle game schedule visibility';
+      toast.error(`Failed to toggle game schedule visibility: ${errorMessage}`);
     }
   };
 
@@ -3210,7 +3216,7 @@ const AdminGameSchedule = () => {
             Manage game schedules, content sets, and visibility for all teams.
           </p>
           <p style={{ color: 'green', margin: '8px 0 0 0', fontSize: '12px' }}>✅ Component is rendering successfully!</p>
-          <p style={{ color: 'blue', margin: '4px 0 0 0', fontSize: '11px' }}>Debug: gameSettings keys: {Object.keys(gameSettings).join(', ')}</p>
+  
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
