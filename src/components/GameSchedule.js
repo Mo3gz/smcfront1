@@ -14,29 +14,29 @@ const GameSchedule = () => {
 
   // Determine user's team based on their teamName
   const getUserTeamKey = (teamName) => {
-    // Map team names to team keys (teamA, teamB, etc.)
+    // Map team names to team keys (team1, team2, etc.)
     const teamMapping = {
-      'Team Alpha': 'teamA',
-      'Team Beta': 'teamB', 
-      'Team Gamma': 'teamC',
-      'Team Delta': 'teamD',
-      'Team Epsilon': 'teamE',
-      'Team Zeta': 'teamF',
-      'Team Eta': 'teamG',
-      'Team Theta': 'teamH',
-      'Ayman': 'teamA', // Admin user
+      'Team 1': 'team1',
+      'Team 2': 'team2', 
+      'Team 3': 'team3',
+      'Team 4': 'team4',
+      'Team 5': 'team5',
+      'Team 6': 'team6',
+      'Team 7': 'team7',
+      'Team 8': 'team8',
+      'Ayman': 'team1', // Admin user
       // Add more mappings as needed for different team naming conventions
-      'Alpha': 'teamA',
-      'Beta': 'teamB',
-      'Gamma': 'teamC',
-      'Delta': 'teamD',
-      'Epsilon': 'teamE',
-      'Zeta': 'teamF',
-      'Eta': 'teamG',
-      'Theta': 'teamH'
+      '1': 'team1',
+      '2': 'team2',
+      '3': 'team3',
+      '4': 'team4',
+      '5': 'team5',
+      '6': 'team6',
+      '7': 'team7',
+      '8': 'team8'
     };
     
-    return teamMapping[teamName] || 'teamA'; // Default to teamA if no mapping found
+    return teamMapping[teamName] || 'team1'; // Default to team1 if no mapping found
   };
 
   // Fetch game schedule for user's team

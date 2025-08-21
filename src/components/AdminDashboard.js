@@ -2890,6 +2890,7 @@ const AdminGameSchedule = () => {
   const [editingTeam, setEditingTeam] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSchedules, setEditingSchedules] = useState({});
+  const [selectedTeam, setSelectedTeam] = useState('all'); // 'all' or specific team
 
   const fetchGameSettings = useCallback(async () => {
     try {
@@ -3111,10 +3112,32 @@ const AdminGameSchedule = () => {
 
       {/* Team Schedules */}
       <div style={{ marginBottom: '24px' }}>
-        <h4 style={{ marginBottom: '16px', color: '#4facfe' }}>Team Schedules</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h4 style={{ color: '#4facfe', margin: 0 }}>Team Schedules</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <label style={{ fontSize: '14px', fontWeight: '600' }}>Filter by Team:</label>
+            <select
+              value={selectedTeam}
+              onChange={(e) => setSelectedTeam(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid #ddd',
+                fontSize: '14px'
+              }}
+            >
+              <option value="all">All Teams</option>
+              {gameSettings.availableTeams?.map(team => (
+                <option key={team} value={team}>
+                  {team.replace('team', 'Team ')}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-          {gameSettings.availableTeams?.map(team => (
+          {gameSettings.availableTeams?.filter(team => selectedTeam === 'all' || team === selectedTeam).map(team => (
             <div 
               key={team}
               style={{
