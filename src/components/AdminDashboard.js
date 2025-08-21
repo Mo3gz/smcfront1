@@ -814,21 +814,33 @@ const AdminNotifications = ({ notifications }) => {
     try {
       const newState = !currentState;
       
+      console.log('🔔 Frontend: Toggling notification:', {
+        notificationId,
+        currentState,
+        newState
+      });
+      
       // Update local state immediately for better UX
       setNotificationStates(prev => ({
         ...prev,
         [notificationId]: newState
       }));
 
+      console.log('🔔 Frontend: Making API call to:', `/api/admin/notifications/${notificationId}/toggle`);
+      console.log('🔔 Frontend: Request body:', { enabled: newState });
+
       // Save to database
-      await api.put(`/api/admin/notifications/${notificationId}/toggle`, {
+      const response = await api.put(`/api/admin/notifications/${notificationId}/toggle`, {
         enabled: newState
       });
 
+      console.log('🔔 Frontend: API response:', response.data);
       toast.success(`Notification ${newState ? 'enabled' : 'disabled'}`);
     } catch (error) {
-      console.error('Error toggling notification:', error);
-      toast.error('Failed to toggle notification');
+      console.error('❌ Frontend: Error toggling notification:', error);
+      console.error('❌ Frontend: Error response:', error.response?.data);
+      console.error('❌ Frontend: Error status:', error.response?.status);
+      toast.error(`Failed to toggle notification: ${error.response?.data?.error || error.message}`);
       
       // Revert state on error
       setNotificationStates(prev => ({
@@ -888,7 +900,34 @@ const AdminNotifications = ({ notifications }) => {
 
   return (
     <div className="card">
-      <h3>Admin Notifications</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h3 style={{ margin: 0 }}>Admin Notifications</h3>
+        <button
+          onClick={async () => {
+            try {
+              console.log('🧪 Testing notification API...');
+              const response = await api.get('/api/admin/notifications/debug/test');
+              console.log('🧪 Test response:', response.data);
+              toast.success('API test successful');
+            } catch (error) {
+              console.error('🧪 Test failed:', error);
+              toast.error('API test failed');
+            }
+          }}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#6366f1',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          🧪 Test API
+        </button>
+      </div>
+      
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
         {filterOptions.map(opt => {
           const isActive = filter === opt.value;
