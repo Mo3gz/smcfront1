@@ -49,6 +49,7 @@ const Inventory = ({ socket, userData, setUserData }) => {
   const fetchTeams = useCallback(async () => {
     try {
       const response = await api.get(`/api/scoreboard`);
+      console.log('🔍 Fetched teams:', response.data);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -107,6 +108,12 @@ const Inventory = ({ socket, userData, setUserData }) => {
 
     fetchFiftyCoinsStatus();
   }, []);
+
+  // Debug user data
+  useEffect(() => {
+    console.log('🔍 User data in Inventory:', user);
+    console.log('🔍 UserData in Inventory:', userData);
+  }, [user, userData]);
 
   // Listen for global 50 coins visibility updates
   useEffect(() => {
@@ -325,15 +332,22 @@ const Inventory = ({ socket, userData, setUserData }) => {
 
   // Helper function to check if card requires team selection
   const requiresTeamSelection = (cardName) => {
+    console.log('🔍 Checking team selection for card:', cardName);
+    
     // Use the card's requiresTeamSelection property if available, otherwise fallback to hardcoded list
     const selectedCard = inventory.find(card => card.name === cardName);
+    console.log('🔍 Selected card:', selectedCard);
+    
     if (selectedCard && selectedCard.requiresTeamSelection !== undefined) {
+      console.log('🔍 Using card property:', selectedCard.requiresTeamSelection);
       return selectedCard.requiresTeamSelection;
     }
     
     // Fallback to hardcoded list for backward compatibility
     const teamCards = ['Robin Hood', 'Avenger', 'Freeze Player'];
-    return teamCards.includes(cardName);
+    const requiresTeam = teamCards.includes(cardName);
+    console.log('🔍 Using hardcoded list, requires team:', requiresTeam);
+    return requiresTeam;
   };
 
   // Helper function to check if card requires country selection
@@ -507,7 +521,16 @@ const Inventory = ({ socket, userData, setUserData }) => {
             )}
 
             {/* Team Selection */}
-            {(requiresTeamSelection(selectedCard.name) || selectedCard.type === 'attack' || selectedCard.type === 'alliance') && (
+            {(() => {
+              const shouldShow = requiresTeamSelection(selectedCard.name) || selectedCard.type === 'attack' || selectedCard.type === 'alliance';
+              console.log('🔍 Team selection condition:', {
+                cardName: selectedCard.name,
+                cardType: selectedCard.type,
+                requiresTeamSelection: requiresTeamSelection(selectedCard.name),
+                shouldShow
+              });
+              return shouldShow;
+            })() && (
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
                   Select Team
