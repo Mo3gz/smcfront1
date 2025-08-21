@@ -791,6 +791,8 @@ const CardManagement = ({ teams }) => {
 // Admin Notifications Component
 const AdminNotifications = ({ notifications }) => {
   const [filter, setFilter] = useState('all');
+  const [notificationStates, setNotificationStates] = useState({});
+  
   const filterOptions = [
     { label: 'All', value: 'all' },
     { label: 'Admin Actions', value: 'admin-action' },
@@ -798,6 +800,43 @@ const AdminNotifications = ({ notifications }) => {
     { label: 'Cards', value: 'card-used' },
     { label: 'Countries', value: 'country-bought' }
   ];
+
+  // Initialize notification states from notifications
+  useEffect(() => {
+    const states = {};
+    notifications.forEach(notification => {
+      states[notification.id] = notification.enabled !== false; // Default to true if not set
+    });
+    setNotificationStates(states);
+  }, [notifications]);
+
+  const handleToggleNotification = async (notificationId, currentState) => {
+    try {
+      const newState = !currentState;
+      
+      // Update local state immediately for better UX
+      setNotificationStates(prev => ({
+        ...prev,
+        [notificationId]: newState
+      }));
+
+      // Save to database
+      await api.put(`/api/admin/notifications/${notificationId}/toggle`, {
+        enabled: newState
+      });
+
+      toast.success(`Notification ${newState ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Error toggling notification:', error);
+      toast.error('Failed to toggle notification');
+      
+      // Revert state on error
+      setNotificationStates(prev => ({
+        ...prev,
+        [notificationId]: currentState
+      }));
+    }
+  };
 
   // Format notification message based on action type
   const formatNotificationMessage = (notification) => {
@@ -847,63 +886,9 @@ const AdminNotifications = ({ notifications }) => {
     }
   };
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-
-  // Fetch initial notification status
-  useEffect(() => {
-    const fetchNotificationStatus = async () => {
-      try {
-        const response = await api.get('/api/admin/notifications/status');
-        setNotificationsEnabled(response.data.enabled);
-      } catch (error) {
-        console.error('Error fetching notification status:', error);
-      }
-    };
-
-    fetchNotificationStatus();
-  }, []);
-
-  const handleToggleNotifications = async () => {
-    try {
-      const newState = !notificationsEnabled;
-      setNotificationsEnabled(newState);
-      
-      // Save to database
-      await api.post('/api/admin/notifications/toggle', {
-        enabled: newState
-      });
-      
-      toast.success(`Notifications ${newState ? 'enabled' : 'disabled'}`);
-    } catch (error) {
-      console.error('Error toggling notifications:', error);
-      toast.error('Failed to toggle notifications');
-      // Revert state on error
-      setNotificationsEnabled(!notificationsEnabled);
-    }
-  };
-
   return (
     <div className="card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h3 style={{ margin: 0 }}>Admin Notifications</h3>
-        <button
-          onClick={handleToggleNotifications}
-          className="btn"
-          style={{
-            backgroundColor: notificationsEnabled ? '#dc3545' : '#28a745',
-            color: 'white',
-            padding: '8px 16px',
-            fontSize: '14px',
-            fontWeight: '600',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          {notificationsEnabled ? '🔕 Disable' : '🔔 Enable'}
-        </button>
-      </div>
+      <h3>Admin Notifications</h3>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
         {filterOptions.map(opt => {
           const isActive = filter === opt.value;
@@ -999,13 +984,50 @@ const AdminNotifications = ({ notifications }) => {
                       </span>
                     )}
                   </div>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: '#9ca3af',
-                    whiteSpace: 'nowrap',
-                    marginLeft: '8px'
-                  }}>
-                    {new Date(notification.timestamp).toLocaleString()}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {/* Status Indicator */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: notificationStates[notification.id] ? '#f0fdf4' : '#fef2f2',
+                      border: `1px solid ${notificationStates[notification.id] ? '#bbf7d0' : '#fecaca'}`,
+                      fontSize: '11px',
+                      color: notificationStates[notification.id] ? '#166534' : '#dc2626'
+                    }}>
+                      <span>{notificationStates[notification.id] ? '🔔' : '🔕'}</span>
+                      {notificationStates[notification.id] ? 'Active' : 'Disabled'}
+                    </div>
+                    
+                    {/* Toggle Button */}
+                    <button
+                      onClick={() => handleToggleNotification(notification.id, notificationStates[notification.id])}
+                      style={{
+                        padding: '6px 12px',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        backgroundColor: notificationStates[notification.id] ? '#ef4444' : '#10b981',
+                        color: 'white',
+                        transition: 'all 0.2s ease',
+                        minWidth: '80px'
+                      }}
+                      title={notificationStates[notification.id] ? 'Click to disable' : 'Click to enable'}
+                    >
+                      {notificationStates[notification.id] ? '❌ Disable' : '✅ Enable'}
+                    </button>
+                    
+                    <div style={{ 
+                      fontSize: '12px', 
+                      color: '#9ca3af',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {new Date(notification.timestamp).toLocaleString()}
+                    </div>
                   </div>
                 </div>
 
