@@ -137,7 +137,7 @@ const AdminDashboard = ({ socket }) => {
       case 'cards':
         return <CardManagement teams={teams} />;
       case 'notifications':
-        return <AdminNotifications notifications={notifications} />;
+        return <AdminNotifications notifications={notifications} fetchNotifications={fetchNotifications} />;
       case 'scoreboard':
         return <AdminScoreboard teams={teams} fetchTeams={fetchTeams} />;
       case 'teams':
@@ -789,7 +789,7 @@ const CardManagement = ({ teams }) => {
 };
 
 // Admin Notifications Component
-const AdminNotifications = ({ notifications }) => {
+const AdminNotifications = ({ notifications, fetchNotifications }) => {
   const [filter, setFilter] = useState('all');
   const [notificationStates, setNotificationStates] = useState({});
   
@@ -905,26 +905,28 @@ const AdminNotifications = ({ notifications }) => {
         <button
           onClick={async () => {
             try {
-              console.log('🧪 Testing notification API...');
-              const response = await api.get('/api/admin/notifications/debug/test');
-              console.log('🧪 Test response:', response.data);
-              toast.success('API test successful');
+              console.log('🔄 Refreshing notifications...');
+              await fetchNotifications();
+              toast.success('Notifications refreshed successfully!');
             } catch (error) {
-              console.error('🧪 Test failed:', error);
-              toast.error('API test failed');
+              console.error('❌ Error refreshing notifications:', error);
+              toast.error('Failed to refresh notifications');
             }
           }}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#6366f1',
+            backgroundColor: '#4CAF50',
             color: 'white',
             border: 'none',
             borderRadius: '6px',
             fontSize: '12px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
           }}
         >
-          🧪 Test API
+          🔄 Refresh
         </button>
       </div>
       
