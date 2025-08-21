@@ -374,16 +374,7 @@ const PromoCodes = ({ teams, socket }) => {
     }
   };
 
-  const handleInitializePromocodes = async () => {
-    try {
-      const response = await api.post('/api/admin/promocodes/initialize', {}, { withCredentials: true });
-      toast.success(response.data.message);
-      fetchPromocodes(); // Refresh the list
-    } catch (error) {
-      console.error('Initialize promocodes error:', error);
-      toast.error('Failed to initialize promocodes');
-    }
-  };
+
 
   const handleUpdatePromo = async (promoId, updates) => {
     try {
@@ -414,20 +405,7 @@ const PromoCodes = ({ teams, socket }) => {
 
   return (
     <div>
-      {/* Initialize Promocodes Section */}
-      <div className="card" style={{ marginBottom: '20px' }}>
-        <h3>Initialize Promocodes</h3>
-        <p style={{ marginBottom: '16px', color: '#666' }}>
-          Click the button below to initialize the system with the predefined list of promocodes.
-        </p>
-        <button 
-          onClick={handleInitializePromocodes} 
-          className="btn"
-          style={{ backgroundColor: '#28a745' }}
-        >
-          Initialize Promocodes
-        </button>
-      </div>
+
 
       {/* Create New Promocode Section */}
       <div className="card" style={{ marginBottom: '20px' }}>

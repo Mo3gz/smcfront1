@@ -349,26 +349,7 @@ const MapView = ({ userData, setUserData, socket }) => {
           </div>
         </div>
 
-        {/* Collect Coins Button */}
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <button 
-            className="mining-button"
-            onClick={handleCollectCoins}
-            disabled={countries.filter(c => c.owner === userData?.id).length === 0}
-          >
-            ⛏️ Collect Kaizen
-          </button>
-          {userData?.lastMined && (
-            <div className="last-collected">
-              Last collected: {new Date(userData.lastMined).toLocaleString()}
-            </div>
-          )}
-          {getNextCollectionTime() && (
-            <div className="next-collection-time">
-              {getNextCollectionTime()}
-            </div>
-          )}
-        </div>
+
 
         <div className="map-grid">
           {countries.filter(country => country.isVisible !== false).map((country) => (
