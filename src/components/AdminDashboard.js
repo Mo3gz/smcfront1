@@ -1857,7 +1857,6 @@ const CountryManagement = ({ teams, socket }) => {
         <div style={{ minWidth: '150px', display: 'flex', flexDirection: 'column', alignItems: 'end' }}>
           <div style={{ 
             fontSize: '12px', 
-            color: '#666', 
             marginBottom: '4px',
             padding: '2px 8px',
             backgroundColor: fiftyCoinsCountriesHidden ? '#dc3545' : '#28a745',
