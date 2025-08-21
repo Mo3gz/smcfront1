@@ -7,7 +7,7 @@ import Inventory from './user/Inventory';
 import Spin from './user/Spin';
 import MapView from './user/MapView';
 
-// Notifications removed - only admin can see them
+import Notifications from './Notifications';
 import GameSchedule from './GameSchedule';
 
 import { API_BASE_URL } from '../utils/api';
@@ -258,7 +258,7 @@ const UserDashboard = ({ socket }) => {
              </div>
            </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Notifications removed - only admin can see them */}
+            <Notifications />
             <button 
               onClick={handleLogout}
               className="btn btn-danger"
