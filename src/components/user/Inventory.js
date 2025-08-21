@@ -18,7 +18,6 @@ const Inventory = ({ socket, userData, setUserData }) => {
   const [availableGames, setAvailableGames] = useState([]);
   const [availableCountries, setAvailableCountries] = useState([]);
   const [gameSettings, setGameSettings] = useState({});
-  const [gameSelectionCardsHidden, setGameSelectionCardsHidden] = useState(false);
 
   const fetchInventory = useCallback(async () => {
     try {
@@ -76,7 +75,10 @@ const Inventory = ({ socket, userData, setUserData }) => {
       console.log('🎮 Available games length:', Array.isArray(response.data) ? response.data.length : 'Not an array');
       
       if (Array.isArray(response.data) && response.data.length > 0) {
-        setAvailableGames(response.data);
+        // Filter out fiftyCoinsCountriesHidden game if it's in the response
+        const filteredGames = response.data.filter(gameId => gameId !== 'fiftyCoinsCountriesHidden');
+        console.log('🎮 Filtered available games:', filteredGames);
+        setAvailableGames(filteredGames);
       } else {
         console.warn('🎮 No available games returned from API, using fallback');
         // Set a default fallback to prevent empty dropdown
@@ -141,6 +143,10 @@ const Inventory = ({ socket, userData, setUserData }) => {
           
           const enabledGameIds = Object.keys(newGameSettings).filter(gameId => {
             const gameData = newGameSettings[gameId];
+            // Filter out fiftyCoinsCountriesHidden game when it's active
+            if (gameId === 'fiftyCoinsCountriesHidden' && newGameSettings.fiftyCoinsCountriesHidden) {
+              return false;
+            }
             return typeof gameData === 'object' ? gameData.enabled : gameData;
           });
           console.log('🎮 Updated available games from socket:', enabledGameIds);
@@ -176,11 +182,11 @@ const Inventory = ({ socket, userData, setUserData }) => {
         }
       });
 
-      // Listen for game selection cards visibility updates
-      socket.on('game-selection-cards-visibility-update', (data) => {
-        console.log('📡 Game selection cards visibility update received:', data);
-        setGameSelectionCardsHidden(data.hidden);
-        toast.info(`Game selection cards are now ${data.hidden ? 'hidden' : 'visible'}`);
+      // Listen for fifty coins countries visibility updates
+      socket.on('fifty-coins-countries-visibility-update', (data) => {
+        console.log('Fifty coins countries visibility updated:', data);
+        // Refresh available games when visibility changes
+        fetchAvailableGames();
       });
 
       return () => {
@@ -188,7 +194,7 @@ const Inventory = ({ socket, userData, setUserData }) => {
         socket.off('game-settings-update');
         socket.off('countries-update');
         socket.off('user-update');
-        socket.off('game-selection-cards-visibility-update');
+        socket.off('fifty-coins-countries-visibility-update');
       };
     }
   }, [socket, fetchInventory, fetchAvailableGames, fetchAvailableCountries, setUserData, user?.id]);
@@ -341,31 +347,23 @@ const Inventory = ({ socket, userData, setUserData }) => {
           </div>
         ) : (
           <div className="card-grid">
-            {inventory
-              .filter(card => {
-                // Filter out cards that require game selection if the setting is enabled
-                if (gameSelectionCardsHidden && card.requiresGameSelection) {
-                  return false;
-                }
-                return true;
-              })
-              .map((card) => (
-                <div
-                  key={card.id}
-                  className="card-item"
-                  style={{ background: getCardColor(card.type) }}
-                  onClick={() => handleCardClick(card)}
-                >
-                  <div style={{ marginBottom: '8px' }}>
-                    {getCardIcon(card.type)}
-                  </div>
-                  <div className="card-name">{card.name}</div>
-                  <div className="card-type">{card.type}</div>
-                  <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '8px' }}>
-                    {card.effect}
-                  </div>
+            {inventory.map((card) => (
+              <div
+                key={card.id}
+                className="card-item"
+                style={{ background: getCardColor(card.type) }}
+                onClick={() => handleCardClick(card)}
+              >
+                <div style={{ marginBottom: '8px' }}>
+                  {getCardIcon(card.type)}
                 </div>
-              ))}
+                <div className="card-name">{card.name}</div>
+                <div className="card-type">{card.type}</div>
+                <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '8px' }}>
+                  {card.effect}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

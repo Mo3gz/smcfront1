@@ -1527,7 +1527,6 @@ const CountryManagement = ({ teams, socket }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOwnership, setFilterOwnership] = useState('all'); // all, owned, unowned
   const [fiftyCoinsCountriesHidden, setFiftyCoinsCountriesHidden] = useState(false);
-  const [gameSelectionCardsHidden, setGameSelectionCardsHidden] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [newOwnerId, setNewOwnerId] = useState('');
   
@@ -1581,20 +1580,10 @@ const CountryManagement = ({ teams, socket }) => {
     }
   }, []);
 
-  const fetchGameSelectionCardsVisibilityState = useCallback(async () => {
-    try {
-      const response = await api.get(`/api/admin/cards/game-selection-status`);
-      setGameSelectionCardsHidden(response.data.hidden);
-    } catch (error) {
-      console.error('Error fetching game selection cards visibility state:', error);
-    }
-  }, []);
-
   useEffect(() => {
     fetchCountries();
     fetchFiftyCoinsVisibilityState();
-    fetchGameSelectionCardsVisibilityState();
-  }, [fetchCountries, fetchFiftyCoinsVisibilityState, fetchGameSelectionCardsVisibilityState]);
+  }, [fetchCountries, fetchFiftyCoinsVisibilityState]);
 
   // Listen for global 50 coins visibility updates
   useEffect(() => {
@@ -1605,15 +1594,8 @@ const CountryManagement = ({ teams, socket }) => {
         toast.info(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'} globally`);
       });
 
-      socket.on('game-selection-cards-visibility-update', (data) => {
-        console.log('📡 Global game selection cards visibility update received:', data);
-        setGameSelectionCardsHidden(data.hidden);
-        toast.info(`Game selection cards are now ${data.hidden ? 'hidden' : 'visible'} globally`);
-      });
-
       return () => {
         socket.off('fifty-coins-countries-visibility-update');
-        socket.off('game-selection-cards-visibility-update');
       };
     }
   }, [socket]);
@@ -1787,21 +1769,6 @@ const CountryManagement = ({ teams, socket }) => {
     }
   };
 
-  const handleToggleGameSelectionCardsVisibility = async () => {
-    try {
-      const response = await api.post(`/api/admin/cards/toggle-game-selection`, {
-        hidden: !gameSelectionCardsHidden
-      });
-      
-      console.log('Global game selection cards visibility toggle response:', response.data);
-      setGameSelectionCardsHidden(!gameSelectionCardsHidden);
-      toast.success(response.data.message);
-    } catch (error) {
-      console.error('Error toggling game selection cards visibility:', error);
-      toast.error(error.response?.data?.error || 'Failed to toggle game selection cards visibility');
-    }
-  };
-
   // Filter countries based on search and ownership filter
   const filteredCountries = countries.filter(country => {
     const matchesSearch = country.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -1915,36 +1882,6 @@ const CountryManagement = ({ teams, socket }) => {
             }}
           >
             {fiftyCoinsCountriesHidden ? 'Show 50 Kaizen Countries' : 'Hide 50 Kaizen Countries'}
-          </button>
-        </div>
-        <div style={{ minWidth: '150px', display: 'flex', flexDirection: 'column', alignItems: 'end' }}>
-          <div style={{ 
-            fontSize: '12px', 
-            marginBottom: '4px',
-            padding: '2px 8px',
-            backgroundColor: gameSelectionCardsHidden ? '#dc3545' : '#28a745',
-            color: 'white',
-            borderRadius: '4px',
-            fontWeight: '600'
-          }}>
-            Game Selection Cards Status: {gameSelectionCardsHidden ? 'Hidden' : 'Visible'}
-          </div>
-          <button
-            onClick={handleToggleGameSelectionCardsVisibility}
-            className="btn"
-            style={{
-              backgroundColor: gameSelectionCardsHidden ? '#dc3545' : '#28a745',
-              color: 'white',
-              padding: '10px 16px',
-              fontSize: '14px',
-              fontWeight: '600',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            {gameSelectionCardsHidden ? 'Show Game Selection Cards' : 'Hide Game Selection Cards'}
           </button>
         </div>
       </div>
@@ -3061,68 +2998,6 @@ const AdminGameSchedule = () => {
     }
   };
 
-  const handleLoadDefaultSchedules = async () => {
-    try {
-      // Get default schedules for the current team
-      const response = await api.get('/api/admin/default-schedules');
-      const defaultSchedules = response.data.schedules[editingTeam];
-      
-      if (defaultSchedules) {
-        setEditingSchedules(defaultSchedules);
-        toast.success(`Loaded default schedules for ${editingTeam.replace('team', 'Team ')}`);
-      } else {
-        toast.error('No default schedules found for this team');
-      }
-    } catch (error) {
-      console.error('Error loading default schedules:', error);
-      toast.error('Failed to load default schedules');
-    }
-  };
-
-  const handleCopyFromTeam = async (sourceTeam) => {
-    try {
-      const response = await api.get(`/api/admin/team-schedules/${sourceTeam}`);
-      const sourceSchedules = response.data.schedules;
-      
-      if (sourceSchedules) {
-        setEditingSchedules(sourceSchedules);
-        toast.success(`Copied schedules from ${sourceTeam.replace('team', 'Team ')}`);
-      } else {
-        toast.error('No schedules found for the source team');
-      }
-    } catch (error) {
-      console.error('Error copying team schedules:', error);
-      toast.error('Failed to copy team schedules');
-    }
-  };
-
-  const handleClearSchedules = () => {
-    const emptySchedules = {};
-    gameSettings.availableSets?.forEach(set => {
-      emptySchedules[set] = [];
-    });
-    setEditingSchedules(emptySchedules);
-    toast.success('Cleared all schedules for this team');
-  };
-
-  const handleApplyToAllTeams = async () => {
-    try {
-      const response = await api.get('/api/admin/default-schedules');
-      const defaultSchedules = response.data.schedules;
-      
-      const requestData = {
-        schedules: defaultSchedules
-      };
-      
-      await api.post('/api/admin/team-game-schedules', requestData);
-      toast.success('Applied default schedules to all teams');
-      fetchGameSettings();
-    } catch (error) {
-      console.error('Error applying defaults to all teams:', error);
-      toast.error('Failed to apply defaults to all teams');
-    }
-  };
-
   const updateGame = (setName, gameIndex, field, value) => {
     setEditingSchedules(prev => ({
       ...prev,
@@ -3205,17 +3080,6 @@ const AdminGameSchedule = () => {
           >
             {gameSettings.gameScheduleVisible ? 'Hide Game Schedule' : 'Show Game Schedule'}
           </button>
-          <button
-            onClick={() => handleApplyToAllTeams()}
-            className="btn btn-warning"
-            style={{
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            🚀 Apply Defaults to All Teams
-          </button>
         </div>
       </div>
 
@@ -3288,14 +3152,9 @@ const AdminGameSchedule = () => {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div>
-                  <h5 style={{ margin: 0, color: '#333' }}>
-                    {team.replace('team', 'Team ')}
-                  </h5>
-                  <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
-                    {gameSettings.teamGameSchedules?.[team] ? 'Custom Schedules' : 'Using Defaults'}
-                  </div>
-                </div>
+                <h5 style={{ margin: 0, color: '#333' }}>
+                  {team.replace('team', 'Team ')}
+                </h5>
                 <button
                   onClick={() => handleEditTeamSchedules(team)}
                   className="btn btn-primary"
@@ -3404,6 +3263,9 @@ const AdminGameSchedule = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3>Edit Schedules for {editingTeam.replace('team', 'Team ')}</h3>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                Debug: {JSON.stringify(editingSchedules).substring(0, 100)}...
+              </div>
               <button
                 onClick={() => setShowEditModal(false)}
                 style={{
@@ -3416,52 +3278,6 @@ const AdminGameSchedule = () => {
               >
                 ×
               </button>
-            </div>
-            
-            {/* Quick Actions */}
-            <div style={{ 
-              marginBottom: '24px', 
-              padding: '16px', 
-              backgroundColor: '#f8f9fa', 
-              borderRadius: '8px',
-              border: '1px solid #dee2e6'
-            }}>
-              <h4 style={{ marginBottom: '12px', color: '#4facfe' }}>Quick Actions</h4>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button 
-                  onClick={handleLoadDefaultSchedules}
-                  className="btn btn-secondary"
-                  style={{ fontSize: '12px', padding: '8px 12px' }}
-                >
-                  📋 Load Default Schedules
-                </button>
-                <button 
-                  onClick={handleClearSchedules}
-                  className="btn btn-danger"
-                  style={{ fontSize: '12px', padding: '8px 12px' }}
-                >
-                  🗑️ Clear All Schedules
-                </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#666' }}>Copy from:</span>
-                  <select
-                    onChange={(e) => e.target.value && handleCopyFromTeam(e.target.value)}
-                    style={{
-                      padding: '6px 8px',
-                      borderRadius: '4px',
-                      border: '1px solid #ddd',
-                      fontSize: '12px'
-                    }}
-                  >
-                    <option value="">Select Team</option>
-                    {gameSettings.availableTeams?.filter(team => team !== editingTeam).map(team => (
-                      <option key={team} value={team}>
-                        {team.replace('team', 'Team ')}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
             </div>
             
             <div style={{ marginBottom: '24px' }}>
