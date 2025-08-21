@@ -12,8 +12,7 @@ import {
   Gamepad2,
   Calendar
 } from 'lucide-react';
-import api, { API_BASE_URL } from '../utils/api';
-import axios from 'axios';
+import api from '../utils/api';
 
 const AdminDashboard = ({ socket }) => {
   const { user, logout, checkAdminStatus } = useAuth();
