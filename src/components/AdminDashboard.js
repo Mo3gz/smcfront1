@@ -1573,7 +1573,7 @@ const CountryManagement = ({ teams, socket }) => {
 
   const fetchFiftyCoinsVisibilityState = useCallback(async () => {
     try {
-      const response = await api.get(`/api/admin/countries/fifty-coins-visibility`);
+      const response = await api.get(`/api/admin/countries/fifty-coins-status`);
       setFiftyCoinsCountriesHidden(response.data.hidden);
     } catch (error) {
       console.error('Error fetching 50 coins visibility state:', error);
@@ -1854,7 +1854,19 @@ const CountryManagement = ({ teams, socket }) => {
             <option value="unowned">Unowned Only</option>
           </select>
         </div>
-        <div style={{ minWidth: '150px', display: 'flex', alignItems: 'end' }}>
+        <div style={{ minWidth: '150px', display: 'flex', flexDirection: 'column', alignItems: 'end' }}>
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#666', 
+            marginBottom: '4px',
+            padding: '2px 8px',
+            backgroundColor: fiftyCoinsCountriesHidden ? '#dc3545' : '#28a745',
+            color: 'white',
+            borderRadius: '4px',
+            fontWeight: '600'
+          }}>
+            Game fiftyCoinsCountriesHidden Status: {fiftyCoinsCountriesHidden ? 'Active' : 'Inactive'}
+          </div>
           <button
             onClick={handleToggleFiftyCoinsVisibility}
             className="btn"
