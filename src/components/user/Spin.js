@@ -35,40 +35,6 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [spinCounts, setSpinCounts] = useState({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
   const [cardProgress, setCardProgress] = useState({});
 
-  // New state for fiftyCoinsCountriesHidden setting
-  const [fiftyCoinsCountriesHidden, setFiftyCoinsCountriesHidden] = useState(false);
-
-  // Fetch the fiftyCoinsCountriesHidden setting
-  useEffect(() => {
-    const fetchFiftyCoinsStatus = async () => {
-      try {
-        const response = await api.get('/api/countries/fifty-coins-status');
-        setFiftyCoinsCountriesHidden(response.data.hidden);
-      } catch (error) {
-        console.error('Error fetching 50 coins visibility state:', error);
-        // Default to false if there's an error
-        setFiftyCoinsCountriesHidden(false);
-      }
-    };
-
-    fetchFiftyCoinsStatus();
-  }, []);
-
-  // Listen for global 50 coins visibility updates
-  useEffect(() => {
-    if (socket) {
-      socket.on('fifty-coins-countries-visibility-update', (data) => {
-        console.log('📡 Global 50 coins visibility update received:', data);
-        setFiftyCoinsCountriesHidden(data.hidden);
-        toast.info(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'} globally`);
-      });
-
-      return () => {
-        socket.off('fifty-coins-countries-visibility-update');
-      };
-    }
-  }, [socket]);
-
   useEffect(() => {
     // Update final cost when spinType or discount changes
     const baseCost = spinTypes.find(s => s.id === spinType).cost;
@@ -543,32 +509,9 @@ const Spin = ({ socket, userData, setUserData }) => {
     return <IconComponent size={24} />;
   }, []);
 
-  // Helper function to check if a spin type has game-requiring cards
-  const hasGameRequiringCards = useCallback((spinTypeId) => {
-    const gameRequiringCards = {
-      lucky: ['Game Protection'],
-      gamehelper: ['Secret Info', 'Robin Hood', 'Avenger', 'Betrayal'],
-      challenge: ['Freeze Player', 'Silent Game'],
-      hightier: ['Flip the Fate'],
-      lowtier: ['Victory Multiplier']
-    };
-    
-    return gameRequiringCards[spinTypeId] && gameRequiringCards[spinTypeId].length > 0;
-  }, []);
-
   // Memoized spin types rendering to prevent unnecessary re-renders
   const memoizedSpinTypes = useMemo(() => {
-    // Filter out spin types that have game-requiring cards when fiftyCoinsCountriesHidden is active
-    const filteredSpinTypes = fiftyCoinsCountriesHidden 
-      ? spinTypes.filter(spin => !hasGameRequiringCards(spin.id))
-      : spinTypes;
-
-    // If current spin type is not available, switch to the first available one
-    if (filteredSpinTypes.length > 0 && !filteredSpinTypes.find(spin => spin.id === spinType)) {
-      setSpinType(filteredSpinTypes[0].id);
-    }
-
-    return filteredSpinTypes.map((spin) => {
+    return spinTypes.map((spin) => {
       const isDisabled = isSpinDisabled(spin.id);
       const statusMessage = getSpinStatusMessage(spin.id);
       const cardProgress = getCardCollectionProgress(spin.id);
@@ -664,7 +607,7 @@ const Spin = ({ socket, userData, setUserData }) => {
         </div>
       );
     });
-     }, [spinType, isSpinDisabled, getSpinStatusMessage, getSpinIcon, getCardCollectionProgress, fiftyCoinsCountriesHidden, hasGameRequiringCards]);
+     }, [spinType, isSpinDisabled, getSpinStatusMessage, getSpinIcon, getCardCollectionProgress]);
 
   // MCQ handling
   const handleMcqAnswer = async (selectedAnswer) => {
@@ -753,28 +696,6 @@ const Spin = ({ socket, userData, setUserData }) => {
       {showResult && <Confetti />}
 
       <div className="card">
-        {/* Game-requiring cards hidden notification */}
-        {fiftyCoinsCountriesHidden && (
-          <div style={{ 
-            marginBottom: '16px', 
-            padding: '12px', 
-            backgroundColor: '#fff3cd', 
-            border: '1px solid #ffeaa7', 
-            borderRadius: '8px',
-            color: '#856404',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <span>⚠️</span>
-            <span>
-              <strong>Game-requiring cards are currently hidden</strong> due to 50 kaizen countries being hidden. 
-              Some spin types may not be available.
-            </span>
-          </div>
-        )}
-
         {/* Spin Type Selection */}
         <div style={{ marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '16px', color: '#333' }}>Choose Spin Type</h3>

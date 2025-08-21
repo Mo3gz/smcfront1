@@ -18,9 +18,6 @@ const Inventory = ({ socket, userData, setUserData }) => {
   const [availableGames, setAvailableGames] = useState([]);
   const [availableCountries, setAvailableCountries] = useState([]);
   const [gameSettings, setGameSettings] = useState({});
-  
-  // New state for fiftyCoinsCountriesHidden setting
-  const [fiftyCoinsCountriesHidden, setFiftyCoinsCountriesHidden] = useState(false);
 
   const fetchInventory = useCallback(async () => {
     try {
@@ -49,7 +46,6 @@ const Inventory = ({ socket, userData, setUserData }) => {
   const fetchTeams = useCallback(async () => {
     try {
       const response = await api.get(`/api/scoreboard`);
-      console.log('🔍 Fetched teams:', response.data);
       setTeams(response.data);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -92,42 +88,6 @@ const Inventory = ({ socket, userData, setUserData }) => {
       setAvailableGames(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
     }
   }, []);
-
-  // Fetch the fiftyCoinsCountriesHidden setting
-  useEffect(() => {
-    const fetchFiftyCoinsStatus = async () => {
-      try {
-        const response = await api.get('/api/countries/fifty-coins-status');
-        setFiftyCoinsCountriesHidden(response.data.hidden);
-      } catch (error) {
-        console.error('Error fetching 50 coins visibility state:', error);
-        // Default to false if there's an error
-        setFiftyCoinsCountriesHidden(false);
-      }
-    };
-
-    fetchFiftyCoinsStatus();
-  }, []);
-
-  // Debug user data
-  useEffect(() => {
-    console.log('🔍 User data in Inventory:', user);
-    console.log('🔍 UserData in Inventory:', userData);
-  }, [user, userData]);
-
-  // Listen for global 50 coins visibility updates
-  useEffect(() => {
-    if (socket) {
-      socket.on('fifty-coins-countries-visibility-update', (data) => {
-        console.log('📡 Global 50 coins visibility update received in Inventory:', data);
-        setFiftyCoinsCountriesHidden(data.hidden);
-      });
-
-      return () => {
-        socket.off('fifty-coins-countries-visibility-update');
-      };
-    }
-  }, [socket]);
 
   const fetchAvailableCountries = useCallback(async () => {
     try {
@@ -332,50 +292,21 @@ const Inventory = ({ socket, userData, setUserData }) => {
 
   // Helper function to check if card requires team selection
   const requiresTeamSelection = (cardName) => {
-    console.log('🔍 Checking team selection for card:', cardName);
-    
     // Use the card's requiresTeamSelection property if available, otherwise fallback to hardcoded list
     const selectedCard = inventory.find(card => card.name === cardName);
-    console.log('🔍 Selected card:', selectedCard);
-    
     if (selectedCard && selectedCard.requiresTeamSelection !== undefined) {
-      console.log('🔍 Using card property:', selectedCard.requiresTeamSelection);
       return selectedCard.requiresTeamSelection;
     }
     
     // Fallback to hardcoded list for backward compatibility
     const teamCards = ['Robin Hood', 'Avenger', 'Freeze Player'];
-    const requiresTeam = teamCards.includes(cardName);
-    console.log('🔍 Using hardcoded list, requires team:', requiresTeam);
-    return requiresTeam;
+    return teamCards.includes(cardName);
   };
 
   // Helper function to check if card requires country selection
   const requiresCountrySelection = (cardName) => {
     return cardName === "Borrow kaizen to buy a country";
   };
-
-  // Helper function to check if a card requires game selection
-  const isGameRequiringCard = (cardName) => {
-    const gameRequiringCards = [
-      'Game Protection',
-      'Secret Info', 
-      'Robin Hood', 
-      'Avenger', 
-      'Betrayal',
-      'Freeze Player', 
-      'Silent Game',
-      'Flip the Fate',
-      'Victory Multiplier'
-    ];
-    
-    return gameRequiringCards.includes(cardName);
-  };
-
-  // Filter inventory to hide game-requiring cards when fiftyCoinsCountriesHidden is active
-  const filteredInventory = fiftyCoinsCountriesHidden 
-    ? inventory.filter(card => !isGameRequiringCard(card.name))
-    : inventory;
 
   if (loading) {
     return (
@@ -393,41 +324,15 @@ const Inventory = ({ socket, userData, setUserData }) => {
       </div>
 
       <div className="card">
-        {/* Game-requiring cards hidden notification */}
-        {fiftyCoinsCountriesHidden && (
-          <div style={{ 
-            marginBottom: '16px', 
-            padding: '12px', 
-            backgroundColor: '#fff3cd', 
-            border: '1px solid #ffeaa7', 
-            borderRadius: '8px',
-            color: '#856404',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <span>⚠️</span>
-            <span>
-              <strong>Game-requiring cards are currently hidden</strong> due to 50 kaizen countries being hidden. 
-              Some cards may not be visible in your inventory.
-            </span>
-          </div>
-        )}
-
-        {filteredInventory.length === 0 ? (
+        {inventory.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <Package size={48} color="#667eea" />
-            <p style={{ marginTop: '16px', color: '#666' }}>
-              {inventory.length === 0 ? 'No cards yet' : 'No cards available'}
-            </p>
-            <p style={{ color: '#999', fontSize: '14px' }}>
-              {inventory.length === 0 ? 'Spin to get cards!' : 'Game-requiring cards are hidden'}
-            </p>
+            <p style={{ marginTop: '16px', color: '#666' }}>No cards yet</p>
+            <p style={{ color: '#999', fontSize: '14px' }}>Spin to get cards!</p>
           </div>
         ) : (
           <div className="card-grid">
-            {filteredInventory.map((card) => (
+            {inventory.map((card) => (
               <div
                 key={card.id}
                 className="card-item"
@@ -521,16 +426,7 @@ const Inventory = ({ socket, userData, setUserData }) => {
             )}
 
             {/* Team Selection */}
-            {(() => {
-              const shouldShow = requiresTeamSelection(selectedCard.name) || selectedCard.type === 'attack' || selectedCard.type === 'alliance';
-              console.log('🔍 Team selection condition:', {
-                cardName: selectedCard.name,
-                cardType: selectedCard.type,
-                requiresTeamSelection: requiresTeamSelection(selectedCard.name),
-                shouldShow
-              });
-              return shouldShow;
-            })() && (
+            {(requiresTeamSelection(selectedCard.name) || selectedCard.type === 'attack' || selectedCard.type === 'alliance') && (
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#333', fontWeight: '600' }}>
                   Select Team
@@ -542,21 +438,12 @@ const Inventory = ({ socket, userData, setUserData }) => {
                   required
                 >
                   <option value="">Choose a team...</option>
-                  {teams.map((team) => (
-                    <option 
-                      key={team.id} 
-                      value={team.id}
-                      disabled={team.id === (user && user.id)}
-                    >
-                      {team.teamName} {team.id === (user && user.id) ? '(Your Team)' : ''}
+                  {teams.filter(team => team.id !== (user && user.id)).map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.teamName}
                     </option>
                   ))}
                 </select>
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  Total teams: {teams.length} | 
-                  Current user ID: {user?.id || 'undefined'} (type: {typeof user?.id}) | 
-                  Teams data: {JSON.stringify(teams.map(t => ({ id: t.id, name: t.teamName, idType: typeof t.id })))}
-                </div>
               </div>
             )}
 
