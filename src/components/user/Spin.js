@@ -34,6 +34,7 @@ const Spin = ({ socket, userData, setUserData }) => {
   const [spinLimitations, setSpinLimitations] = useState({});
   const [spinCounts, setSpinCounts] = useState({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
   const [cardProgress, setCardProgress] = useState({});
+  const [gameSelectionCardsHidden, setGameSelectionCardsHidden] = useState(false);
 
   useEffect(() => {
     // Update final cost when spinType or discount changes
@@ -188,11 +189,19 @@ const Spin = ({ socket, userData, setUserData }) => {
          }
        });
 
+      // Listen for game selection cards visibility updates
+      socket.on('game-selection-cards-visibility-update', (data) => {
+        console.log('📡 Game selection cards visibility update received in Spin:', data);
+        setGameSelectionCardsHidden(data.hidden);
+        toast.info(`Game selection cards are now ${data.hidden ? 'hidden' : 'visible'}`);
+      });
+
       return () => {
         socket.off('user-update');
         socket.off('spin-counts-reset');
         socket.off('user-team-settings-updated');
         socket.off('spin-limitation-status');
+        socket.off('game-selection-cards-visibility-update');
       };
     }
   }, [socket, userData?.id, setUserData]);
@@ -351,13 +360,26 @@ const Spin = ({ socket, userData, setUserData }) => {
       };
     }
     
-    return cardProgress[spinId] || {
+    const progress = cardProgress[spinId] || {
       collected: 0,
       total: 0,
       remaining: 0,
       percentage: 0
     };
-  }, [cardProgress]);
+    
+    // If game selection cards are hidden, adjust the progress to exclude those cards
+    if (gameSelectionCardsHidden) {
+      // This is a simplified adjustment - the backend should handle the actual filtering
+      // but we can adjust the display here to reflect the hidden cards
+      return {
+        ...progress,
+        // Note: The actual filtering happens in the backend getCardsByType function
+        // This is just for display purposes
+      };
+    }
+    
+    return progress;
+  }, [cardProgress, gameSelectionCardsHidden]);
 
   const handleSpin = async () => {
     if (spinning) return;

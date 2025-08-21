@@ -18,6 +18,7 @@ const Inventory = ({ socket, userData, setUserData }) => {
   const [availableGames, setAvailableGames] = useState([]);
   const [availableCountries, setAvailableCountries] = useState([]);
   const [gameSettings, setGameSettings] = useState({});
+  const [gameSelectionCardsHidden, setGameSelectionCardsHidden] = useState(false);
 
   const fetchInventory = useCallback(async () => {
     try {
@@ -175,11 +176,19 @@ const Inventory = ({ socket, userData, setUserData }) => {
         }
       });
 
+      // Listen for game selection cards visibility updates
+      socket.on('game-selection-cards-visibility-update', (data) => {
+        console.log('📡 Game selection cards visibility update received:', data);
+        setGameSelectionCardsHidden(data.hidden);
+        toast.info(`Game selection cards are now ${data.hidden ? 'hidden' : 'visible'}`);
+      });
+
       return () => {
         socket.off('inventory-update');
         socket.off('game-settings-update');
         socket.off('countries-update');
         socket.off('user-update');
+        socket.off('game-selection-cards-visibility-update');
       };
     }
   }, [socket, fetchInventory, fetchAvailableGames, fetchAvailableCountries, setUserData, user?.id]);
@@ -332,23 +341,31 @@ const Inventory = ({ socket, userData, setUserData }) => {
           </div>
         ) : (
           <div className="card-grid">
-            {inventory.map((card) => (
-              <div
-                key={card.id}
-                className="card-item"
-                style={{ background: getCardColor(card.type) }}
-                onClick={() => handleCardClick(card)}
-              >
-                <div style={{ marginBottom: '8px' }}>
-                  {getCardIcon(card.type)}
+            {inventory
+              .filter(card => {
+                // Filter out cards that require game selection if the setting is enabled
+                if (gameSelectionCardsHidden && card.requiresGameSelection) {
+                  return false;
+                }
+                return true;
+              })
+              .map((card) => (
+                <div
+                  key={card.id}
+                  className="card-item"
+                  style={{ background: getCardColor(card.type) }}
+                  onClick={() => handleCardClick(card)}
+                >
+                  <div style={{ marginBottom: '8px' }}>
+                    {getCardIcon(card.type)}
+                  </div>
+                  <div className="card-name">{card.name}</div>
+                  <div className="card-type">{card.type}</div>
+                  <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '8px' }}>
+                    {card.effect}
+                  </div>
                 </div>
-                <div className="card-name">{card.name}</div>
-                <div className="card-type">{card.type}</div>
-                <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '8px' }}>
-                  {card.effect}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>

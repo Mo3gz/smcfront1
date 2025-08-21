@@ -1527,6 +1527,7 @@ const CountryManagement = ({ teams, socket }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOwnership, setFilterOwnership] = useState('all'); // all, owned, unowned
   const [fiftyCoinsCountriesHidden, setFiftyCoinsCountriesHidden] = useState(false);
+  const [gameSelectionCardsHidden, setGameSelectionCardsHidden] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [newOwnerId, setNewOwnerId] = useState('');
   
@@ -1580,10 +1581,20 @@ const CountryManagement = ({ teams, socket }) => {
     }
   }, []);
 
+  const fetchGameSelectionCardsVisibilityState = useCallback(async () => {
+    try {
+      const response = await api.get(`/api/admin/cards/game-selection-status`);
+      setGameSelectionCardsHidden(response.data.hidden);
+    } catch (error) {
+      console.error('Error fetching game selection cards visibility state:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCountries();
     fetchFiftyCoinsVisibilityState();
-  }, [fetchCountries, fetchFiftyCoinsVisibilityState]);
+    fetchGameSelectionCardsVisibilityState();
+  }, [fetchCountries, fetchFiftyCoinsVisibilityState, fetchGameSelectionCardsVisibilityState]);
 
   // Listen for global 50 coins visibility updates
   useEffect(() => {
@@ -1594,8 +1605,15 @@ const CountryManagement = ({ teams, socket }) => {
         toast.info(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'} globally`);
       });
 
+      socket.on('game-selection-cards-visibility-update', (data) => {
+        console.log('📡 Global game selection cards visibility update received:', data);
+        setGameSelectionCardsHidden(data.hidden);
+        toast.info(`Game selection cards are now ${data.hidden ? 'hidden' : 'visible'} globally`);
+      });
+
       return () => {
         socket.off('fifty-coins-countries-visibility-update');
+        socket.off('game-selection-cards-visibility-update');
       };
     }
   }, [socket]);
@@ -1769,6 +1787,21 @@ const CountryManagement = ({ teams, socket }) => {
     }
   };
 
+  const handleToggleGameSelectionCardsVisibility = async () => {
+    try {
+      const response = await api.post(`/api/admin/cards/toggle-game-selection`, {
+        hidden: !gameSelectionCardsHidden
+      });
+      
+      console.log('Global game selection cards visibility toggle response:', response.data);
+      setGameSelectionCardsHidden(!gameSelectionCardsHidden);
+      toast.success(response.data.message);
+    } catch (error) {
+      console.error('Error toggling game selection cards visibility:', error);
+      toast.error(error.response?.data?.error || 'Failed to toggle game selection cards visibility');
+    }
+  };
+
   // Filter countries based on search and ownership filter
   const filteredCountries = countries.filter(country => {
     const matchesSearch = country.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -1882,6 +1915,36 @@ const CountryManagement = ({ teams, socket }) => {
             }}
           >
             {fiftyCoinsCountriesHidden ? 'Show 50 Kaizen Countries' : 'Hide 50 Kaizen Countries'}
+          </button>
+        </div>
+        <div style={{ minWidth: '150px', display: 'flex', flexDirection: 'column', alignItems: 'end' }}>
+          <div style={{ 
+            fontSize: '12px', 
+            marginBottom: '4px',
+            padding: '2px 8px',
+            backgroundColor: gameSelectionCardsHidden ? '#dc3545' : '#28a745',
+            color: 'white',
+            borderRadius: '4px',
+            fontWeight: '600'
+          }}>
+            Game Selection Cards Status: {gameSelectionCardsHidden ? 'Hidden' : 'Visible'}
+          </div>
+          <button
+            onClick={handleToggleGameSelectionCardsVisibility}
+            className="btn"
+            style={{
+              backgroundColor: gameSelectionCardsHidden ? '#dc3545' : '#28a745',
+              color: 'white',
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            {gameSelectionCardsHidden ? 'Show Game Selection Cards' : 'Hide Game Selection Cards'}
           </button>
         </div>
       </div>
