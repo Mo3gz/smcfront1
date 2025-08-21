@@ -11,37 +11,6 @@ console.log('🔧 Hostname:', window.location.hostname);
 console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
 
-// Helper function to ensure Safari username is always available
-const ensureSafariUsername = () => {
-  const userAgent = navigator.userAgent;
-  const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
-  
-  if (isSafari) {
-    let username = localStorage.getItem('safariUsername');
-    
-    // If no Safari username, try to get it from user object
-    if (!username) {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          if (user.username) {
-            username = user.username;
-            localStorage.setItem('safariUsername', username);
-            console.log('🦁 Safari username restored from user object:', username);
-          }
-        } catch (e) {
-          console.log('🦁 Safari username restoration failed:', e);
-        }
-      }
-    }
-    
-    return username;
-  }
-  
-  return null;
-};
-
 // Create axios instance with mobile-friendly configuration
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -78,12 +47,10 @@ api.interceptors.request.use(
     const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
     
     if (isSafari) {
-      const username = ensureSafariUsername();
-      if (username) {
-        config.headers['x-username'] = username;
-        console.log('🦁 Safari API interceptor added username to request:', username, 'URL:', config.url);
-      } else {
-        console.log('🦁 Safari detected but no username available for request');
+      const storedUsername = localStorage.getItem('safariUsername');
+      if (storedUsername && !config.headers['x-username']) {
+        config.headers['x-username'] = storedUsername;
+        console.log('🦁 Safari API interceptor added username to request:', storedUsername);
       }
     }
     
@@ -112,20 +79,6 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired or invalid
       console.log('Token expired or invalid - attempting to refresh authentication');
-      
-      // For Safari, try to restore username and retry the request
-      const userAgent = navigator.userAgent;
-      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
-      
-      if (isSafari) {
-        const username = ensureSafariUsername();
-        if (username) {
-          console.log('🦁 Safari 401 recovery: username restored, retrying request');
-          // Retry the request with the restored username
-          error.config.headers['x-username'] = username;
-          return api.request(error.config);
-        }
-      }
       
       // Don't immediately clear everything - let the auth context handle it
       // Only clear if this is not an auth check request itself

@@ -92,7 +92,22 @@ const UserDashboard = ({ socket }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // First fetch user's team settings
+        // Fetch mining information
+        const miningResponse = await fetch(`${API_BASE_URL}/api/mining/info`, {
+          credentials: 'include',
+        });
+        
+        if (miningResponse.ok) {
+          const miningData = await miningResponse.json();
+          setUserData(prev => ({
+            ...prev,
+            miningRate: miningData.miningRate,
+            totalMined: miningData.totalMined,
+            lastMined: miningData.lastMined
+          }));
+        }
+
+        // Fetch user's team settings
         const userResponse = await fetch(`${API_BASE_URL}/api/user`, {
           credentials: 'include',
         });
@@ -117,22 +132,6 @@ const UserDashboard = ({ socket }) => {
             }
           }));
         }
-
-        // Then fetch mining information (after user data is loaded)
-        const miningResponse = await fetch(`${API_BASE_URL}/api/mining/info`, {
-          credentials: 'include',
-        });
-        
-        if (miningResponse.ok) {
-          const miningData = await miningResponse.json();
-          console.log('⛏️ Fetched mining info:', miningData);
-          setUserData(prev => ({
-            ...prev,
-            miningRate: miningData.miningRate || 0,
-            totalMined: miningData.totalMined || 0,
-            lastMined: miningData.lastMined
-          }));
-        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -143,66 +142,9 @@ const UserDashboard = ({ socket }) => {
     }
   }, [user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Refresh mining rate after a short delay to ensure all data is loaded
-  useEffect(() => {
-    if (user.id && userData?.id) {
-      const timer = setTimeout(() => {
-        console.log('⏰ Refreshing mining rate after delay...');
-        refreshMiningRate();
-      }, 1000); // 1 second delay
-      
-      return () => clearTimeout(timer);
-    }
-  }, [user.id, userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const handleLogout = async () => {
     await logout();
     toast.success('Logged out successfully');
-  };
-
-  // Function to refresh mining rate
-  const refreshMiningRate = async () => {
-    try {
-      console.log('🔄 Refreshing mining rate...');
-      
-      // First refresh user data to ensure we have the latest info
-      const userResponse = await fetch(`${API_BASE_URL}/api/user`, {
-        credentials: 'include',
-      });
-      
-      if (userResponse.ok) {
-        const userProfile = await userResponse.json();
-        setUserData(prev => ({
-          ...prev,
-          ...userProfile
-        }));
-      }
-      
-      // Then fetch mining information
-      const miningResponse = await fetch(`${API_BASE_URL}/api/mining/info`, {
-        credentials: 'include',
-      });
-      
-      if (miningResponse.ok) {
-        const miningData = await miningResponse.json();
-        console.log('⛏️ Refreshed mining info:', miningData);
-        setUserData(prev => ({
-          ...prev,
-          miningRate: miningData.miningRate || 0,
-          totalMined: miningData.totalMined || 0,
-          lastMined: miningData.lastMined
-        }));
-        
-        if (miningData.miningRate > 0) {
-          toast.success(`Mining rate updated: ${miningData.miningRate} kaizen/hr`);
-        } else {
-          toast.info('No countries owned yet. Buy countries to start mining!');
-        }
-      }
-    } catch (error) {
-      console.error('Error refreshing mining rate:', error);
-      toast.error('Failed to refresh mining rate');
-    }
   };
 
   const renderContent = () => {
@@ -286,26 +228,6 @@ const UserDashboard = ({ socket }) => {
                 {userData?.miningRate || 0}
               </div>
               <div className="mining-stat-label">Mining Rate (kaizen/hr)</div>
-              {userData?.miningRate === 0 && (
-                <div style={{ 
-                  fontSize: '10px', 
-                  color: '#ff9800', 
-                  marginTop: '2px',
-                  cursor: 'pointer'
-                }} onClick={refreshMiningRate} title="Click to refresh mining rate">
-                  🔄 Refresh
-                </div>
-              )}
-              {userData?.miningRate === 0 && (
-                <div style={{ 
-                  fontSize: '9px', 
-                  color: '#999', 
-                  marginTop: '1px',
-                  fontStyle: 'italic'
-                }}>
-                  Buy countries to start mining!
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -338,11 +260,7 @@ const UserDashboard = ({ socket }) => {
           </div>
           <div 
             className={`nav-item ${activeTab === 'map' ? 'active' : ''}`}
-            onClick={() => {
-              setActiveTab('map');
-              // Refresh mining rate when navigating to map since it seems to fix the issue
-              setTimeout(() => refreshMiningRate(), 500);
-            }}
+            onClick={() => setActiveTab('map')}
           >
             <Map className="nav-icon" />
             <span className="nav-text">Map</span>
