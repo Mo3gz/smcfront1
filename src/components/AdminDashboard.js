@@ -151,6 +151,7 @@ const AdminDashboard = ({ socket }) => {
         console.log('🎯 Rendering AdminGameSchedule component');
         return <AdminGameSchedule />;
       case 'notification-settings':
+        console.log('🔔 Rendering NotificationSettings component');
         return <NotificationSettings />;
 
       default:
@@ -3061,6 +3062,8 @@ const GameManagement = ({ socket }) => {
 
 // Notification Settings Component
 const NotificationSettings = () => {
+  console.log('🔔 NotificationSettings component mounted');
+  
   const [notificationSettings, setNotificationSettings] = useState({
     promocodes: true,
     countryPurchases: true,
@@ -3075,12 +3078,18 @@ const NotificationSettings = () => {
   useEffect(() => {
     const fetchNotificationSettings = async () => {
       try {
+        console.log('🔔 Fetching notification settings...');
         const response = await api.get('/api/admin/notification-settings');
+        console.log('🔔 Notification settings response:', response.data);
         if (response.data.success) {
           setNotificationSettings(response.data.notifications);
+          console.log('✅ Notification settings loaded:', response.data.notifications);
+        } else {
+          console.error('❌ Notification settings response not successful:', response.data);
+          toast.error('Failed to load notification settings');
         }
       } catch (error) {
-        console.error('Error fetching notification settings:', error);
+        console.error('❌ Error fetching notification settings:', error);
         toast.error('Failed to fetch notification settings');
       }
     };
@@ -3091,18 +3100,25 @@ const NotificationSettings = () => {
   // Handle notification setting toggle
   const handleNotificationToggle = async (notificationType, enabled) => {
     try {
+      console.log(`🔔 Toggling notification setting: ${notificationType} = ${enabled}`);
       setLoading(true);
       const response = await api.post('/api/admin/notification-settings', {
         notificationType,
         enabled
       });
       
+      console.log('🔔 Toggle response:', response.data);
+      
       if (response.data.success) {
         setNotificationSettings(response.data.notifications);
         toast.success(response.data.message);
+        console.log('✅ Notification setting updated successfully');
+      } else {
+        console.error('❌ Toggle response not successful:', response.data);
+        toast.error('Failed to update notification setting');
       }
     } catch (error) {
-      console.error('Error updating notification setting:', error);
+      console.error('❌ Error updating notification setting:', error);
       toast.error('Failed to update notification setting');
     } finally {
       setLoading(false);
