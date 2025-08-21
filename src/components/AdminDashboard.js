@@ -1026,22 +1026,6 @@ const AdminNotifications = ({ notifications, fetchNotifications }) => {
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {/* Status Indicator */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      backgroundColor: notificationStates[notification.id] ? '#f0fdf4' : '#fef2f2',
-                      border: `1px solid ${notificationStates[notification.id] ? '#bbf7d0' : '#fecaca'}`,
-                      fontSize: '11px',
-                      color: notificationStates[notification.id] ? '#166534' : '#dc2626'
-                    }}>
-                      <span>{notificationStates[notification.id] ? '🔔' : '🔕'}</span>
-                      {notificationStates[notification.id] ? 'Active' : 'Disabled'}
-                    </div>
-                    
                     {/* Toggle Button */}
                     <button
                       onClick={() => handleToggleNotification(notification.id, notificationStates[notification.id])}
