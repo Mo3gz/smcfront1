@@ -10,7 +10,8 @@ import {
   LogOut,
   Map,
   Gamepad2,
-  Calendar
+  Calendar,
+  Bell
 } from 'lucide-react';
 import api from '../utils/api';
 
@@ -149,6 +150,8 @@ const AdminDashboard = ({ socket }) => {
       case 'matchups':
         console.log('🎯 Rendering AdminGameSchedule component');
         return <AdminGameSchedule />;
+      case 'notification-settings':
+        return <NotificationSettings />;
 
       default:
         return <PromoCodes teams={teams} socket={socket} />;
@@ -173,6 +176,59 @@ const AdminDashboard = ({ socket }) => {
 
   return (
     <div className="container">
+      <style>
+        {`
+          .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+          }
+          
+          .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+          }
+          
+          .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+          }
+          
+          .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+          }
+          
+          input:checked + .toggle-slider {
+            background-color: #2196F3;
+          }
+          
+          input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+          }
+          
+          input:disabled + .toggle-slider {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+        `}
+      </style>
       <div className="header">
         <div className="user-info" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
           <div>
@@ -224,6 +280,13 @@ const AdminDashboard = ({ socket }) => {
           >
             <Settings className="nav-icon" />
             <span className="nav-text">Notifications</span>
+          </div>
+          <div 
+            className={`nav-item ${activeTab === 'notification-settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('notification-settings')}
+          >
+            <Bell className="nav-icon" />
+            <span className="nav-text">Notification Settings</span>
           </div>
           <div 
             className={`nav-item ${activeTab === 'scoreboard' ? 'active' : ''}`}
@@ -2995,6 +3058,120 @@ const GameManagement = ({ socket }) => {
 
 
 
+
+// Notification Settings Component
+const NotificationSettings = () => {
+  const [notificationSettings, setNotificationSettings] = useState({
+    promocodes: true,
+    countryPurchases: true,
+    spinResults: true,
+    adminActions: true,
+    teamUpdates: true,
+    gameSchedule: true
+  });
+  const [loading, setLoading] = useState(false);
+
+  // Fetch notification settings
+  useEffect(() => {
+    const fetchNotificationSettings = async () => {
+      try {
+        const response = await api.get('/api/admin/notification-settings');
+        if (response.data.success) {
+          setNotificationSettings(response.data.notifications);
+        }
+      } catch (error) {
+        console.error('Error fetching notification settings:', error);
+        toast.error('Failed to fetch notification settings');
+      }
+    };
+
+    fetchNotificationSettings();
+  }, []);
+
+  // Handle notification setting toggle
+  const handleNotificationToggle = async (notificationType, enabled) => {
+    try {
+      setLoading(true);
+      const response = await api.post('/api/admin/notification-settings', {
+        notificationType,
+        enabled
+      });
+      
+      if (response.data.success) {
+        setNotificationSettings(response.data.notifications);
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error updating notification setting:', error);
+      toast.error('Failed to update notification setting');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const notificationTypes = [
+    { key: 'promocodes', label: 'Promocode Operations', description: 'Promocode creation, assignment, and updates' },
+    { key: 'countryPurchases', label: 'Country Purchases', description: 'Country buying, selling, and ownership changes' },
+    { key: 'spinResults', label: 'Spin Results', description: 'Spin game results and rewards' },
+    { key: 'adminActions', label: 'Admin Actions', description: 'Administrative operations and changes' },
+    { key: 'teamUpdates', label: 'Team Updates', description: 'Team information and status changes' },
+    { key: 'gameSchedule', label: 'Game Schedule', description: 'Game schedule modifications and updates' }
+  ];
+
+  return (
+    <div className="card">
+      <div style={{ marginBottom: '24px' }}>
+        <h3>Notification Settings</h3>
+        <p style={{ color: '#666', margin: '8px 0 0 0' }}>
+          Control which types of notifications are sent to admins. These settings only affect admin notifications.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+        {notificationTypes.map(({ key, label, description }) => (
+          <div 
+            key={key}
+            style={{ 
+              padding: '20px', 
+              border: '1px solid #ddd', 
+              borderRadius: '8px', 
+              background: '#fff',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>{label}</h4>
+                <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>{description}</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={notificationSettings[key]}
+                  onChange={(e) => handleNotificationToggle(key, e.target.checked)}
+                  disabled={loading}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+        <h4 style={{ marginBottom: '12px', color: '#4facfe' }}>ℹ️ Information</h4>
+        <ul style={{ margin: 0, paddingLeft: '20px', color: '#666', fontSize: '14px' }}>
+          <li>These settings control which notifications are sent to <strong>admins only</strong></li>
+          <li>Users cannot see or control these notification settings</li>
+          <li>Changes take effect immediately</li>
+          <li>All settings are saved to the database automatically</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
 
 // Admin Game Schedule Management Component
 const AdminGameSchedule = () => {
