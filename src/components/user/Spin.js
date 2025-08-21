@@ -33,6 +33,7 @@ const Spin = ({ socket, userData, setUserData }) => {
   // Spin limitation states
   const [spinLimitations, setSpinLimitations] = useState({});
   const [spinCounts, setSpinCounts] = useState({ lucky: 0, gamehelper: 0, challenge: 0, hightier: 0, lowtier: 0, random: 0 });
+  const [cardProgress, setCardProgress] = useState({});
 
   useEffect(() => {
     // Update final cost when spinType or discount changes
@@ -122,6 +123,26 @@ const Spin = ({ socket, userData, setUserData }) => {
         console.log('📡 Team settings update socket event received:', data);
         console.log('📡 Current userData ID:', userData?.id);
         console.log('📡 Event user ID:', data.userId);
+        
+        if (data.userId === userData?.id) {
+          // Refresh card progress when team settings are updated
+          const fetchCardProgress = async () => {
+            const progressData = {};
+            
+            for (const spinType of ['lucky', 'gamehelper', 'challenge', 'hightier', 'lowtier']) {
+              try {
+                const response = await api.get(`/api/cards/progress/${spinType}`);
+                progressData[spinType] = response.data;
+              } catch (error) {
+                console.error(`Error fetching card progress for ${spinType}:`, error);
+              }
+            }
+            
+            setCardProgress(progressData);
+          };
+          
+          fetchCardProgress();
+        }
         
         if (data.userId === userData?.id) {
           console.log('🔄 Team settings updated via socket:', data.teamSettings);
@@ -285,6 +306,39 @@ const Spin = ({ socket, userData, setUserData }) => {
     return `Available (${current}/${limit})`;
   }, [spinLimitations, spinCounts]);
 
+  // Fetch card progress for all spin types
+  useEffect(() => {
+    const fetchCardProgress = async () => {
+      const progressData = {};
+      
+      for (const spinType of ['lucky', 'gamehelper', 'challenge', 'hightier', 'lowtier']) {
+        try {
+          const response = await api.get(`/api/cards/progress/${spinType}`);
+          progressData[spinType] = response.data;
+        } catch (error) {
+          console.error(`Error fetching card progress for ${spinType}:`, error);
+          // Fallback to local calculation if API fails
+          const receivedCards = userData?.teamSettings?.receivedCards || {};
+          const receivedCardsForType = receivedCards[spinType] || [];
+          const collectedCards = receivedCardsForType.length;
+          
+          progressData[spinType] = {
+            collected: collectedCards,
+            total: 0,
+            remaining: 0,
+            percentage: 0
+          };
+        }
+      }
+      
+      setCardProgress(progressData);
+    };
+    
+    if (userData?.id) {
+      fetchCardProgress();
+    }
+  }, [userData?.id, userData?.teamSettings?.receivedCards]);
+
   // Memoized function to get card collection progress
   const getCardCollectionProgress = useCallback((spinId) => {
     // Random spin type has no card collection tracking
@@ -297,29 +351,13 @@ const Spin = ({ socket, userData, setUserData }) => {
       };
     }
     
-    const receivedCards = userData?.teamSettings?.receivedCards || {};
-    const receivedCardsForType = receivedCards[spinId] || [];
-    
-    // Get total cards for this spin type
-    const spinTypes = {
-      lucky: 4,
-      gamehelper: 4,
-      challenge: 4,
-      hightier: 2,
-      lowtier: 3,
-      random: 0 // Random has no collection tracking
+    return cardProgress[spinId] || {
+      collected: 0,
+      total: 0,
+      remaining: 0,
+      percentage: 0
     };
-    
-    const totalCards = spinTypes[spinId] || 0;
-    const collectedCards = receivedCardsForType.length;
-    
-    return {
-      collected: collectedCards,
-      total: totalCards,
-      remaining: totalCards - collectedCards,
-      percentage: totalCards > 0 ? Math.round((collectedCards / totalCards) * 100) : 0
-    };
-  }, [userData?.teamSettings?.receivedCards]);
+  }, [cardProgress]);
 
   const handleSpin = async () => {
     if (spinning) return;

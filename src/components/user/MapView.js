@@ -234,12 +234,8 @@ const MapView = ({ userData, setUserData, socket }) => {
         );
       }
       
-      // Show detailed breakdown in toast
-      const breakdown = response.data.countriesWithEarnings?.map(c => 
-        `${c.countryName}: ${c.earned} kaizen`
-      ).join(', ');
-      
-              toast.success(`Successfully mined ${response.data.earned} kaizen! ${breakdown ? `(${breakdown})` : ''}`);
+      // Show only total amount in toast
+      toast.success(`Successfully mined ${response.data.earned} kaizen!`);
     } catch (error) {
               toast.error(error.response?.data?.error || 'Failed to collect kaizen');
     }

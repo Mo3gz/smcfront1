@@ -150,15 +150,7 @@ const AdminDashboard = ({ socket }) => {
         return <GameManagement />;
       case 'matchups':
         console.log('🎯 Rendering AdminGameSchedule component');
-        return (
-          <div style={{ padding: '20px', border: '2px solid red' }}>
-    
-            <p>If you see this, the routing is working!</p>
-            <button onClick={() => alert('Button clicked!')}>Test Button</button>
-            <hr />
-            <AdminGameSchedule />
-          </div>
-        );
+        return <AdminGameSchedule />;
       case 'statistics':
         return <StatisticsView />;
       default:
@@ -2370,12 +2362,15 @@ const CountryManagement = ({ teams, socket }) => {
 };
 
 // Game Management Component
-const GameManagement = () => {
+const GameManagement = ({ socket }) => {
   const [gameSettings, setGameSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newGameName, setNewGameName] = useState('');
   const [addingGame, setAddingGame] = useState(false);
+  const [activeContentSet, setActiveContentSet] = useState('default');
+  const [availableContentSets, setAvailableContentSets] = useState([]);
+  const [contentSetsLoading, setContentSetsLoading] = useState(true);
 
 
 
@@ -2436,6 +2431,34 @@ const GameManagement = () => {
       setLoading(false);
     }
   }, []);
+
+  const fetchContentSets = useCallback(async () => {
+    try {
+      setContentSetsLoading(true);
+      const response = await api.get(`/api/admin/content-sets`);
+      setAvailableContentSets(response.data.availableContentSets);
+      setActiveContentSet(response.data.currentActiveSet);
+    } catch (error) {
+      console.error('Error fetching content sets:', error);
+      toast.error('Failed to fetch content sets');
+    } finally {
+      setContentSetsLoading(false);
+    }
+  }, []);
+
+  const handleChangeActiveContent = async (contentSetId) => {
+    try {
+      const response = await api.post(`/api/admin/active-content`, {
+        contentSet: contentSetId
+      });
+      
+      setActiveContentSet(contentSetId);
+      toast.success(response.data.message);
+    } catch (error) {
+      console.error('Error changing active content:', error);
+      toast.error('Failed to change active content set');
+    }
+  };
 
   useEffect(() => {
     fetchGameSettings();
