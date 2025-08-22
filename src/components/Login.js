@@ -141,7 +141,7 @@ const Login = () => {
     <div className="container">
       <div className="page-content">
         <div className="header">
-          <h1>Saint Paula Sports Team</h1>
+          <h1>Saint Paul Sports Team</h1>
           <p>Team Competition Platform</p>
         </div>
 
