@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Coins, Hammer } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../../utils/api';
 
@@ -8,7 +8,6 @@ const MapView = ({ userData, setUserData, socket }) => {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ open: false, country: null });
-  const [collecting, setCollecting] = useState(false);
 
   const recalculateMiningRate = useCallback((currentCountries = countries) => {
     if (userData?.id) {
@@ -86,70 +85,6 @@ const MapView = ({ userData, setUserData, socket }) => {
     }
   }, [userData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle collect coins
-  const handleCollectCoins = async () => {
-    if (collecting) return;
-    
-    setCollecting(true);
-    try {
-      // Safari-specific authentication
-      const userAgent = navigator.userAgent;
-      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
-      const config = { withCredentials: true };
-      
-      if (isSafari) {
-        const storedUsername = localStorage.getItem('safariUsername');
-        if (storedUsername) {
-          config.headers = { 'x-username': storedUsername };
-          console.log('🦁 Collect Coins: Adding Safari username:', storedUsername);
-        }
-      }
-      
-      const response = await api.post(`/api/mining/collect`, {}, config);
-      
-      // Update user data with new coins and total mined
-      setUserData(prev => ({
-        ...prev,
-        coins: response.data.newCoins,
-        totalMined: response.data.totalMined,
-        lastMined: response.data.collectionTime
-      }));
-      
-      toast.success(`Successfully collected ${response.data.earned} coins!`);
-      
-      // Refresh countries to update lastMined timestamps
-      fetchCountries();
-      
-    } catch (error) {
-      console.error('Collect coins error:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to collect coins';
-      toast.error(errorMessage);
-    } finally {
-      setCollecting(false);
-    }
-  };
-
-  // Calculate time until next collection
-  const getTimeUntilNextCollection = () => {
-    if (!userData?.lastMined) return null;
-    
-    const lastMined = new Date(userData.lastMined);
-    const now = new Date();
-    const timeDiff = now - lastMined;
-    const minutesDiff = Math.floor(timeDiff / (1000 * 60));
-    
-    // If less than 1 hour has passed, show remaining time
-    if (minutesDiff < 60) {
-      const remainingMinutes = 60 - minutesDiff;
-      return remainingMinutes;
-    }
-    
-    return 0; // Ready to collect
-  };
-
-  const timeUntilNext = getTimeUntilNextCollection();
-  const canCollect = timeUntilNext === 0;
-
         // Listen for real-time country updates
       useEffect(() => {
         if (socket) {
@@ -188,7 +123,7 @@ const MapView = ({ userData, setUserData, socket }) => {
       // Listen for global 50 coins countries visibility updates
       socket.on('fifty-coins-countries-visibility-update', (data) => {
         console.log('📡 Global 50 coins visibility update received:', data);
-        toast(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'}`, {
+        toast.info(`50 kaizen countries are now ${data.hidden ? 'hidden' : 'visible'}`, {
           duration: 3000,
           icon: data.hidden ? '👁️‍🗨️' : '👁️',
         });
@@ -274,7 +209,66 @@ const MapView = ({ userData, setUserData, socket }) => {
     }
   };
 
+  const handleCollectCoins = async () => {
+    try {
+      const response = await api.post(`/api/mining/collect`, {});
+      
+      // Update user data with new values
+      setUserData(prev => ({
+        ...prev,
+        coins: response.data.newCoins,
+        totalMined: response.data.totalMined,
+        lastMined: new Date().toISOString() // Update lastMined for display
+      }));
+      
+      // Update countries list to reflect new lastMined timestamps
+      if (response.data.countriesWithEarnings) {
+        setCountries(prev =>
+          prev.map(country => {
+            const earningCountry = response.data.countriesWithEarnings.find(c => c.countryId === country.id);
+            if (earningCountry) {
+              return { ...country, lastMined: new Date().toISOString() };
+            }
+            return country;
+          })
+        );
+      }
+      
+      // Show detailed breakdown in toast
+      const breakdown = response.data.countriesWithEarnings?.map(c => 
+        `${c.countryName}: ${c.earned} kaizen`
+      ).join(', ');
+      
+      toast.success(`Successfully mined ${response.data.earned} kaizen! ${breakdown ? `(${breakdown})` : ''}`);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to collect kaizen');
+    }
+  };
 
+  // Calculate next collection time
+  const getNextCollectionTime = () => {
+    if (!userData?.lastMined || !userData?.miningRate) return null;
+    
+    const lastMined = new Date(userData.lastMined);
+    const now = new Date();
+    const elapsedMinutes = Math.floor((now - lastMined) / (1000 * 60));
+    
+    // Calculate minutes until next collection
+    // miningRate is per hour, so we need 60 minutes to earn 1 coin
+    const minutesPerCoin = 60 / userData.miningRate;
+    const minutesUntilNext = Math.max(0, minutesPerCoin - elapsedMinutes);
+    
+    if (minutesUntilNext === 0) return 'Ready to collect!';
+    
+    const hours = Math.floor(minutesUntilNext / 60);
+    const minutes = minutesUntilNext % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m until next collection`;
+    } else {
+      return `${minutes}m until next collection`;
+    }
+  };
 
   const getCountryColor = (country) => {
     if (country.owner === userData.id) {
@@ -359,78 +353,26 @@ const MapView = ({ userData, setUserData, socket }) => {
           </div>
         </div>
 
-        {/* Collect Coins Section */}
-        {userData?.miningRate > 0 && (
-          <div style={{ 
-            marginBottom: '24px', 
-            padding: '20px', 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-            borderRadius: '16px',
-            color: 'white',
-            textAlign: 'center'
-          }}>
-            <div style={{ marginBottom: '16px' }}>
-              <Hammer size={32} style={{ marginBottom: '8px' }} />
-              <h3 style={{ margin: '8px 0', fontSize: '18px' }}>Mining Operations</h3>
-              <div style={{ fontSize: '14px', opacity: 0.9 }}>
-                Current Mining Rate: <strong>{userData.miningRate}</strong> kaizen/hour
-              </div>
+        {/* Collect Coins Button */}
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <button 
+            className="mining-button"
+            onClick={handleCollectCoins}
+            disabled={countries.filter(c => c.owner === userData?.id).length === 0}
+          >
+            ⛏️ Collect Kaizen
+          </button>
+          {userData?.lastMined && (
+            <div className="last-collected">
+              Last collected: {new Date(userData.lastMined).toLocaleString()}
             </div>
-            
-            <button
-              onClick={handleCollectCoins}
-              disabled={collecting || !canCollect}
-              style={{
-                background: canCollect ? '#4CAF50' : '#ccc',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '12px 24px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: canCollect && !collecting ? 'pointer' : 'not-allowed',
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                margin: '0 auto'
-              }}
-            >
-              {collecting ? (
-                <div className="spinner" style={{ width: '20px', height: '20px' }}></div>
-              ) : (
-                <>
-                  <Coins size={20} />
-                  {canCollect ? 'Collect Coins' : 'Collecting...'}
-                </>
-              )}
-            </button>
-            
-            {!canCollect && timeUntilNext && (
-              <div style={{ 
-                marginTop: '12px', 
-                fontSize: '14px', 
-                opacity: 0.8,
-                background: 'rgba(255, 255, 255, 0.2)',
-                padding: '8px 16px',
-                borderRadius: '8px',
-                display: 'inline-block'
-              }}>
-                ⏰ Next collection available in {timeUntilNext} minutes
-              </div>
-            )}
-            
-            {userData?.lastMined && (
-              <div style={{ 
-                marginTop: '12px', 
-                fontSize: '12px', 
-                opacity: 0.7 
-              }}>
-                Last collected: {new Date(userData.lastMined).toLocaleString()}
-              </div>
-            )}
-          </div>
-        )}
+          )}
+          {getNextCollectionTime() && (
+            <div className="next-collection-time">
+              {getNextCollectionTime()}
+            </div>
+          )}
+        </div>
 
         <div className="map-grid">
           {countries.filter(country => country.isVisible !== false).map((country) => (
@@ -500,9 +442,8 @@ const MapView = ({ userData, setUserData, socket }) => {
           <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
             <p><strong>Buy Countries:</strong> Spend kaizen to own countries and gain their score points</p>
             <p><strong>Score Boost:</strong> Each country gives you bonus points for the scoreboard</p>
-            <p><strong>Mining:</strong> Owned countries generate kaizen automatically - collect them regularly!</p>
             <p><strong>Exclusive:</strong> Once owned, a country cannot be bought by other teams</p>
-            <p><strong>Strategy:</strong> Choose wisely - expensive countries give more points and mining rates!</p>
+            <p><strong>Strategy:</strong> Choose wisely - expensive countries give more points!</p>
           </div>
         </div>
       </div>
