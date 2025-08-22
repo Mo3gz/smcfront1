@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Coins, Pickaxe } from 'lucide-react';
+import { Coins, Hammer } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../../utils/api';
 
@@ -370,7 +370,7 @@ const MapView = ({ userData, setUserData, socket }) => {
             textAlign: 'center'
           }}>
             <div style={{ marginBottom: '16px' }}>
-              <Pickaxe size={32} style={{ marginBottom: '8px' }} />
+              <Hammer size={32} style={{ marginBottom: '8px' }} />
               <h3 style={{ margin: '8px 0', fontSize: '18px' }}>Mining Operations</h3>
               <div style={{ fontSize: '14px', opacity: 0.9 }}>
                 Current Mining Rate: <strong>{userData.miningRate}</strong> kaizen/hour
