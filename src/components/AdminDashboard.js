@@ -1043,7 +1043,7 @@ const AdminNotifications = ({ notifications, fetchNotifications }) => {
                       }}
                       title={notificationStates[notification.id] ? 'Click to disable' : 'Click to enable'}
                     >
-                      {notificationStates[notification.id] ? '❌ Disable' : '✅ Enable'}
+                      {notificationStates[notification.id] ? '❌ Lesa M3mlte4 Action Ya anna' : '✅ Done'}
                     </button>
                     
                     <div style={{ 
