@@ -9,20 +9,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const { login, testAuth } = useAuth();
-
-  // Auto sign-in credentials
-  const autoSignInCredentials = [
-    { username: 'ayman', password: '20011126', role: 'Admin' },
-    { username: 'Team1', password: 'SunFlower92', role: 'Team 1' },
-    { username: 'Team2', password: 'BlueMoon87', role: 'Team 2' },
-    { username: 'Team3', password: 'RedRocket45', role: 'Team 3' },
-    { username: 'Team4', password: 'GreenTree33', role: 'Team 4' },
-    { username: 'Team5', password: 'PurpleCat76', role: 'Team 5' },
-    { username: 'Team6', password: 'OrangeFish28', role: 'Team 6' },
-    { username: 'Team7', password: 'YellowBird61', role: 'Team 7' },
-    { username: 'Team8', password: 'PinkStar84', role: 'Team 8' }
-  ];
+  const { login } = useAuth();
 
   // Validation functions
   const validateUsername = (value) => {
@@ -69,15 +56,6 @@ const Login = () => {
       ...prev,
       password: error
     }));
-  };
-
-  // Quick login with auto sign-in credentials
-  const handleQuickLogin = async (credential) => {
-    setUsername(credential.username);
-    setPassword(credential.password);
-    setErrors({});
-    const formData = { username: credential.username, password: credential.password };
-    await handleLogin(formData);
   };
 
   // Main login handler
@@ -280,68 +258,6 @@ const Login = () => {
               )}
             </button>
           </form>
-
-          {/* Auto Sign-In Quick Login */}
-          <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(102, 126, 234, 0.1)', borderRadius: '12px' }}>
-            <h3 style={{ color: '#667eea', marginBottom: '12px', fontSize: '16px' }}>Quick Sign-In:</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
-              {autoSignInCredentials.map((credential, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleQuickLogin(credential)}
-                  disabled={loading}
-                  style={{
-                    padding: '10px 12px',
-                    background: 'white',
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: '12px',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    opacity: loading ? 0.6 : 1
-                  }}
-                  onMouseEnter={(e) => !loading && (e.target.style.background = '#f5f5f5')}
-                  onMouseLeave={(e) => !loading && (e.target.style.background = 'white')}
-                >
-                  <div style={{ fontWeight: 'bold', color: '#667eea', marginBottom: '2px' }}>
-                    {credential.role}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#666' }}>
-                    {credential.username}
-                  </div>
-                </button>
-              ))}
-            </div>
-            
-            {/* Debug Test Button */}
-            <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(255, 193, 7, 0.1)', borderRadius: '8px' }}>
-              <button
-                onClick={async () => {
-                  console.log('🧪 Testing authentication...');
-                  const result = await testAuth();
-                  console.log('🧪 Test result:', result);
-                  if (result.success) {
-                    toast.success('Auth test passed!');
-                  } else {
-                    toast.error('Auth test failed: ' + (result.message || result.error));
-                  }
-                }}
-                style={{
-                  padding: '8px 12px',
-                  background: '#ffc107',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  color: '#333',
-                  fontWeight: 'bold'
-                }}
-              >
-                🧪 Test Authentication
-              </button>
-            </div>
-          </div>
         </div>
       </div>
       
