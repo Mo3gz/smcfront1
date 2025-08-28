@@ -57,15 +57,15 @@ The application is designed to be intuitive and visually appealing. The mobile-f
 
 | Admin Scoreboard | Admin Countries Management | Admin Promocode Management | Admin Cards Management |
 | :---: | :---: | :---: | :---: |
-| \![Admin Scoreboard](Screenshots/Admin Scoreboard.jpg) | \![Admin Countries Management](Screenshots/Admin Countires Management.jpg) | \![Admin Promocode Management](Screenshots/Admin Promocode Management.jpg) | \![Admin Cards Management](Screenshots/Admin Cards Management.jpg) |
+| ![Admin Scoreboard](Screenshots/Admin Scoreboard.png) | ![Admin Countries Management](Screenshots/Admin Countires Management.png) | ![Admin Promocode Management](Screenshots/Admin Promocode Management.png) | ![Admin Cards Management](Screenshots/Admin Cards Management.png) |
 
 | Admin Games Management | Admin Game Schedule Management | Admin Notifications Management | Admin Spins Management |
 | :---: | :---: | :---: | :---: |
-| \![Admin Games Management](Screenshots/Admin Games Management.jpg) | \![Admin Game Schedule Management](Screenshots/Admin Games schedule Management.jpg) | \![Admin Notifications Management](Screenshots/Admin Notifications Management.jpg) | \![Admin Spins Management](Screenshots/Admin Spins Management.jpg) |
+| ![Admin Games Management](Screenshots/Admin Games Management.png) | ![Admin Game Schedule Management](Screenshots/Admin Games schedule Management.png) | ![Admin Notifications Management](Screenshots/Admin Notifications Management.png) | ![Admin Spins Management](Screenshots/Admin Spins Management.png) |
 
 | User Login | User Countries |
 | :---: | :---: |
-|  | \![User Countries](Screenshots/User Countries.jpg) |
+| ![User Login](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/CxJLVMm46wO0ejD1RnoMWp-images_1756382325358_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0xvZ2lu.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0N4SkxWTW00NndPMGVqRDFSbm9NV3AtaW1hZ2VzXzE3NTYzODIzMjUzNThfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwweHZaMmx1LnBuZyIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=s2JnhHQHZP8OI650ihPUyvzu95ECUbIbkMkmFjgHWs1n1axFBjcLHAeQdOQYuWBLB26DzyVrezUQsThFOKD5LJvAbD1aPCafWRsE0S8rJbnMHRXPbYGekNRu6r9W1CgFOh8W6G6LbDYFmqyw0ksOu~wzgh9i1bvQ~MTJYFEQuZYDzOeIG2IkJFH5ljZfc6YIbTQLLujRiCfseRBHMlwsjTgTaXPJp146emNb9fQKA-TJZ6bs0qi0MHE7vVXZ~r35JmHFAk-~sTq2lJhOFJcJhGZPf5~yjQKFx~9xLbnfA2rRzk3ADxAqdn~3TNLa9upFSitQDZrpkqYuwqq8vXDAxA__) | ![User Countries](Screenshots/User Countries.png) |
 
 -----
 
