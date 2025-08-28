@@ -1,8 +1,8 @@
 ### 🏆 Saint Paul Grand Game Scoring System Frontend
 
-Welcome to the official frontend repository for the Saint Paul Grand Game Scoring System\! This application is a dynamic, real-time platform designed to manage and enhance the team-based competition experience for volunteering camps. Built with a modern tech stack and a mobile-first philosophy, it serves as the central hub for team members and administrators, gamifying the entire event with live scoring, strategic card collection, and interactive challenges.
+Welcome to the official frontend repository for the Saint Paul Grand Game Scoring System! This application is a dynamic, real-time platform designed to manage and enhance the team-based competition experience for volunteering camps. Built with a modern tech stack and a mobile-first philosophy, it serves as the central hub for team members and administrators, gamifying the entire event with live scoring, strategic card collection, and interactive challenges.
 
------
+---
 
 ### ✨ Core Features
 
@@ -10,82 +10,81 @@ This application is built for both participants (Team Members) and event organiz
 
 #### **Team Member Features**
 
-  * **Live Scoreboard**: A real-time leader board that displays team rankings, scores, and currency (Kaizen) in an engaging format, with live visual cues for updates.
-  * **Dynamic Inventory**: A personal inventory system for collecting and using various "cards" earned through the game. Cards have unique effects categorized as:
-      * **Attack Cards**: Impact other teams' scores or resources.
-      * **Alliance Cards**: Facilitate collaboration and score boosts with other teams.
-      * **Luck Cards**: Offer personal advantages or special actions.
-  * **The Spin & Win System**: A central hub for earning new cards and resources. It features multiple spin types with varying costs and rewards, including:
-      * **Lucky Spin** for instant currency and gifts.
-      * **Game Helper** for strategic cards tied to specific games.
-      * **Challenge Spins** that present skill-based mini-games with timers, like "Speed Buy" or "Mystery Question (MCQ)".
-      * **High & Low Tier** options for premium and entry-level rewards.
-  * **Interactive World Map**: A visual representation of a world map where teams can "conquer" countries by spending Kaizen. Owning countries grants score points and a continuous mining rate of Kaizen.
-  * **Event Schedule**: A dedicated tab to view the camp's program and game schedules, including matchups and locations, keeping teams informed about upcoming activities.
+* **Live Scoreboard**: A real-time leader board that displays team rankings, scores, and currency (Kaizen) in an engaging format, with live visual cues for updates.
+* **Dynamic Inventory**: A personal inventory system for collecting and using various "cards" earned through the game. Cards have unique effects categorized as:
+
+  * **Attack Cards**: Impact other teams' scores or resources.
+  * **Alliance Cards**: Facilitate collaboration and score boosts with other teams.
+  * **Luck Cards**: Offer personal advantages or special actions.
+* **The Spin & Win System**: A central hub for earning new cards and resources. It features multiple spin types with varying costs and rewards, including:
+
+  * **Lucky Spin** for instant currency and gifts.
+  * **Game Helper** for strategic cards tied to specific games.
+  * **Challenge Spins** that present skill-based mini-games with timers, like "Speed Buy" or "Mystery Question (MCQ)".
+  * **High & Low Tier** options for premium and entry-level rewards.
+* **Interactive World Map**: A visual representation of a world map where teams can "conquer" countries by spending Kaizen. Owning countries grants score points and a continuous mining rate of Kaizen.
+* **Event Schedule**: A dedicated tab to view the camp's program and game schedules, including matchups and locations, keeping teams informed about upcoming activities.
 
 #### **Administrator Features**
 
-  * **Comprehensive Management Dashboard**: A centralized control panel for event organizers to oversee all game aspects.
-  * **Team & Score Management**: View and edit all team details, scores, and Kaizen balances.
-  * **Promo Code System**: Create and manage promo codes with custom discounts, assigning them to specific teams for strategic advantages.
-  * **Card Distribution**: Manually grant any type of card to an individual team or all teams at once.
-  * **Real-time Notifications**: Receive live updates on all user actions, such as card usage and team activities, with a built-in action tracking system.
-  * **Game & Schedule Control**: Toggle game visibility for card usage, and manage the full schedule of camp activities and team matchups.
+* **Comprehensive Management Dashboard**: A centralized control panel for event organizers to oversee all game aspects.
+* **Team & Score Management**: View and edit all team details, scores, and Kaizen balances.
+* **Promo Code System**: Create and manage promo codes with custom discounts, assigning them to specific teams for strategic advantages.
+* **Card Distribution**: Manually grant any type of card to an individual team or all teams at once.
+* **Real-time Notifications**: Receive live updates on all user actions, such as card usage and team activities, with a built-in action tracking system.
+* **Game & Schedule Control**: Toggle game visibility for card usage, and manage the full schedule of camp activities and team matchups.
 
------
+---
 
 ### 💻 Technology Stack
 
-  * **Frontend Framework**: React.js
-  * **State Management**: React Context API
-  * **Styling**: Custom CSS, with a mobile-first and responsive design approach.
-  * **UI Components**: Lucide React for crisp, modern icons.
-  * **API Client**: Axios.
-  * **Real-time Communication**: Socket.io for live updates on scores, notifications, and game events.
-  * **Build Tools**: Webpack, Babel.
-  * **Authentication**: Dual-authentication system for cross-browser compatibility, especially on iOS Safari.
+* **Frontend Framework**: React.js
+* **State Management**: React Context API
+* **Styling**: Custom CSS, with a mobile-first and responsive design approach.
+* **UI Components**: Lucide React for crisp, modern icons.
+* **API Client**: Axios.
+* **Real-time Communication**: Socket.io for live updates on scores, notifications, and game events.
+* **Build Tools**: Webpack, Babel.
+* **Authentication**: Dual-authentication system for cross-browser compatibility, especially on iOS Safari.
 
------
+---
 
 ### 🎨 User Interface & User Experience
 
 The application is designed to be intuitive and visually appealing. The mobile-first design ensures a seamless experience across all devices. A user-friendly navigation bar provides quick access to all core features, and real-time toasts and modal notifications keep users engaged and informed of important game events.
 
------
+---
 
 ### 📷 Screenshots
 
-| Admin Scoreboard | Admin Countries Management | Admin Promocode Management | Admin Cards Management |
-| :---: | :---: | :---: | :---: |
-| ![Admin Scoreboard](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582659_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0FkbWluX1Njb3JlYm9hcmQ.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NTlfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwwRmtiV2x1WDFOamIzSmxZbTloY21RLnBuZyIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=o~cq1Xqm-pESo19puuHKUHCfTwiJOT4bz2Irs3xVKVF-VHDCWCtJqM--bucWzmYX0PS63evX13DWGE0ALNJvotCVFTa0SmzpvSzL01HW-dMTr9Iad4~H5u~7j6CmAcOI4LIZNF29sKgndjQ1z2kw1-fn3PXOs4vlOU8t21rbaVg2GpCKZ4kBmJfI2hVWT2Hg2LBDSD2TXEJhy5o0nR0eH7Mfh1Q-MC5-lg3dXbX6U9PZpLPkz0cJ4E~EzG0CyGQ1ZmkUU3AdWCUZfF6oBnSURxHIxcSdKf~b6JQ49nUhnrsg7GYjaWHu2XD2sUsvqWqzgVcuYJsz4TjULNerHTx4KQ__) | ![Admin Countries Management](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582660_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0FkbWluX0NvdW50aXJlc19NYW5hZ2VtZW50.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwwRmtiV2x1WDBOdmRXNTBhWEpsYzE5TllXNWhaMlZ0Wlc1MC5wbmciLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=NvwC3d5EN-QpYaMhwObeuiKi~xV8nVdG3HFtLdN14BrIrqd~lIaUn9UQrAzwlEWKEfKnEWNmXjO3fHS3EAdfifrs8HTEcXV5PqAZ~TTBD2LTL2VduL3x7y~zffY38esZVHMqvvK3-uZcSguj8TwFKLvz~1VwnSbWSX6XPs4ThIjKa8~fzkz0ejE1S~HEp-V-DmYxE~2mMr-3~REQw59rH5IKGkC3rSH8zrNwLcye154qrCJWwhqvywyZXvLzuPqz~zm2Hd-x2f4zl4QJa-G~OOo3IypyyKcYp-z1x74YKD3dGGZ2yXdRRrcTHMLE75Efr3ifLrCfRhg-RuGVFcNOwA__) | ![Admin Promocode Management](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582660_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0FkbWluX1Byb21vY29kZV9NYW5hZ2VtZW50.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwwRmtiV2x1WDFCeWIyMXZZMjlrWlY5TllXNWhaMlZ0Wlc1MC5wbmciLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=bvYJfkXWoYcZrehqNV43fap3AxuK71cT4Ed8PED7dvURFw8CE1yQaQC7IWhhfOw6SBRKb5UU-sGnPtiXsOZ7KSX3DL3zhWCoicgDldtihFedc0fUVyF~wiLQeFuwJrECSi9ahjSwOp3WZjmbv36gkPXf5aDY2mrCv8aAZlpc0GO45Hs6RjQ9YN8AhThrlVJ0QFIsFLN7vDRBJZ3aeDXdwC0UJtd13eSfXPmSJXUXqq9~NoqZNt1ex8UZ1wdvySaxjOAWlZPJJhvoXTrilOS-Mc~Kla3jAR6xdriz4ixs8ZrpIYDWTB5rQ01KMjZHs-Mh7UXq3gcVJeR96DagMAU7yA__) | ![Admin Cards Management](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582661_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0FkbWluX0NhcmRzX01hbmFnZW1lbnQ.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjFfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwwRmtiV2x1WDBOaGNtUnpYMDFoYm1GblpXMWxiblEucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=D~woA9-11X7cE3p0L-LFWCOjaE52OwxLk0sHAYhntrxn~GW8yIv8JMEU6qfdU-BV0nnr4WHtTGJWB~23Ngdyq58cctZJ~lIY3mSy4YmRYo1u-9hhB4sYYyYP8ND9t9245w~6VLymSyx8uve~GtJ~E8DJMbO70iXkrSk9VkgstWGjROXtsgu5ccqgFUT9Yh6gqDR6gKNp-8nzAmtXWq4OB3XVABKTMiws0TX3nc4GLXJzv8Xw2j2F66~s6-pgQqP5e7a548OXHqMTfALFZyhv3ZzlnWUNZ4g8ytr0R1NFf60dArwvw~CteA9Wjn7au3NTVqRRom-yJox9EZgCydSplg__) |
+|                    Admin Scoreboard                   |                         Admin Countries Management                        |                         Admin Promocode Management                        |                       Admin Cards Management                      |
+| :---------------------------------------------------: | :-----------------------------------------------------------------------: | :-----------------------------------------------------------------------: | :---------------------------------------------------------------: |
+| ![Admin Scoreboard](Screenshots/Admin_Scoreboard.png) | ![Admin Countries Management](Screenshots/Admin_Countires_Management.png) | ![Admin Promocode Management](Screenshots/Admin_Promocode_Management.png) | ![Admin Cards Management](Screenshots/Admin_Cards_Management.png) |
 
-| Admin Games Management | Admin Game Schedule Management | Admin Notifications Management | Admin Spins Management |
-| :---: | :---: | :---: | :---: |
-| ![Admin Games Management](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582661_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0FkbWluX0dhbWVzX01hbmFnZW1lbnQ.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjFfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwwRmtiV2x1WDBkaGJXVnpYMDFoYm1GblpXMWxiblEucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=qN3ngM7pML-rjshy89V0k3Eyotp2BcJC6m7NUPyv9lTWEksFS0VTX2UvTanGsZv6nLluO~Zesa8a68RUqCgZRD16XKykhrv48vih3LX2HuHXuf8TXR-cPsQSzebfayB~ld7rVW6ycTzgXi3w5a9xtShBggAO2Mmr51eZOWXzgdCaIIt-pSR7DJf71x80HhxbY7uR~FZkSbJTF1-9szkabjv6WDkBA5ZANGelrfmsUGpAGtirDh36iKRxkJ0zI8BSWDHiB~0g3aQxondue6hQPooh3K1-r6ywL1RfhtkXzVgaREri0ZsOauOcr2cS4x4dBguAW4jFszIfS6VjyaSRNg__) | ![Admin Game Schedule Management](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582661_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0FkbWluX0dhbWVzX3NjaGVkdWxlX01hbmFnZW1lbnQ.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjFfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwwRmtiV2x1WDBkaGJXVnpYM05qYUdWa2RXeGxYMDFoYm1GblpXMWxiblEucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=nJ8oQbbZtn3N~EojbE3t8h2QKIQhr40JMre~mT9ivaSBaQf7glTOxbn0dsAdJIe77Zqa28rQsih8Rsf7SoR3nfAV5t2dOZ6ZNyuzmp0f9ZR4rxHY3VRqmTLxc6axfIzPhlEFLTUYWa84mK3zDgLEi5wvRQfQ-7F8jpwHAEPcwHVNRc4hwjNzUUzTIsjAlD4TQvo-3DkzvgDNFlZHbDeDglN4kXxTv0qGV21PzCN7~33fsdWW1hOOndNFMRSro6o-1BFaKTa3n1P~dX5Uq7AdckPCHaAq7p1UVbpIDudm33bcZo1mIhXY3cPD1uOedoDkKqFkBcMzZifjK-hlcXZWUw__) | ![Admin Notifications Management](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582662_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0FkbWluX05vdGlmaWNhdGlvbnNfTWFuYWdlbWVudA.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjJfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwwRmtiV2x1WDA1dmRHbG1hV05oZEdsdmJuTmZUV0Z1WVdkbGJXVnVkQS5wbmciLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=E9rSCTNMQSaKtvNnZWMdgOxcS-u0Z5wg0Nru9WdKdEUEK5MQQ90ehoyTsP~nFPrmDjwcmSTzhHAx4gkHXPFgHIcHhZjII5002EwHxIpHT~JwEozhPxpA0gT9P~Y4S2Xvk-YVsGm0vJgFGa3AhdFa05Mte8dEAZZ8L7y2IKjvF254~cbMA-Gzsts4ayKu7wRNsYty-2iMhXszF6f6sN2hu-QhUaEmT6L6yAZSLy~uFyLhqCXEQ0smOttGJYzIC3QY6N78AURVnuyytRq0XFzDVvkTnPK697zcEOFw-vVYlIXBR0rPIRxCarzK2DmXPKgEhl1r0iP6jBEbiP6js8K-dQ__) | ![Admin Spins Management](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582662_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0FkbWluX1NwaW5zX01hbmFnZW1lbnQ.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjJfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwwRmtiV2x1WDFOd2FXNXpYMDFoYm1GblpXMWxiblEucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=ZGofVd0oC76ugezImvX49Ixxp7k~XqZbyi-kj-40FMG7mt6hw60auK8pwrxQ7Ku02xdo2XCqT0m6PxJFvCVSC1fiSXvOEIPUg8izbt1tinkn-e5vO2pLFZ-QJSuuVz5MavzAYJsTuAZyvzcuLn21pUTAtfspb5k2DO6AtEnj64MbFEQanR-CYMMWx8spXGf7vZ48JztOGRfOmQ5BMAUGpVKbcMV1QpUToTGyya2NwoWax~r2cVCvawO0eO7qhJ5wJQDpQ2TXw7W5NRQk9LNG1pmTL~wjn5AzXxS966uiJQhFM7TcvbtzCSgKG-0zjqEgsxyY4XHmLgPS21qkzaus-A__) |
+|                       Admin Games Management                      |                           Admin Game Schedule Management                           |                           Admin Notifications Management                          |                       Admin Spins Management                      |
+| :---------------------------------------------------------------: | :--------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: | :---------------------------------------------------------------: |
+| ![Admin Games Management](Screenshots/Admin_Games_Management.png) | ![Admin Game Schedule Management](Screenshots/Admin_Games_schedule_Management.png) | ![Admin Notifications Management](Screenshots/Admin_Notifications_Management.png) | ![Admin Spins Management](Screenshots/Admin_Spins_Management.png) |
 
-| User Login | User Countries |
-| :---: | :---: |
-| ![User Login](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582663_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL0xvZ2lu.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjNfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwweHZaMmx1LnBuZyIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=UE1hJIuRXSPJfGbSUdOVchhKQSyZ6JtjRapB04Wb8NzGpEwDM~59aBlnDhDgyJM8KJizzCq7g69rkarQDE48isGULxsoUHah8MQBj8AL9J1ZEz-N0lXTyQVbLmBi4eFKbvro-1tiVWEUU2I17kVCvwQ3~ExnczIJr1xq7VpG~D3ehjngUI~Fkdn5hf2Ohdysu2e-zphu6vQJoiQLuL1TVZyucaK9zhbxKgJxTMFMcJUsbQEQvkYJMFa8F0sDxdnCpCCxVrtkgj72tvxjQQOjC0EsmGqKqZbX1CFyGiNJna51t02v7AhLB8WuEgtzytAugZWI9DUAuAuOdJpMWxaRhw__) | ![User Countries](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582663_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL1VzZXJfQ291bnRyaWVz.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjNfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwxVnpaWEpmUTI5MWJuUnlhV1Z6LnBuZyIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=j65MMGZOiHhh-y7pu82nUOgGTkSDU4OU~7XMDcA43ja5q15CQm234SDw~TH3WiN8-fdngdD7wFP7XR5mzGK~Z2qijnbZ21q97kHjl5XlCYHfToCIia3xwKEm1lswvBj37-Iq6WwbL1NHS7VNzchxlclk3s98usUHDTL0YNygc7nVJXgmss68bfYAUhIjwU6cJHzLzsnK3NIrn~ts3D90ftdpfXbrsuBQc7xRlaSr0olaWzSB4KxdsFtgi~tcBN5qZELcNbZBiTJjjMOs546V6J8iEBLBo0Msuk-sFbPiO~foR~ecSKm5gEZ8iiagZ~TJ3tYVgWq79kY91aEUwmbSbg__) |
+|              User Login              |                   User Countries                  |
+| :----------------------------------: | :-----------------------------------------------: |
+| ![User Login](Screenshots/Login.png) | ![User Countries](Screenshots/User_Countries.png) |
 
------
+|                    User Day Schedule                    |                     User Game Schedule                    |                   User Inventory                  |                   User Scoreboard                   |                 User Spins                |
+| :-----------------------------------------------------: | :-------------------------------------------------------: | :-----------------------------------------------: | :-------------------------------------------------: | :---------------------------------------: |
+| ![User Day Schedule](Screenshots/User_Day_Schedule.png) | ![User Game Schedule](Screenshots/User_Game_Schedule.png) | ![User Inventory](Screenshots/User_Inventory.png) | ![User Scoreboard](Screenshots/User_Scoreboard.png) | ![User Spins](Screenshots/User_Spins.png) |
+
+---
 
 ### 🚀 Getting Started
 
 To get a local copy of this project up and running, follow these simple steps:
 
-1.  Clone the repository: `git clone https://github.com/aymanashrafmounir/saintpaul-scoringsystem-frontend.git`
-2.  Install dependencies: `npm install`
-3.  Configure your environment variables (refer to the `.env` file for guidance).
-4.  Start the development server: `npm start`
-5.  Open your browser to `http://localhost:3000` to view the application.
+1. Clone the repository: `git clone https://github.com/aymanashrafmounir/saintpaul-scoringsystem-frontend.git`
+2. Install dependencies: `npm install`
+3. Configure your environment variables (refer to the `.env` file for guidance).
+4. Start the development server: `npm start`
+5. Open your browser to `http://localhost:3000` to view the application.
 
------
+---
 
 Developed with passion by Ayman Ashraf Mounir.
-
-
-| User Day Schedule | User Game Schedule | User Inventory | User Scoreboard | User Spins |
-| :---: | :---: | :---: | :---: | :---: |
-| ![User Day Schedule](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582663_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL1VzZXJfRGF5X1NjaGVkdWxl.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjNfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwxVnpaWEpmUkdGNVgxTmphR1ZrZFd4bC5wbmciLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=r29CxzjT92En1ejo3exbI7pPmQXpmaejTPUloyJreG42RRXIdOOBPrYj5igZRsHeVxMxXCo7xFp7uAsdORvAY1~7POcXknTw78nHblFkJ-F~bJYkX45CoUUmaGB-zLGG4Gvcq2FzioHUmxa1INNQV4N3S1eZg7LFEKvKcm-QU~SSC5mWqMaDCS4OH0lUjF9yUTFDUBKM76FElI5U7mJtd8~jm4CeklnMU0-xYQy9s7-vXqDKDlBNZ7ggsjRHiJAlGOu-vXhRMB00s2A0MSRzphoPuM2y5Ommdny138Xp-J7gfp69uODiY~DZCK~r9G9rPLkZfP4x8rEoPi000dvwUg__) | ![User Game Schedule](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582664_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL1VzZXJfR2FtZV9TY2hlZHVsZQ.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjRfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwxVnpaWEpmUjJGdFpWOVRZMmhsWkhWc1pRLnBuZyIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=YxaGoMHm1fwxkHKfqogJVEGcsIn~4g3eUk0cOu8x8~xNCIlTuTHinBqDlKJMEyzJ013YknYVJ8mUg23SfnViFZwJO1R44~e4xngwELOnf0gXIbSQl7ALzUw~zNoAz7V-y3sQwWCtoPaxE2XMTrMY~6wysfVdZ~Q7Omnwh5sbxu6FLrr-tm5EnYzVY2bNeDWDSr9bwl1puY0F8GhevhE01~L17H4aw7v8qOYISwLnQsrkmH6iDb4IpsVcJsYFv-KB1jO5iL6NSx5Cp-qooA1lzBs7tRgGxoV1vRQSCGh7TM2jXWY-eGdlST-VgjxmOUnCk0FjXfOPN5yDuvYdZ8xfvA__) | ![User Inventory](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582664_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL1VzZXJfSW52ZW50b3J5.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjRfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwxVnpaWEpmU1c1MlpXNTBiM0o1LnBuZyIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=NGt8bOrmoocGoxBmjzXfuRTyK0obPzainLXy7C0xQfa2ux1mWTLjrWOv9Icww4XiG4-yEj~58ftiSMxa50RIETGBxZ2pqjDRP64TSMQ4tR6XN1mv0k-B8FdtPN7J3z1gDQZbReGs3HzY~NQo0z8w59ntB2swtz74FayxBjvsVzpZVGNE9zm-KgRJBLnl0baaZpViu3jeAnEjPBuGedSi~kFrAsM~9PU~D9juccfND4GpISedWtU6DdLMif9Cv3tSrfYTl9u762q49yzmw98CKMLgphniMR~5B0fYUzJ28fPXQhpdOXOJQpkbkz2PdIv5MMpOb9NMDA5WVE3s3kOyaA__) | ![User Scoreboard](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582664_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL1VzZXJfU2NvcmVib2FyZA.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjRfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwxVnpaWEpmVTJOdmNtVmliMkZ5WkEucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=tCwXqQ7WSizo0ig128aZWdvTMC8z8w1TEi0xB2Tu3PZT8oZf8T~Zg09Kp~3REW3BoR2OifUbfHh6PuOTTX71E83h0RLokAX~sguniOl1F9R6RF1FljzKb0ghFPtZ3yrBnfmW9XusS00maFN4xYrixrn4lfSQHwTsF06NHu4K1n3f2xwtKfF8Jq6vDbcT1zBQ9s3oaR8M9SEqKtI-C0nXeTyHFZMuf6gBCkA5LurwqmyWa-6g88jlc9NE4s6WogB-kNAUYLKndPmj9rg4l0b~dPr3odje-BfrGM3IktlGOp0ojKAGP0ck7lsV120eGJg6secCSnkGaov4-MwIchBEoQ__) | ![User Spins](https://private-us-east-1.manuscdn.com/sessionFile/Z0nLU3M7WzWXhiwqpsOsmq/sandbox/D6nX0QqDyjMpg4XiZ0rrbF-images_1756382582665_na1fn_L2hvbWUvdWJ1bnR1L1NhaW50UGF1bC1TY29yaW5nU3lzdGVtLUZyb250ZW5kL1NjcmVlbnNob3RzL1VzZXJfU3BpbnM.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvWjBuTFUzTTdXeldYaGl3cXBzT3NtcS9zYW5kYm94L0Q2blgwUXFEeWpNcGc0WGlaMHJyYkYtaW1hZ2VzXzE3NTYzODI1ODI2NjVfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxTmhhVzUwVUdGMWJDMVRZMjl5YVc1blUzbHpkR1Z0TFVaeWIyNTBaVzVrTDFOamNtVmxibk5vYjNSekwxVnpaWEpmVTNCcGJuTS5wbmciLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=HwcnWZu2iaMnCdrnj9TMyrwlEFOR~4iF8lkvreClvEEVYQja~HmLPXuPGcHVIX0BqtKVONAuwMkvJalQncHVwfIL5BeselTnOqjoyubLFsfa4KmGkN7rYdYcXQO~FLgKo7AXilxCz7bNZsfxXIJIbDbtxiQ1zm9VdpIz7mqVhedwj7V0oG0TcXSdCGNZ9iTJBPNwd407M8nfzeu9hWDyue9ZwmbllS9GQeZWDlAWb-Bv6fpXIhqUwA4PCNyn4txmH4dciiVgslkCtLXM6bgX4RkvtV7J7~WymtVtkxrtYsF~m829dESBr5EcnJhuC6zEKATJr4Rhp1gnFv9HVA3L~w__) |
-
-
