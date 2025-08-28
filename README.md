@@ -57,7 +57,7 @@ The application is designed to be intuitive and visually appealing. The mobile-f
 
 | Admin Scoreboard | Admin Countries Management | Admin Promocode Management | Admin Cards Management |
 | :---: | :---: | :---: | :---: |
-| \![Admin Scoreboard](Screenshots/Admin Scoreboard.jpg) | \![Admin Countries Management](Screenshots/Admin Countires Management.jpg) | \![Admin Promocode Management](Screenshots/Admin Promocode Management.jpg) | \![Admin Cards Management](Screenshots/Admin Cards Management.jpg) |
+| \![Admin Scoreboard](Screenshots/Admin Scoreboard.png) | \![Admin Countries Management](Screenshots/Admin Countires Management.jpg) | \![Admin Promocode Management](Screenshots/Admin Promocode Management.jpg) | \![Admin Cards Management](Screenshots/Admin Cards Management.jpg) |
 
 | Admin Games Management | Admin Game Schedule Management | Admin Notifications Management | Admin Spins Management |
 | :---: | :---: | :---: | :---: |
